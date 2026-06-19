@@ -1,0 +1,205 @@
+@extends('layouts.app')
+@section('title', 'Encode Student Profile')
+@section('content')
+
+    <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 class="text-base font-semibold text-gray-800 mb-6">Encode Student Profile</h2>
+
+        <form method="POST" action="{{ route('registrar.students.store') }}">
+            @csrf
+
+            {{-- Link to existing user account --}}
+            <div class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Link to Student Account <span class="text-gray-400">(optional)</span>
+                </label>
+                <select name="user_id"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="">Select student account...</option>
+                    @foreach($users as $user)
+                        <option value="{{ $user->id }}">{{ $user->name }} — {{ $user->email }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Link this profile to an existing Student account created by Super Admin.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+
+                {{-- Student Number --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Student Number <span class="text-red-500">*</span></label>
+                    <input type="text" name="student_number" value="{{ old('student_number') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        placeholder="2024-0001">
+                    @error('student_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Existing QR Code --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Existing QR Code Value <span class="text-gray-400">(leave blank to auto-generate)</span>
+                    </label>
+                    <input type="text" name="qr_code_value" value="{{ old('qr_code_value') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        placeholder="Existing Salus QR value">
+                </div>
+
+                {{-- Gender --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                    <select name="gender"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        <option value="">Select...</option>
+                        <option value="Male" {{ old('gender') == 'Male' ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ old('gender') == 'Female' ? 'selected' : '' }}>Female</option>
+                        <option value="Other" {{ old('gender') == 'Other' ? 'selected' : '' }}>Other</option>
+                    </select>
+                </div>
+
+                {{-- First Name --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="first_name" value="{{ old('first_name') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    @error('first_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Middle Name --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
+                    <input type="text" name="middle_name" value="{{ old('middle_name') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                </div>
+
+                {{-- Last Name --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="last_name" value="{{ old('last_name') }}"
+       <label class="block text-sm font-medium text-gray-700 mb-1">                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    @error('last_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Suffix --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Suffix</label>
+                    <input type="text" name="suffix" value="{{ old('suffix') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        placeholder="Jr., Sr., III">
+                </div>
+
+                {{-- Date of Birth --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                    <input type="date" name="date_of_birth" value="{{ old('date_of_birth') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                </div>
+
+                {{-- Contact Number --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                    <input type="text" name="contact_number" value="{{ old('contact_number') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        placeholder="09XXXXXXXXX">
+                </div>
+
+                {{-- Email --}}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" name="email" value="{{ old('email') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                </div>
+
+                {{-- Address --}}
+                <div class="mb-4 col-span-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <textarea name="address" rows="2"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">{{ old('address') }}</textarea>
+                </div>
+
+            </div>
+
+            {{-- Guardian Information --}}
+            <div class="border-t border-gray-100 pt-4 mt-2 mb-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">Guardian Information</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Guardian Name</label>
+                        <input type="text" name="guardian_name" value="{{ old('guardian_name') }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Guardian Contact</label>
+                        <input type="text" name="guardian_contact" value="{{ old('guardian_contact') }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                        <input type="text" name="guardian_relationship" value="{{ old('guardian_relationship') }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                            placeholder="Parent, Guardian...">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Academic Information --}}
+<div class="border-t border-gray-100 pt-4 mt-2 mb-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-3">Academic Information</h3>
+    <div class="grid grid-cols-3 gap-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level <span class="text-red-500">*</span></label>
+            <select name="year_level_id"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                <option value="">Select grade level...</option>
+                @foreach($yearLevels as $yr)
+                    <option value="{{ $yr->id }}" {{ old('year_level_id') == $yr->id ? 'selected' : '' }}>
+                        {{ $yr->name }}
+                    </option>
+                @endforeach
+            </select>
+            @error('year_level_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Section <span class="text-red-500">*</span></label>
+            <select name="section_id"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                <option value="">Select section...</option>
+                @foreach($sections as $section)
+                    <option value="{{ $section->id }}" {{ old('section_id') == $section->id ? 'selected' : '' }}>
+                        {{ $section->yearLevel->name ?? '' }} — Section {{ $section->name }}
+                    </option>
+                @endforeach
+            </select>
+            @error('section_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">School Year <span class="text-red-500">*</span></label>
+            <input type="text" name="school_year" value="{{ old('school_year', '2025-2026') }}"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Semester <span class="text-red-500">*</span></label>
+            <select name="semester"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                <option value="1st" {{ old('semester') == '1st' ? 'selected' : '' }}>1st Semester</option>
+                <option value="2nd" {{ old('semester') == '2nd' ? 'selected' : '' }}>2nd Semester</option>
+                <option value="Summer" {{ old('semester') == 'Summer' ? 'selected' : '' }}>Summer</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+            <div class="flex gap-3">
+                <button type="submit"
+                    class="bg-green-800 hover:bg-green-900 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
+                    Save Student Profile
+                </button>
+                <a href="{{ route('registrar.students') }}"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-6 py-2.5 rounded-lg transition">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+@endsection
