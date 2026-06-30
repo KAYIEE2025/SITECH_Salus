@@ -4,6 +4,7 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Spatie\Activitylog\Models\Activity;
 
 class DashboardController extends Controller
 {
@@ -15,10 +16,14 @@ class DashboardController extends Controller
         $totalTeachers = User::role('Teacher')->count();
         $totalSSG = User::role('SSG')->count();
         $totalStudents = User::role('Student')->count();
+        $activeUsers = User::where('is_active', true)->count();
+        $inactiveUsers = User::where('is_active', false)->count();
+        $recentLogs = Activity::with('causer')->latest()->take(8)->get();
 
         return view('superadmin.dashboard', compact(
             'totalUsers', 'totalAdmins', 'totalRegistrars',
-            'totalTeachers', 'totalSSG', 'totalStudents'
+            'totalTeachers', 'totalSSG', 'totalStudents',
+            'activeUsers', 'inactiveUsers', 'recentLogs'
         ));
     }
 }

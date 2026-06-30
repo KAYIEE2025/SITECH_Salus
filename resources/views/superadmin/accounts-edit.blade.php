@@ -2,76 +2,87 @@
 
 @section('title', 'Edit Account')
 
-<!-- @section('sidebar-links')
-    <x-nav-link href="{{ route('superadmin.dashboard') }}" :active="false">Dashboard</x-nav-link>
-    <x-nav-link href="{{ route('superadmin.accounts') }}" :active="true">Manage Accounts</x-nav-link>
-    <x-nav-link href="#" :active="false">Activity Logs</x-nav-link>
-    <x-nav-link href="{{ route('superadmin.profile') }}" :active="false">My Profile</x-nav-link>
-@endsection -->
-
 @section('content')
-
-    <div class="max-w-lg">
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 class="text-base font-semibold text-gray-800 mb-4">Edit Account</h2>
-
-            <form method="POST" action="{{ route('superadmin.accounts.update', $user) }}">
-                @csrf @method('PUT')
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                    <input type="text" name="name" value="{{ old('name', $user->name) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                    @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+    <div class="max-w-2xl">
+        <div class="rounded-xl border border-gray-200 bg-white p-6">
+            <div class="mb-6 flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-800">Edit Account</h2>
+                    <p class="mt-1 text-sm text-gray-500">{{ $user->email }}</p>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                    <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                    @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <span class="rounded-full {{ $user->is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600' }} px-3 py-1 text-xs font-semibold">
+                    {{ $user->is_active ? 'Active' : 'Inactive' }}
+                </span>
+            </div>
+
+            <form method="POST" action="{{ route('superadmin.accounts.update', $user) }}" class="space-y-4">
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label for="name" class="mb-1 block text-sm font-medium text-gray-700">Full Name</label>
+                    <input id="name" type="text" name="name" value="{{ old('name', $user->name) }}" required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                    <select name="role"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                        @foreach($roles as $role)
-                            <option value="{{ $role->name }}"
-                                {{ $user->hasRole($role->name) ? 'selected' : '' }}>
-                                {{ $role->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                <div>
+                    <label for="email" class="mb-1 block text-sm font-medium text-gray-700">Email Address</label>
+                    <input id="email" type="email" name="email" value="{{ old('email', $user->email) }}" required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    @error('email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        New Password <span class="text-gray-400">(leave blank to keep current)</span>
-                    </label>
-                    <input type="password" name="password"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                <div>
+                    <label for="contact_number" class="mb-1 block text-sm font-medium text-gray-700">Contact Number</label>
+                    <input id="contact_number" type="text" name="contact_number" value="{{ old('contact_number', $user->contact_number) }}"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    @error('contact_number') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                    <input type="password" name="password_confirmation"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                @if($user->hasRole('Super Admin'))
+                    <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                        This protected Super Admin account cannot have its role changed here.
+                    </div>
+                @else
+                    <div>
+                        <label for="role" class="mb-1 block text-sm font-medium text-gray-700">Role</label>
+                        <select id="role" name="role" required
+                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                            @foreach($roles as $role)
+                                <option value="{{ $role->name }}" @selected(old('role', $user->getRoleNames()->first()) === $role->name)>
+                                    {{ $role->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('role') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+                @endif
+
+                <div>
+                    <label for="password" class="mb-1 block text-sm font-medium text-gray-700">New Password</label>
+                    <input id="password" type="password" name="password" autocomplete="new-password"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    <p class="mt-1 text-xs text-gray-400">Leave blank to keep the current password.</p>
+                    @error('password') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="flex gap-3">
-                    <button type="submit"
-                        class="bg-green-800 hover:bg-green-900 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
+                <div>
+                    <label for="password_confirmation" class="mb-1 block text-sm font-medium text-gray-700">Confirm New Password</label>
+                    <input id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="rounded-lg bg-[#1a5c1a] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-green-900">
                         Save Changes
                     </button>
-                    <a href="{{ route('superadmin.accounts') }}"
-                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-6 py-2.5 rounded-lg transition">
+                    <a href="{{ route('superadmin.accounts') }}" class="rounded-lg bg-gray-100 px-6 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200">
                         Cancel
                     </a>
                 </div>
-
             </form>
         </div>
     </div>
-
 @endsection

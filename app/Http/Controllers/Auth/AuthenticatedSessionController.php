@@ -29,6 +29,11 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
+        activity()
+            ->event('login')
+            ->causedBy($user)
+            ->log('Logged in');
+
         if ($user->hasRole('Super Admin')) {
             return redirect()->route('superadmin.dashboard');
         } elseif ($user->hasRole('Admin')) {
@@ -51,6 +56,15 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        if ($user) {
+            activity()
+                ->event('logout')
+                ->causedBy($user)
+                ->log('Logged out');
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

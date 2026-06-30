@@ -2,72 +2,83 @@
 
 @section('title', 'Super Admin Dashboard')
 
-<!-- @section('sidebar-links')
-    <x-nav-link href="{{ route('superadmin.dashboard') }}" :active="request()->routeIs('superadmin.dashboard')">
-        Dashboard
-    </x-nav-link>
-    <x-nav-link href="{{ route('superadmin.accounts') }}" :active="false">
-        Manage Accounts
-    </x-nav-link>
-    <x-nav-link href="#" :active="false">
-        Roles & Access
-    </x-nav-link>
-    <x-nav-link href="{{ route('superadmin.activity-logs') }}" :active="false">Activity Logs</x-nav-link>
-    <x-nav-link href="{{ route('superadmin.profile') }}" :active="false">
-        My Profile
-    </x-nav-link>
-@endsection -->
-
 @section('content')
-
-    {{-- Stat Cards --}}
-    <div class="grid grid-cols-3 gap-6 mb-8">
-
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <p class="text-sm text-gray-500 mb-1">Total Accounts</p>
-            <p class="text-3xl font-bold text-green-800">{{ $totalUsers }}</p>
+    <div class="mb-8 grid grid-cols-4 gap-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="text-sm text-gray-500">Total Accounts</p>
+            <p class="mt-1 text-3xl font-bold text-[#1a5c1a]">{{ $totalUsers }}</p>
         </div>
-
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <p class="text-sm text-gray-500 mb-1">Teachers</p>
-            <p class="text-3xl font-bold text-green-800">{{ $totalTeachers }}</p>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="text-sm text-gray-500">Active Accounts</p>
+            <p class="mt-1 text-3xl font-bold text-[#1a5c1a]">{{ $activeUsers }}</p>
         </div>
-
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <p class="text-sm text-gray-500 mb-1">Students</p>
-            <p class="text-3xl font-bold text-green-800">{{ $totalStudents }}</p>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="text-sm text-gray-500">Inactive Accounts</p>
+            <p class="mt-1 text-3xl font-bold text-red-600">{{ $inactiveUsers }}</p>
         </div>
-
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <p class="text-sm text-gray-500 mb-1">Admins</p>
-            <p class="text-3xl font-bold text-green-800">{{ $totalAdmins }}</p>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="text-sm text-gray-500">Students</p>
+            <p class="mt-1 text-3xl font-bold text-[#c8a000]">{{ $totalStudents }}</p>
         </div>
-
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <p class="text-sm text-gray-500 mb-1">Registrars</p>
-            <p class="text-3xl font-bold text-green-800">{{ $totalRegistrars }}</p>
-        </div>
-
-        <div class="bg-white rounded-xl border border-gray-200 p-5">
-            <p class="text-sm text-gray-500 mb-1">SSG</p>
-            <p class="text-3xl font-bold text-green-800">{{ $totalSSG }}</p>
-        </div>
-
     </div>
 
-    {{-- Quick Actions --}}
-    <div class="flex gap-3">
-    <a href="{{ route('superadmin.accounts') }}"
-        class="bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
-        Create Account
-    </a>
-    <a href="{{ route('superadmin.activity-logs') }}"
-        class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-lg transition">
-        View Activity Logs
-    </a>
-</div>
+    <div class="mb-8 grid grid-cols-4 gap-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="text-sm text-gray-500">Admins</p>
+            <p class="mt-1 text-2xl font-bold text-gray-800">{{ $totalAdmins }}</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="text-sm text-gray-500">Registrars</p>
+            <p class="mt-1 text-2xl font-bold text-gray-800">{{ $totalRegistrars }}</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="text-sm text-gray-500">Teachers</p>
+            <p class="mt-1 text-2xl font-bold text-gray-800">{{ $totalTeachers }}</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+            <p class="text-sm text-gray-500">SSG Officers</p>
+            <p class="mt-1 text-2xl font-bold text-gray-800">{{ $totalSSG }}</p>
+        </div>
     </div>
 
+    <div class="grid grid-cols-3 gap-6">
+        <div class="rounded-xl border border-gray-200 bg-white p-6">
+            <h2 class="text-base font-semibold text-gray-800">Quick Actions</h2>
+            <div class="mt-4 space-y-3">
+                <a href="{{ route('superadmin.accounts') }}" class="block rounded-lg bg-[#1a5c1a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-900">
+                    Create or Manage Accounts
+                </a>
+                <a href="{{ route('superadmin.activity-logs') }}" class="block rounded-lg bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-200">
+                    View System Activity
+                </a>
+                <a href="{{ route('superadmin.roles') }}" class="block rounded-lg bg-yellow-50 px-4 py-3 text-sm font-semibold text-yellow-800 transition hover:bg-yellow-100">
+                    Review Roles & Access
+                </a>
+            </div>
+        </div>
+
+        <div class="col-span-2 rounded-xl border border-gray-200 bg-white">
+            <div class="border-b border-gray-100 px-6 py-4">
+                <h2 class="text-base font-semibold text-gray-800">Recent System Activity</h2>
+            </div>
+
+            <div class="divide-y divide-gray-100">
+                @forelse($recentLogs as $log)
+                    <div class="flex items-start justify-between gap-4 px-6 py-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-800">{{ $log->description }}</p>
+                            <p class="mt-1 text-xs text-gray-500">
+                                {{ optional($log->causer)->name ?? 'System' }} - {{ $log->event ?? 'activity' }}
+                            </p>
+                        </div>
+                        <p class="shrink-0 text-xs text-gray-400">{{ $log->created_at->diffForHumans() }}</p>
+                    </div>
+                @empty
+                    <div class="px-6 py-8 text-center text-sm text-gray-400">
+                        No activity logs yet.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
 @endsection
-
-
