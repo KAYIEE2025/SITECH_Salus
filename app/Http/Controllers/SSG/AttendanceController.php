@@ -169,8 +169,8 @@ class AttendanceController extends Controller
 
     private function ensureAttendanceRecords(SsgEvent $event)
     {
-        // Get all active students who don't have attendance records for this event
-        $studentsWithoutAttendance = Student::where('status', 'Active')
+        // Get all active, pending, and account created students who don't have attendance records for this event
+        $studentsWithoutAttendance = Student::whereIn('status', ['Active', 'Pending Student Account', 'Account Created'])
             ->whereDoesntHave('ssgAttendances', fn ($query) => $query->where('ssg_event_id', $event->id))
             ->get();
 

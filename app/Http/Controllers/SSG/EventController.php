@@ -38,25 +38,27 @@ class EventController extends Controller
             ]));
 
             Student::query()
-                ->where('status', 'Active')
+                ->whereIn('status', ['Active', 'Pending Student Account', 'Account Created'])
                 ->select('id')
                 ->chunkById(500, function ($students) use ($event, &$attendanceCount) {
-                    $now = now();
-                    $records = $students->map(fn (Student $student) => [
-                        'ssg_event_id' => $event->id,
-                        'student_id' => $student->id,
-                        'is_present' => false,
-                        'scanned_at' => null,
-                        'applicable_fine' => $event->fine_amount,
-                        'actual_fine' => $event->fine_amount,
-                        'payment_status' => 'Unpaid',
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ])->all();
+                    foreach ($students as $student) {
+                        $attendance = \App\Models\SsgEventAttendance::firstOrCreate(
+                            [
+                                'ssg_event_id' => $event->id,
+                                'student_id' => $student->id,
+                            ],
+                            [
+                                'is_present' => false,
+                                'scanned_at' => null,
+                                'applicable_fine' => $event->fine_amount,
+                                'actual_fine' => $event->fine_amount,
+                                'payment_status' => 'Unpaid',
+                            ]
+                        );
 
-                    if ($records !== []) {
-                        DB::table('ssg_event_attendances')->insert($records);
-                        $attendanceCount += count($records);
+                        if ($attendance->wasRecentlyCreated) {
+                            $attendanceCount++;
+                        }
                     }
                 });
         });
