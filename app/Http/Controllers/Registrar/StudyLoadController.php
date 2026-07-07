@@ -46,6 +46,8 @@ public function store(Request $request)
         'days'         => 'required|array|min:1',
         'time_start'   => 'required',
         'time_end'     => 'required',
+        'date_start'   => 'nullable|date',
+        'date_end'     => 'nullable|date|after_or_equal:date_start',
         'semester'     => 'required|in:1st,2nd,Summer',
         'school_year'  => 'required|string',
     ]);
@@ -101,6 +103,8 @@ public function store(Request $request)
         'days'        => $request->days,
         'time_start'  => $request->time_start,
         'time_end'    => $request->time_end,
+        'date_start'  => $request->date_start,
+        'date_end'    => $request->date_end,
         'semester'    => $request->semester,
         'school_year' => $request->school_year,
     ]);

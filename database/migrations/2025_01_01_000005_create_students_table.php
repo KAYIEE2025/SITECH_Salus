@@ -26,7 +26,7 @@ return new class extends Migration {
             $table->foreignId('section_id')->constrained();
             $table->string('school_year', 20);
             $table->enum('semester', ['1st', '2nd', 'Summer']);
-            $table->enum('status', ['Active', 'Inactive', 'Graduated', 'Dropped'])->default('Active');
+            $table->enum('status', ['Pending Student Account', 'Account Created', 'Active', 'Inactive', 'Graduated', 'Dropped'])->default('Pending Student Account');
             $table->string('photo_path')->nullable();
             $table->string('qr_code_value')->nullable();
             $table->string('qr_code_path')->nullable();

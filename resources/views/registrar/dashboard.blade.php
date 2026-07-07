@@ -18,5 +18,9 @@
             <p class="text-sm text-gray-500 mb-1">Pending Grade Approvals</p>
             <p class="text-3xl font-bold text-green-800">{{ $pendingGrades }}</p>
         </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-5">
+            <p class="text-sm text-gray-500 mb-1">Active Sections</p>
+            <p class="text-3xl font-bold text-green-800">{{ $activeSections }}</p>
+        </div>
     </div>
 @endsection

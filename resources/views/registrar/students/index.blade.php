@@ -39,10 +39,12 @@
                 </span>
             </td>
             <td class="px-6 py-3">
-                <a href="{{ route('registrar.students.edit', $student) }}"
-                    class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
-                    Edit
-                </a>
+                <div class="flex gap-2">
+                    <a href="{{ route('registrar.students.edit', $student) }}"
+                        class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
+                        Edit
+                    </a>
+                </div>
             </td>
         </tr>
         @empty

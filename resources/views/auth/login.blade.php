@@ -24,10 +24,10 @@
             @csrf
 
             <div class="mb-4">
-                <label for="email" class="mb-1 block text-sm font-medium text-gray-700">Email Address</label>
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
+                <label for="email" class="mb-1 block text-sm font-medium text-gray-700">Email Address or Username</label>
+                <input id="email" type="text" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
                     class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]"
-                    placeholder="you@salus.edu">
+                    placeholder="you@salus.edu or student number">
             </div>
 
             <div class="mb-6">

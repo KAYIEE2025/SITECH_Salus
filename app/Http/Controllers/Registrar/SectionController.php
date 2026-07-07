@@ -22,6 +22,7 @@ class SectionController extends Controller
         $request->validate([
             'year_level_id' => 'required|exists:year_levels,id',
             'name'          => 'required|string|max:10',
+            'adviser'       => 'nullable|string|max:100',
         ]);
 
         $exists = Section::where('name', $request->name)
@@ -35,6 +36,7 @@ class SectionController extends Controller
         Section::create([
             'name'          => $request->name,
             'year_level_id' => $request->year_level_id,
+            'adviser'       => $request->adviser,
         ]);
 
         return back()->with('success', 'Section added successfully.');

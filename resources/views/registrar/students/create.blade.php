@@ -20,10 +20,24 @@
                         <option value="{{ $user->id }}">{{ $user->name }} — {{ $user->email }}</option>
                     @endforeach
                 </select>
+                @error('user_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 <p class="text-xs text-gray-500 mt-1">Link this profile to an existing Student account created by Super Admin.</p>
             </div>
 
-            <div class="grid grid-cols-3 gap-4">
+            {{-- Student Type --}}
+            <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Student Type <span class="text-red-500">*</span></label>
+                <select name="student_type"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="">Select student type...</option>
+                    <option value="new" {{ old('student_type') == 'new' ? 'selected' : '' }}>New Student</option>
+                    <option value="old" {{ old('student_type') == 'old' ? 'selected' : '' }}>Old Student</option>
+                </select>
+                @error('student_type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <p class="text-xs text-gray-500 mt-1">New students will have a QR code automatically generated. Old students will have QR codes imported later.</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 
                 {{-- Student Number --}}
                 <div class="mb-4">
@@ -34,14 +48,9 @@
                     @error('student_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Existing QR Code --}}
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Existing QR Code Value <span class="text-gray-400">(leave blank to auto-generate)</span>
-                    </label>
-                    <input type="text" name="qr_code_value" value="{{ old('qr_code_value') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                        placeholder="Existing Salus QR value">
+                <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                    <p class="text-sm font-medium text-green-800">QR Code</p>
+                    <p class="mt-1 text-xs text-green-700">A unique QR code will be generated automatically after saving.</p>
                 </div>
 
                 {{-- Gender --}}
@@ -75,7 +84,7 @@
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
                     <input type="text" name="last_name" value="{{ old('last_name') }}"
-       <label class="block text-sm font-medium text-gray-700 mb-1">                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
                     @error('last_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
@@ -110,7 +119,7 @@
                 </div>
 
                 {{-- Address --}}
-                <div class="mb-4 col-span-3">
+                <div class="mb-4 md:col-span-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
                     <textarea name="address" rows="2"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">{{ old('address') }}</textarea>
@@ -121,7 +130,7 @@
             {{-- Guardian Information --}}
             <div class="border-t border-gray-100 pt-4 mt-2 mb-4">
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Guardian Information</h3>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Guardian Name</label>
                         <input type="text" name="guardian_name" value="{{ old('guardian_name') }}"
@@ -144,7 +153,7 @@
             {{-- Academic Information --}}
 <div class="border-t border-gray-100 pt-4 mt-2 mb-6">
     <h3 class="text-sm font-semibold text-gray-700 mb-3">Academic Information</h3>
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level <span class="text-red-500">*</span></label>
             <select name="year_level_id"
@@ -184,6 +193,9 @@
                 <option value="2nd" {{ old('semester') == '2nd' ? 'selected' : '' }}>2nd Semester</option>
                 <option value="Summer" {{ old('semester') == 'Summer' ? 'selected' : '' }}>Summer</option>
             </select>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 md:col-span-3">
+            Saving this profile sets the student status to <span class="font-semibold text-gray-800">Pending Student Account</span> and creates study load records from the selected section's class schedules.
         </div>
     </div>
 </div>

@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class FinalGrade extends Model
 {
     protected $fillable = [
-        'student_id', 'class_schedule_id', 'final_grade', 'remarks',
-        'computed_at', 'status', 'submitted_at', 'reviewed_by',
+        'student_id', 'class_schedule_id', 'final_grade', 'initial_grade', 
+        'transmuted_grade', 'quarterly_grade', 'remarks',
+        'component_scores', 'computed_at', 'status', 'submitted_at', 'reviewed_by',
         'reviewed_at', 'rejection_reason',
     ];
 
@@ -16,6 +17,7 @@ class FinalGrade extends Model
         'computed_at'  => 'datetime',
         'submitted_at' => 'datetime',
         'reviewed_at'  => 'datetime',
+        'component_scores' => 'array',
     ];
 
     public function student()

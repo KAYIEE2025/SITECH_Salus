@@ -26,6 +26,45 @@ class GradeApprovalController extends Controller
         return view('registrar.grade-approval.index', compact('pendingGrades', 'history'));
     }
 
+    public function approveClass(Request $request, $classScheduleId)
+    {
+        $grades = FinalGrade::where('class_schedule_id', $classScheduleId)
+            ->where('status', 'submitted')
+            ->get();
+
+        foreach ($grades as $grade) {
+            $grade->update([
+                'status' => 'approved',
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now(),
+            ]);
+        }
+
+        return back()->with('success', 'All grades for this class approved successfully.');
+    }
+
+    public function rejectClass(Request $request, $classScheduleId)
+    {
+        $request->validate([
+            'rejection_reason' => 'required|string|max:255',
+        ]);
+
+        $grades = FinalGrade::where('class_schedule_id', $classScheduleId)
+            ->where('status', 'submitted')
+            ->get();
+
+        foreach ($grades as $grade) {
+            $grade->update([
+                'status' => 'draft',
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now(),
+                'rejection_reason' => $request->rejection_reason,
+            ]);
+        }
+
+        return back()->with('success', 'All grades rejected and returned to teacher for revision.');
+    }
+
     public function approve(Request $request, FinalGrade $finalGrade)
     {
         $finalGrade->update([
@@ -49,8 +88,9 @@ class GradeApprovalController extends Controller
             'rejection_reason' => 'required|string|max:255',
         ]);
 
+        // Return to draft status so teacher can edit
         $finalGrade->update([
-            'status'           => 'rejected',
+            'status'           => 'draft',
             'reviewed_by'      => auth()->id(),
             'reviewed_at'      => now(),
             'rejection_reason' => $request->rejection_reason,
@@ -62,6 +102,6 @@ class GradeApprovalController extends Controller
             ->log('Rejected grade for ' . $finalGrade->student->last_name . ', ' . $finalGrade->student->first_name
                 . ' in ' . optional($finalGrade->classSchedule->subject)->code);
 
-        return back()->with('success', 'Grade rejected and sent back to teacher.');
+        return back()->with('success', 'Grade rejected and returned to teacher for revision.');
     }
 }

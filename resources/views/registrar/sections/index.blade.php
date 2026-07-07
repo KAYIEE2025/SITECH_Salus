@@ -37,7 +37,7 @@
                     @error('year_level_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="mb-6">
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                         Section Name <span class="text-red-500">*</span>
                     </label>
@@ -45,6 +45,15 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
                         placeholder="A, B, C, Rizal, Bonifacio...">
                     @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Adviser <span class="text-gray-400">(optional)</span>
+                    </label>
+                    <input type="text" name="adviser" value="{{ old('adviser') }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        placeholder="Teacher name...">
                 </div>
 
                 <button type="submit"

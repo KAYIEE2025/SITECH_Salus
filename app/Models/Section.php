@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Section extends Model
 {
-    protected $fillable = ['name', 'year_level_id', 'is_active'];
+    protected $fillable = ['name', 'year_level_id', 'is_active', 'adviser'];
 
     public function yearLevel()
     {

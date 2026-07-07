@@ -34,4 +34,60 @@ class ActivityLogController extends Controller
 
         return view('superadmin.activity-logs', compact('logs', 'users', 'events'));
     }
+
+    public function generatePdf(Request $request)
+    {
+        $query = Activity::with('causer');
+
+        // Apply date filters
+        if ($request->filled('date_from')) {
+            $query->where('created_at', '>=', $request->date('date_from')->startOfDay());
+        }
+        if ($request->filled('date_to')) {
+            $query->where('created_at', '<=', $request->date('date_to')->endOfDay());
+        }
+
+        // Apply role filter
+        if ($request->filled('role')) {
+            $query->whereHas('causer', function ($q) use ($request) {
+                $q->whereHas('roles', function ($roleQuery) use ($request) {
+                    $roleQuery->where('name', $request->string('role')->toString());
+                });
+            });
+        }
+
+        // Apply event filter
+        if ($request->filled('event')) {
+            $query->where('event', $request->string('event')->toString());
+        }
+
+        $logs = $query->latest()->get();
+
+        $currentUser = auth()->user();
+        $generatedAt = now();
+
+        // Prepare filter information for display
+        $filters = [
+            'date_from' => $request->filled('date_from') ? $request->date('date_from')->format('F d, Y') : null,
+            'date_to' => $request->filled('date_to') ? $request->date('date_to')->format('F d, Y') : null,
+            'role' => $request->filled('role') ? $request->string('role')->toString() : null,
+            'event' => $request->filled('event') ? $request->string('event')->toString() : null,
+        ];
+
+        // Generate filename based on date range
+        $dateFrom = $request->filled('date_from') ? $request->date('date_from')->format('Y-m-d') : now()->format('Y-m-d');
+        $dateTo = $request->filled('date_to') ? $request->date('date_to')->format('Y-m-d') : $dateFrom;
+        
+        if ($dateFrom === $dateTo) {
+            $filename = "Activity_Logs_{$dateFrom}.pdf";
+        } else {
+            $filename = "Activity_Logs_{$dateFrom}_to_{$dateTo}.pdf";
+        }
+
+        // Determine action (download or print)
+        $action = $request->query('action', 'download');
+
+        // Return HTML view - browser will handle PDF generation via print dialog
+        return view('superadmin.pdf.activity-logs', compact('logs', 'currentUser', 'generatedAt', 'filters', 'action', 'filename'));
+    }
 }

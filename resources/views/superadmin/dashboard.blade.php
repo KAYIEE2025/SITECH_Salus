@@ -3,7 +3,7 @@
 @section('title', 'Super Admin Dashboard')
 
 @section('content')
-    <div class="mb-8 grid grid-cols-4 gap-4">
+    <div class="mb-8 grid grid-cols-5 gap-4">
         <div class="rounded-xl border border-gray-200 bg-white p-5">
             <p class="text-sm text-gray-500">Total Accounts</p>
             <p class="mt-1 text-3xl font-bold text-[#1a5c1a]">{{ $totalUsers }}</p>
@@ -20,6 +20,10 @@
             <p class="text-sm text-gray-500">Students</p>
             <p class="mt-1 text-3xl font-bold text-[#c8a000]">{{ $totalStudents }}</p>
         </div>
+        <a href="{{ route('superadmin.student-accounts.index') }}" class="rounded-xl border border-yellow-200 bg-yellow-50 p-5 transition hover:border-yellow-300 hover:bg-yellow-100">
+            <p class="text-sm text-yellow-700">Pending Student Accounts</p>
+            <p class="mt-1 text-3xl font-bold text-yellow-800">{{ $pendingStudentAccounts }}</p>
+        </a>
     </div>
 
     <div class="mb-8 grid grid-cols-4 gap-4">
@@ -48,10 +52,13 @@
                 <a href="{{ route('superadmin.accounts') }}" class="block rounded-lg bg-[#1a5c1a] px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-900">
                     Create or Manage Accounts
                 </a>
+                <a href="{{ route('superadmin.student-accounts.index') }}" class="block rounded-lg bg-yellow-50 px-4 py-3 text-sm font-semibold text-yellow-800 transition hover:bg-yellow-100">
+                    Generate Student Accounts
+                </a>
                 <a href="{{ route('superadmin.activity-logs') }}" class="block rounded-lg bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-200">
                     View System Activity
                 </a>
-                <a href="{{ route('superadmin.roles') }}" class="block rounded-lg bg-yellow-50 px-4 py-3 text-sm font-semibold text-yellow-800 transition hover:bg-yellow-100">
+                <a href="{{ route('superadmin.roles') }}" class="block rounded-lg bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-200">
                     Review Roles & Access
                 </a>
             </div>
