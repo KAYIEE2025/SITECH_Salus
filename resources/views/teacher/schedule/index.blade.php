@@ -6,18 +6,18 @@
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h2 class="text-lg font-semibold text-gray-800">My Teaching Schedule</h2>
-            <p class="mt-1 text-sm text-gray-500">Your assigned classes for the selected school year and semester.</p>
+            <p class="mt-1 text-sm text-gray-500">Your assigned classes for the selected school year.</p>
         </div>
 
         <button type="button"
-            onclick="window.open('{{ route('teacher.schedule.print', ['school_year' => $schoolYear, 'semester' => $semester]) }}', '_blank')"
+            onclick="window.open('{{ route('teacher.schedule.print', ['school_year' => $schoolYear]) }}', '_blank')"
             class="inline-flex items-center justify-center rounded-lg bg-green-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-900">
             Print Schedule
         </button>
     </div>
 
     <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
-        <form method="GET" action="{{ route('teacher.schedule.index') }}" class="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
+        <form method="GET" action="{{ route('teacher.schedule.index') }}" class="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">School Year</label>
                 <select name="school_year" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
@@ -25,16 +25,6 @@
                         <option value="{{ $year }}" {{ $schoolYear === $year ? 'selected' : '' }}>{{ $year }}</option>
                     @empty
                         <option value="">No school year available</option>
-                    @endforelse
-                </select>
-            </div>
-            <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700">Semester</label>
-                <select name="semester" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                    @forelse($semesters as $term)
-                        <option value="{{ $term }}" {{ $semester === $term ? 'selected' : '' }}>{{ $term }} Semester</option>
-                    @empty
-                        <option value="">No semester available</option>
                     @endforelse
                 </select>
             </div>
@@ -54,16 +44,8 @@
                 <p class="mt-1 font-medium text-gray-800">{{ $teacher->name }}</p>
             </div>
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Employee ID</p>
-                <p class="mt-1 font-medium text-gray-800">{{ $teacher->username ?: 'EMP-' . str_pad($teacher->id, 4, '0', STR_PAD_LEFT) }}</p>
-            </div>
-            <div>
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">School Year</p>
                 <p class="mt-1 font-medium text-gray-800">{{ $schoolYear ?? 'N/A' }}</p>
-            </div>
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Semester</p>
-                <p class="mt-1 font-medium text-gray-800">{{ $semester ? $semester . ' Semester' : 'N/A' }}</p>
             </div>
         </div>
     </div>
@@ -71,7 +53,7 @@
     <div class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div class="border-b border-gray-100 px-6 py-4">
             <h3 class="text-base font-semibold text-gray-800">Assigned Classes</h3>
-            <p class="mt-0.5 text-xs text-gray-500">{{ $schoolYear ?? 'N/A' }} · {{ $semester ? $semester . ' Semester' : 'N/A' }}</p>
+            <p class="mt-0.5 text-xs text-gray-500">{{ $schoolYear ?? 'N/A' }}</p>
         </div>
 
         <div class="overflow-x-auto">
@@ -104,7 +86,7 @@
                     @empty
                         <tr>
                             <td colspan="7" class="px-6 py-10 text-center text-gray-400">
-                                No assigned classes for the selected school year and semester.
+                                No assigned classes for the selected school year.
                             </td>
                         </tr>
                     @endforelse

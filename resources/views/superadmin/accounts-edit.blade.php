@@ -51,12 +51,15 @@
                         <select id="role" name="role" required
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                             @foreach($roles as $role)
-                                <option value="{{ $role->name }}" @selected(old('role', $user->getRoleNames()->first()) === $role->name)>
-                                    {{ $role->name }}
-                                </option>
+                                @if($role->name !== 'SSG')
+                                    <option value="{{ $role->name }}" @selected(old('role', $user->getRoleNames()->first()) === $role->name)">
+                                        {{ $role->name }}
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                         @error('role') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <p class="mt-1 text-xs text-gray-500">To assign SSG role, use the <a href="{{ route('superadmin.role-management') }}" class="text-[#1a5c1a] hover:underline">Manage Roles</a> page.</p>
                     </div>
                 @endif
 

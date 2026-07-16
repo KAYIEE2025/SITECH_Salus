@@ -14,7 +14,7 @@
                 {{ $classSchedule->section->name ?? 'Section' }}
             </h2>
             <span class="text-sm text-gray-500">
-                {{ $classSchedule->school_year }} - {{ $classSchedule->semester }}
+                {{ $classSchedule->school_year }}
             </span>
         </div>
 

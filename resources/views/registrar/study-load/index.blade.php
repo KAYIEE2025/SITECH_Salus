@@ -42,11 +42,6 @@
                     </option>
                 @endforeach
             </select>
-                <select name="semester"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                    <option value="1st" {{ request('semester','1st') == '1st' ? 'selected' : '' }}>1st Semester</option>
-                    <option value="2nd" {{ request('semester') == '2nd' ? 'selected' : '' }}>2nd Semester</option>
-                </select>
                 <input type="text" name="school_year" value="{{ request('school_year','2026-2027') }}"
                     class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
                     placeholder="School Year">
@@ -73,11 +68,6 @@
                     </option>
                 @endforeach
             </select>
-                <select name="semester"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                    <option value="1st" {{ request('semester','1st') == '1st' ? 'selected' : '' }}>1st Semester</option>
-                    <option value="2nd" {{ request('semester') == '2nd' ? 'selected' : '' }}>2nd Semester</option>
-                </select>
                 <input type="text" name="school_year" value="{{ request('school_year','2026-2027') }}"
                     class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
                     placeholder="School Year">
@@ -127,7 +117,6 @@
             <form method="POST" action="{{ route('registrar.study-load.store') }}">
                 @csrf
                 <input type="hidden" name="section_id" value="{{ $selected->id }}">
-                <input type="hidden" name="semester" value="{{ request('semester', '1st') }}">
                 <input type="hidden" name="school_year" value="{{ request('school_year', '2026-2027') }}">
 
                <div class="mb-4">
@@ -220,7 +209,7 @@
                 <h2 class="text-base font-semibold text-gray-800">
                     Class Schedule — {{ $selected->yearLevel->name ?? '' }} Section {{ $selected->name }}
                 </h2>
-                <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year','2026-2027') }} · {{ request('semester','1st') }} Semester · Sorted by time</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year','2026-2027') }} · Sorted by time</p>
             </div>
 
             <table class="w-full text-sm">
@@ -291,13 +280,12 @@
             <h2 class="text-base font-semibold text-gray-800">
                 Students in {{ $selected->yearLevel->name ?? '' }} Section {{ $selected->name }}
             </h2>
-            <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year','2026-2027') }} · {{ request('semester','1st') }} Semester</p>
+            <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year','2026-2027') }}</p>
         </div>
 
         @php
             $students = \App\Models\Student::where('section_id', $selected->id)
                 ->where('school_year', request('school_year', '2026-2027'))
-                ->where('semester', request('semester', '1st'))
                 ->get();
         @endphp
 
@@ -330,7 +318,6 @@
                         $studentSchedules = \App\Models\ClassSchedule::with(['subject', 'teacher'])
                             ->where('section_id', $selected->id)
                             ->where('school_year', request('school_year', '2026-2027'))
-                            ->where('semester', request('semester', '1st'))
                             ->orderBy('time_start')
                             ->get();
                     @endphp
@@ -373,7 +360,7 @@
             </div>
         @empty
             <div class="px-6 py-8 text-center text-gray-400">
-                No students enrolled in this section for the selected school year and semester.
+                No students enrolled in this section for the selected school year.
             </div>
         @endforelse
     </div>
@@ -576,10 +563,9 @@
 
         function openPrintPreview(studentId) {
             const sectionId = '{{ request('section_id') }}';
-            const semester = '{{ request('semester', '1st') }}';
             const schoolYear = '{{ request('school_year', '2026-2027') }}';
             
-            fetch(`/registrar/students/${studentId}/print-class-schedule?section_id=${sectionId}&semester=${semester}&school_year=${schoolYear}`)
+            fetch(`/registrar/students/${studentId}/print-class-schedule?section_id=${sectionId}&school_year=${schoolYear}`)
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('print-preview-content').innerHTML = html;

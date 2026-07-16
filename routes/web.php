@@ -25,6 +25,8 @@ use App\Http\Controllers\Student\SchoolCalendarController as StudentSchoolCalend
 use App\Http\Controllers\Student\SSGEventController as StudentSSGEventController;
 use App\Http\Controllers\SuperAdmin\ActivityLogController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\FineRecordsController;
+use App\Http\Controllers\SuperAdmin\RoleManagementController;
 use App\Http\Controllers\SuperAdmin\RolesController;
 use App\Http\Controllers\SuperAdmin\StudentAccountController;
 use App\Http\Controllers\SuperAdmin\UserController;
@@ -48,8 +50,8 @@ Route::middleware('auth')->group(function () {
             $user->hasRole('Admin') => redirect()->route('admin.dashboard'),
             $user->hasRole('Registrar') => redirect()->route('registrar.dashboard'),
             $user->hasRole('Teacher') => redirect()->route('teacher.dashboard'),
-            $user->hasRole('SSG') => redirect()->route('ssg.dashboard'),
             $user->hasRole('Student') => redirect()->route('student.dashboard'),
+            $user->hasRole('SSG') => redirect()->route('ssg.dashboard'),
             default => redirect()->route('login'),
         };
     })->name('dashboard');
@@ -71,7 +73,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/student-accounts', [StudentAccountController::class, 'bulkStore'])->name('student-accounts.bulk-store');
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs');
         Route::get('/activity-logs/pdf', [ActivityLogController::class, 'generatePdf'])->name('activity-logs.pdf');
+        Route::get('/fine-records', [FineRecordsController::class, 'index'])->name('fine-records.index');
+        Route::post('/fine-records/report', [FineRecordsController::class, 'generateReport'])->name('fine-records.report');
         Route::get('/roles', [RolesController::class, 'index'])->name('roles');
+        Route::get('/role-management', [RoleManagementController::class, 'index'])->name('role-management');
+        Route::get('/api/user-roles/{user}', [RoleManagementController::class, 'getUserRoles'])->name('api.user-roles');
+        Route::put('/role-management/{user}', [RoleManagementController::class, 'update'])->name('role-management.update');
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
@@ -123,10 +130,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/sections', [SectionController::class, 'store'])->name('sections.store');
         Route::delete('/sections/{section}', [SectionController::class, 'destroy'])->name('sections.destroy');
         Route::get('/grade-approval', [GradeApprovalController::class, 'index'])->name('grade-approval');
-        Route::post('/grade-approval/{classScheduleId}/approve-class', [GradeApprovalController::class, 'approveClass'])->name('grade-approval.approve-class');
-        Route::post('/grade-approval/{classScheduleId}/reject-class', [GradeApprovalController::class, 'rejectClass'])->name('grade-approval.reject-class');
-        Route::patch('/grade-approval/{finalGrade}/approve', [GradeApprovalController::class, 'approve'])->name('grade-approval.approve');
-        Route::patch('/grade-approval/{finalGrade}/reject', [GradeApprovalController::class, 'reject'])->name('grade-approval.reject');
+        Route::get('/grade-approval/{classSchedule}/view', [GradeApprovalController::class, 'view'])->name('grade-approval.view');
+        Route::patch('/grade-approval/{classSchedule}/approve-class', [GradeApprovalController::class, 'approveClass'])->name('grade-approval.approve-class');
+        Route::patch('/grade-approval/{classSchedule}/reject-class', [GradeApprovalController::class, 'rejectClass'])->name('grade-approval.reject-class');
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
@@ -139,6 +145,13 @@ Route::middleware('auth')->group(function () {
         Route::prefix('classes')->name('classes.')->group(function () {
             Route::get('/', [TeacherClassController::class, 'index'])->name('index');
             Route::get('/{classSchedule}/grades', [TeacherClassController::class, 'manageGrades'])->name('grades');
+            Route::post('/{classSchedule}/process-import', [TeacherClassController::class, 'processImport'])->name('process-import');
+            Route::get('/{classSchedule}/import-summary-preview', [TeacherClassController::class, 'importSummaryPreview'])->name('import-summary-preview');
+            Route::post('/{classSchedule}/confirm-import-summary', [TeacherClassController::class, 'confirmImportSummary'])->name('confirm-import-summary');
+            Route::post('/{classSchedule}/cancel-import-summary', [TeacherClassController::class, 'cancelImportSummary'])->name('cancel-import-summary');
+            Route::post('/{classSchedule}/save-grades', [TeacherClassController::class, 'saveGrades'])->name('save-grades');
+            Route::get('/{classSchedule}/grades-save-confirmation', [TeacherClassController::class, 'saveConfirmation'])->name('grades-save-confirmation');
+            Route::post('/{classSchedule}/submit-grades', [TeacherClassController::class, 'submitGrades'])->name('submit-grades');
             Route::get('/{classSchedule}/students', [TeacherClassController::class, 'showStudents'])->name('students');
         });
         Route::prefix('grades')->name('grades.')->group(function () {
@@ -147,6 +160,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/sections', [TeacherGradeManagementController::class, 'sections'])->name('sections');
             Route::get('/subjects', [TeacherGradeManagementController::class, 'subjects'])->name('subjects');
             Route::get('/{classSchedule}/upload', [TeacherGradeManagementController::class, 'upload'])->name('upload');
+            Route::get('/{classSchedule}/import-preview', [TeacherGradeManagementController::class, 'importPreview'])->name('import-preview');
             Route::post('/process-upload', [TeacherGradeManagementController::class, 'processUpload'])->name('process-upload');
             Route::post('/submit-grades', [TeacherGradeManagementController::class, 'submitGrades'])->name('submit-grades');
             // Old routes (preserved for reference, will be removed in Phase 2)
@@ -193,7 +207,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/study-load', [StudentStudyLoadController::class, 'index'])->name('study-load.index');
         Route::get('/study-load/print', [StudentStudyLoadController::class, 'print'])->name('study-load.print');
         Route::get('/grades', [GradeViewController::class, 'index'])->name('grades.index');
-        Route::get('/grades/print', [GradeViewController::class, 'print'])->name('grades.print');
         Route::get('/announcements', [StudentAnnouncementController::class, 'index'])->name('announcements.index');
         Route::get('/school-calendar', [StudentSchoolCalendarController::class, 'index'])->name('school-calendar.index');
         Route::get('/ssg-events', [StudentSSGEventController::class, 'index'])->name('ssg-events.index');

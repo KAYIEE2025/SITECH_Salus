@@ -25,7 +25,6 @@ class StudyLoadController extends Controller
         $schedules = ClassSchedule::with(['subject', 'teacher'])
             ->where('section_id', request('section_id'))
             ->where('school_year', request('school_year', '2025-2026'))
-            ->where('semester', request('semester', '1st'))
             ->orderBy('time_start')
             ->get();
     }
@@ -48,7 +47,6 @@ public function store(Request $request)
         'time_end'     => 'required',
         'date_start'   => 'nullable|date',
         'date_end'     => 'nullable|date|after_or_equal:date_start',
-        'semester'     => 'required|in:1st,2nd,Summer',
         'school_year'  => 'required|string',
     ]);
 
@@ -61,7 +59,6 @@ public function store(Request $request)
     // ── Conflict: Teacher already has a class at this time/day ──
     $teacherConflict = ClassSchedule::where('teacher_id', $request->teacher_id)
         ->where('school_year', $request->school_year)
-        ->where('semester', $request->semester)
         ->where(function ($q) use ($request) {
             $q->where('time_start', '<', $request->time_end)
               ->where('time_end', '>', $request->time_start);
@@ -79,7 +76,6 @@ public function store(Request $request)
     // ── Conflict: Room already taken ──
     $roomConflict = ClassSchedule::where('room', $request->room)
         ->where('school_year', $request->school_year)
-        ->where('semester', $request->semester)
         ->where(function ($q) use ($request) {
             $q->where('time_start', '<', $request->time_end)
               ->where('time_end', '>', $request->time_start);
@@ -105,7 +101,6 @@ public function store(Request $request)
         'time_end'    => $request->time_end,
         'date_start'  => $request->date_start,
         'date_end'    => $request->date_end,
-        'semester'    => $request->semester,
         'school_year' => $request->school_year,
     ]);
 
@@ -116,7 +111,6 @@ public function store(Request $request)
             'student_id'        => $student->id,
             'class_schedule_id' => $schedule->id,
             'school_year'       => $request->school_year,
-            'semester'          => $request->semester,
         ]);
     }
 
@@ -127,7 +121,6 @@ public function store(Request $request)
     return redirect()->route('registrar.study-load', [
         'section_id'  => $request->section_id,
         'school_year' => $request->school_year,
-        'semester'    => $request->semester,
     ])->with('success', 'Subject added to study load successfully.');
 }
 
@@ -135,7 +128,6 @@ public function store(Request $request)
     {
         $sectionId  = $schedule->section_id;
         $schoolYear = $schedule->school_year;
-        $semester   = $schedule->semester;
 
         // Remove study loads for this schedule
         StudyLoad::where('class_schedule_id', $schedule->id)->delete();
@@ -144,7 +136,6 @@ public function store(Request $request)
         return redirect()->route('registrar.study-load', [
             'section_id'  => $sectionId,
             'school_year' => $schoolYear,
-            'semester'    => $semester,
         ])->with('success', 'Subject removed from study load.');
     }
 }

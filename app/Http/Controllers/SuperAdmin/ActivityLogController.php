@@ -15,11 +15,32 @@ class ActivityLogController extends Controller
             ->when($request->filled('causer_id'), function ($query) use ($request) {
                 $query->where('causer_id', $request->integer('causer_id'));
             })
+            ->when($request->filled('role'), function ($query) use ($request) {
+                $query->whereHas('causer', function ($q) use ($request) {
+                    $q->whereHas('roles', function ($roleQuery) use ($request) {
+                        $roleQuery->where('name', $request->string('role')->toString());
+                    });
+                });
+            })
             ->when($request->filled('event'), function ($query) use ($request) {
                 $query->where('event', $request->string('event')->toString());
             })
             ->when($request->filled('search'), function ($query) use ($request) {
-                $query->where('description', 'like', '%' . $request->string('search')->toString() . '%');
+                $searchTerm = '%' . $request->string('search')->toString() . '%';
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('description', 'like', $searchTerm)
+                      ->orWhere('event', 'like', $searchTerm)
+                      ->orWhereHas('causer', function ($userQuery) use ($searchTerm) {
+                          $userQuery->where('name', 'like', $searchTerm)
+                                    ->orWhere('email', 'like', $searchTerm);
+                      });
+                });
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->where('created_at', '>=', $request->date('date_from')->startOfDay());
+            })
+            ->when($request->filled('date_to'), function ($query) use ($request) {
+                $query->where('created_at', '<=', $request->date('date_to')->endOfDay());
             })
             ->latest()
             ->paginate(20)
@@ -63,8 +84,31 @@ class ActivityLogController extends Controller
 
         $logs = $query->latest()->get();
 
+        // Calculate summary statistics based on filtered logs
+        $summary = [
+            'total' => $logs->count(),
+            'login' => $logs->where('event', 'login')->count(),
+            'logout' => $logs->where('event', 'logout')->count(),
+            'account' => $logs->whereIn('event', ['account_created', 'account_updated', 'account_deleted'])->count(),
+            'role_updates' => $logs->where('event', 'roles_updated')->count(),
+            'qr' => $logs->whereIn('event', ['qr_generated', 'qr_scanned', 'qr_attendance'])->count(),
+            'grade' => $logs->whereIn('event', ['grade_submitted', 'grade_approved', 'grade_updated'])->count(),
+            'announcement' => $logs->whereIn('event', ['announcement_created', 'announcement_updated', 'announcement_deleted'])->count(),
+            'other' => $logs->whereNotIn('event', [
+                'login', 'logout',
+                'account_created', 'account_updated', 'account_deleted',
+                'roles_updated',
+                'qr_generated', 'qr_scanned', 'qr_attendance',
+                'grade_submitted', 'grade_approved', 'grade_updated',
+                'announcement_created', 'announcement_updated', 'announcement_deleted'
+            ])->count(),
+        ];
+
         $currentUser = auth()->user();
         $generatedAt = now();
+
+        // Generate unique report number: ALR-YYYYMMDD-XXXX
+        $reportNumber = 'ALR-' . $generatedAt->format('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
 
         // Prepare filter information for display
         $filters = [
@@ -88,6 +132,6 @@ class ActivityLogController extends Controller
         $action = $request->query('action', 'download');
 
         // Return HTML view - browser will handle PDF generation via print dialog
-        return view('superadmin.pdf.activity-logs', compact('logs', 'currentUser', 'generatedAt', 'filters', 'action', 'filename'));
+        return view('superadmin.pdf.activity-logs', compact('logs', 'currentUser', 'generatedAt', 'filters', 'action', 'filename', 'summary', 'reportNumber'));
     }
 }

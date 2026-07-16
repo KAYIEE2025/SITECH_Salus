@@ -32,11 +32,19 @@ class ClassScheduleController extends Controller
             'days'       => 'required|array|min:1',
             'time_start' => 'required',
             'time_end'   => 'required',
-            'semester'   => 'required|in:1st,2nd,Summer',
             'school_year'=> 'required|string',
         ]);
 
-        $schedule = ClassSchedule::create($request->all());
+        $schedule = ClassSchedule::create($request->only([
+            'subject_id',
+            'teacher_id',
+            'section_id',
+            'room',
+            'days',
+            'time_start',
+            'time_end',
+            'school_year',
+        ]));
 
         activity()
             ->causedBy(auth()->user())

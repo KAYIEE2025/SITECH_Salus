@@ -239,19 +239,11 @@
                         <div class="info-label">Teacher Name:</div>
                         <div class="info-value">{{ $teacher->name }}</div>
                     </div>
-                    <div class="info-row">
-                        <div class="info-label">Employee ID:</div>
-                        <div class="info-value">{{ $teacher->username ?: 'EMP-' . str_pad($teacher->id, 4, '0', STR_PAD_LEFT) }}</div>
-                    </div>
                 </div>
                 <div class="info-col">
                     <div class="info-row">
                         <div class="info-label">School Year:</div>
                         <div class="info-value">{{ $schoolYear ?? 'N/A' }}</div>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">Semester:</div>
-                        <div class="info-value">{{ $semester ? $semester . ' Semester' : 'N/A' }}</div>
                     </div>
                 </div>
             </div>
@@ -287,7 +279,7 @@
                 @empty
                     <tr>
                         <td colspan="7" style="text-align: center; padding: 15px; font-style: italic;">
-                            No assigned classes for the selected school year and semester.
+                            No assigned classes for the selected school year.
                         </td>
                     </tr>
                 @endforelse

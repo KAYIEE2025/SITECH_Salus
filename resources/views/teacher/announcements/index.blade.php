@@ -19,7 +19,7 @@
                             </span>
                         </div>
                         <div class="text-gray-600 text-sm whitespace-pre-line">
-                            {{ $announcement->content }}
+                            {{ $announcement->body ?? 'No description available.' }}
                         </div>
                         @if($announcement->poster)
                             <div class="mt-3 text-xs text-gray-500">

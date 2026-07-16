@@ -69,6 +69,7 @@ class FineController extends Controller
 
         $fineRecords = $student->ssgAttendances()
             ->with('ssgEvent')
+            ->with('scanner')
             ->join('ssg_events', 'ssg_events.id', '=', 'ssg_event_attendances.ssg_event_id')
             ->orderByDesc('ssg_events.event_date')
             ->orderByDesc('ssg_events.event_time')

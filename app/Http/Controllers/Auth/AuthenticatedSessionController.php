@@ -42,10 +42,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('registrar.dashboard');
         } elseif ($user->hasRole('Teacher')) {
             return redirect()->route('teacher.dashboard');
-        } elseif ($user->hasRole('SSG')) {
-            return redirect()->route('ssg.dashboard');
         } elseif ($user->hasRole('Student')) {
             return redirect()->route('student.dashboard');
+        } elseif ($user->hasRole('SSG')) {
+            return redirect()->route('ssg.dashboard');
         }
 
         return redirect()->route('dashboard');

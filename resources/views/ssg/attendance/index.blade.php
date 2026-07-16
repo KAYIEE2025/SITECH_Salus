@@ -157,7 +157,7 @@
         const eventId = @json($event->id);
         const isOngoing = @json($event->status === 'Ongoing');
         const scanStartTime = @json($event->scan_start_time);
-        const scanEndTime = @json($event->scan_end_time);
+        let scanEndTime = @json($event->scan_end_time);
         const eventDate = @json($event->event_date ? $event->event_date->format('Y-m-d') : null);
         let scanLocked = false;
         let scanner = null;
@@ -310,16 +310,10 @@
 
             if (statusInfo.status === 'Upcoming') {
                 badgeElement.innerHTML = '<span class="rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700">Upcoming</span>';
-                if (readerElement) {
-                    readerElement.innerHTML = '<div class="px-4 py-10 text-center text-sm text-gray-500">Scanning has not started yet.</div>';
-                }
             } else if (statusInfo.status === 'Open') {
                 badgeElement.innerHTML = '<span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">Open</span>';
             } else if (statusInfo.status === 'Closed') {
                 badgeElement.innerHTML = '<span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">Closed</span>';
-                if (readerElement) {
-                    readerElement.innerHTML = '<div class="px-4 py-10 text-center text-sm text-gray-500">Scanning has already ended.</div>';
-                }
             }
 
             return statusInfo.canScan;
@@ -389,6 +383,11 @@
                     scanner.clear();
                 }).catch(() => {});
                 scanner = null;
+            }
+            // Clear the reader element to allow re-initialization
+            const readerElement = document.getElementById('reader');
+            if (readerElement) {
+                readerElement.innerHTML = '';
             }
         }
 

@@ -28,7 +28,7 @@ class GradeManagementController extends Controller
 
     public function index()
     {
-        // Show selection form (School Year, Semester, Section, Subject)
+        // Show selection form (School Year, Section, Subject)
         return view('teacher.grades.index');
     }
 
@@ -36,7 +36,6 @@ class GradeManagementController extends Controller
     {
         $request->validate([
             'school_year' => 'required',
-            'semester' => 'required',
             'section_id' => 'required|exists:sections,id',
             'class_schedule_id' => 'required|exists:class_schedules,id',
         ]);
@@ -44,7 +43,6 @@ class GradeManagementController extends Controller
         $classSchedule = ClassSchedule::whereKey($request->class_schedule_id)
             ->where('teacher_id', auth()->id())
             ->where('school_year', $request->school_year)
-            ->where('semester', $request->semester)
             ->where('section_id', $request->section_id)
             ->firstOrFail();
 
@@ -55,14 +53,12 @@ class GradeManagementController extends Controller
     {
         $request->validate([
             'school_year' => 'required|string',
-            'semester' => 'required|string',
         ]);
 
         $sections = ClassSchedule::query()
             ->with('section:id,name')
             ->where('teacher_id', auth()->id())
             ->where('school_year', $request->school_year)
-            ->where('semester', $request->semester)
             ->whereHas('section')
             ->get()
             ->pluck('section')
@@ -81,7 +77,6 @@ class GradeManagementController extends Controller
     {
         $request->validate([
             'school_year' => 'required|string',
-            'semester' => 'required|string',
             'section_id' => 'required|exists:sections,id',
         ]);
 
@@ -89,7 +84,6 @@ class GradeManagementController extends Controller
             ->with('subject:id,code,name')
             ->where('teacher_id', auth()->id())
             ->where('school_year', $request->school_year)
-            ->where('semester', $request->semester)
             ->where('section_id', $request->section_id)
             ->whereHas('subject')
             ->orderBy('id')
@@ -115,6 +109,17 @@ class GradeManagementController extends Controller
         $existingGrades = FinalGrade::where('class_schedule_id', $classSchedule->id)->get();
 
         return view('teacher.grades.index', compact('classSchedule', 'importedData', 'existingGrades'));
+    }
+
+    public function importPreview(ClassSchedule $classSchedule)
+    {
+        if ($classSchedule->teacher_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $classSchedule->load(['subject', 'section']);
+
+        return view('teacher.grades.import-preview', compact('classSchedule'));
     }
 
     public function submitGrades(Request $request)
@@ -226,7 +231,6 @@ class GradeManagementController extends Controller
             'excel_file' => 'required|mimes:xlsx,xls|max:5120',
             'class_schedule_id' => 'required',
             'school_year' => 'required',
-            'semester' => 'required',
         ]);
 
         $classSchedule = ClassSchedule::findOrFail($request->class_schedule_id);

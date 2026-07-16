@@ -2,37 +2,89 @@
 @section('title', 'My Grades')
 @section('content')
     <div class="bg-white rounded-xl border border-gray-200 p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg font-semibold text-gray-800">My Grades</h2>
-            @if($groupedGrades->isNotEmpty())
-                <button onclick="window.open('{{ route('student.grades.print') }}', '_blank')" class="px-4 py-2 bg-green-700 text-white text-sm rounded hover:bg-green-800 transition">
-                    Print Grades
-                </button>
-            @endif
+        <div class="mb-6">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-800">My Grades</h2>
+                <p class="text-sm text-gray-500 mt-1">View your officially approved grades</p>
+            </div>
         </div>
+
+        <!-- Grade Summary -->
+        @if($gradeSummary['total_subjects'] > 0)
+            <div class="mb-6 rounded-lg bg-gray-50 border border-gray-200 p-4">
+                <h3 class="text-sm font-medium text-gray-800 mb-3">Grade Summary</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-500">Total Subjects</p>
+                        <p class="font-medium text-gray-800">{{ $gradeSummary['total_subjects'] }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Average Grade</p>
+                        <p class="font-medium text-gray-800">{{ $gradeSummary['average_grade'] }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Passed</p>
+                        <p class="font-medium text-green-700">{{ $gradeSummary['passed_subjects'] }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Failed</p>
+                        <p class="font-medium text-red-600">{{ $gradeSummary['failed_subjects'] }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Filters -->
+        @if($schoolYears->isNotEmpty())
+            <div class="mb-4 flex flex-wrap items-center gap-3">
+                <form method="GET" action="{{ route('student.grades.index') }}" class="flex flex-wrap items-center gap-3">
+                    <div>
+                        <select name="school_year" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
+                            <option value="">School Year</option>
+                            @foreach($schoolYears as $year)
+                                <option value="{{ $year }}" {{ $filterSchoolYear === $year ? 'selected' : '' }}>{{ $year }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-green-700 text-white text-sm rounded hover:bg-green-800 transition">
+                        Filter
+                    </button>
+                    @if($filterSchoolYear)
+                        <a href="{{ route('student.grades.index') }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition">
+                            Clear
+                        </a>
+                    @endif
+                </form>
+            </div>
+        @endif
 
         @if($groupedGrades->isEmpty())
             <div class="text-center py-12">
-                <p class="text-gray-500">Your grades are not yet available. Please wait for the Registrar's approval.</p>
+                <p class="text-gray-500">No approved grades are available yet.</p>
             </div>
         @else
             @foreach($groupedGrades as $group)
                 <div class="mb-8">
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4 flex items-center gap-3">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            Approved
+                        </span>
                         <h3 class="text-base font-semibold text-green-800">
-                            {{ $group['school_year'] }} — {{ $group['semester'] }} Semester
+                            {{ $group['school_year'] }}
                         </h3>
                     </div>
                     
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
                         <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
                                     <th class="text-left py-3 px-4 font-medium text-gray-600">Subject Code</th>
                                     <th class="text-left py-3 px-4 font-medium text-gray-600">Subject Name</th>
-                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Final Grade</th>
-                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Remarks</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-600">Date Approved</th>
+                                    <th class="text-left py-3 px-4 font-medium text-gray-600">Teacher</th>
+                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Term 1</th>
+                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Term 2</th>
+                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Term 3</th>
+                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Final Rating</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -44,33 +96,25 @@
                                         <td class="py-3 px-4 text-gray-700">
                                             {{ $grade->classSchedule->subject->name ?? 'N/A' }}
                                         </td>
-                                        <td class="py-3 px-4 text-center font-bold text-gray-800">
-                                            {{ $grade->final_grade }}
-                                        </td>
-                                        <td class="py-3 px-4 text-center">
-                                            <span class="text-xs px-2 py-1 rounded-full
-                                                {{ $grade->remarks == 'Passed' ? 'bg-green-50 text-green-700' : ($grade->remarks == 'Failed' ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600') }}">
-                                                {{ $grade->remarks }}
-                                            </span>
-                                        </td>
                                         <td class="py-3 px-4 text-gray-600">
-                                            {{ $grade->reviewed_at ? $grade->reviewed_at->format('M d, Y') : '-' }}
+                                            {{ $grade->classSchedule->teacher->name ?? 'N/A' }}
+                                        </td>
+                                        <td class="py-3 px-4 text-center font-medium text-gray-800">
+                                            {{ $grade->term_1 ?? '-' }}
+                                        </td>
+                                        <td class="py-3 px-4 text-center font-medium text-gray-800">
+                                            {{ $grade->term_2 ?? '-' }}
+                                        </td>
+                                        <td class="py-3 px-4 text-center font-medium text-gray-800">
+                                            {{ $grade->term_3 ?? '-' }}
+                                        </td>
+                                        <td class="py-3 px-4 text-center font-bold text-gray-800">
+                                            {{ $grade->final_rating ?? '-' }}
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>
-
-                    {{-- GWA Display --}}
-                    <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-medium text-gray-700">General Weighted Average (GWA):</span>
-                            <span class="text-lg font-bold text-gray-800">
-                                {{-- GWA computation will be added in a later phase --}}
-                                GWA not yet available.
-                            </span>
-                        </div>
                     </div>
                 </div>
             @endforeach

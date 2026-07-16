@@ -14,7 +14,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $roles = Role::orderBy('name')->get();
-        $assignableRoles = $roles->where('name', '!=', 'Super Admin');
+        $assignableRoles = $roles->reject(fn ($role) => $role->name === 'SSG');
 
         $users = User::with('roles')
             ->when($request->filled('role'), function ($query) use ($request) {
@@ -59,7 +59,7 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users',
             'password' => 'required|min:8|confirmed',
-            'role'     => ['required', 'exists:roles,name', Rule::notIn(['Super Admin'])],
+            'role'     => 'required|exists:roles,name',
             'contact_number' => 'nullable|string|max:20',
         ]);
 
@@ -84,19 +84,23 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles = Role::whereNotIn('name', ['Super Admin'])->orderBy('name')->get();
+        $isProtectedUser = $user->id === 1;
+        $roles = $isProtectedUser 
+            ? Role::whereNotIn('name', ['Super Admin', 'SSG'])->orderBy('name')->get()
+            : Role::where('name', '!=', 'SSG')->orderBy('name')->get();
         return view('superadmin.accounts-edit', compact('user', 'roles'));
     }
 
     public function update(Request $request, User $user)
     {
+        $isProtectedUser = $user->id === 1;
+
         $request->validate([
             'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'role'  => [
-                $user->hasRole('Super Admin') ? 'nullable' : 'required',
+                $isProtectedUser ? 'nullable' : 'required',
                 'exists:roles,name',
-                Rule::notIn(['Super Admin']),
             ],
             'contact_number' => 'nullable|string|max:20',
         ]);
@@ -112,7 +116,7 @@ class UserController extends Controller
             $user->update(['password' => Hash::make($request->password)]);
         }
 
-        if (! $user->hasRole('Super Admin')) {
+        if (! $isProtectedUser) {
             $user->syncRoles($request->role);
         }
 
@@ -128,8 +132,8 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->hasRole('Super Admin')) {
-            return back()->with('error', 'Cannot delete Super Admin account.');
+        if ($user->id === 1) {
+            return back()->with('error', 'Cannot delete the original system Super Admin account.');
         }
 
         activity()
@@ -143,8 +147,8 @@ class UserController extends Controller
 
     public function toggleActive(User $user)
     {
-        if ($user->hasRole('Super Admin')) {
-            return back()->with('error', 'Cannot deactivate Super Admin account.');
+        if ($user->id === 1) {
+            return back()->with('error', 'Cannot deactivate the original system Super Admin account.');
         }
 
         $user->update(['is_active' => !$user->is_active]);

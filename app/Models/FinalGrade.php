@@ -11,6 +11,9 @@ class FinalGrade extends Model
         'transmuted_grade', 'quarterly_grade', 'remarks',
         'component_scores', 'computed_at', 'status', 'submitted_at', 'reviewed_by',
         'reviewed_at', 'rejection_reason',
+        'written_works', 'performance_tasks', 'quarterly_assessment',
+        'student_name', 'imported_data',
+        'term_1', 'term_2', 'term_3', 'final_rating',
     ];
 
     protected $casts = [
@@ -18,6 +21,7 @@ class FinalGrade extends Model
         'submitted_at' => 'datetime',
         'reviewed_at'  => 'datetime',
         'component_scores' => 'array',
+        'imported_data' => 'array',
     ];
 
     public function student()
@@ -33,5 +37,24 @@ class FinalGrade extends Model
     public function reviewer()
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function gradeHistories()
+    {
+        return $this->hasMany(GradeHistory::class)->orderBy('created_at');
+    }
+
+    public function recordHistory($action, $status, $description = null, $rejectionReason = null)
+    {
+        return $this->gradeHistories()->create([
+            'user_id' => auth()->id(),
+            'action' => $action,
+            'status' => $status,
+            'description' => $description,
+            'grade_data' => $this->toArray(),
+            'rejection_reason' => $rejectionReason,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
     }
 }

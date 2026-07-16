@@ -62,7 +62,6 @@ class StudentController extends Controller
                 Rule::exists('sections', 'id')->where(fn ($query) => $query->where('year_level_id', $request->year_level_id)),
             ],
             'school_year'    => 'required|string|max:20',
-            'semester'       => 'required|in:1st,2nd,Summer',
         ]);
 
         if (! empty($validated['user_id']) && ! User::role('Student')->whereKey($validated['user_id'])->whereDoesntHave('student')->exists()) {
@@ -100,7 +99,6 @@ class StudentController extends Controller
 
             $sectionSchedules = ClassSchedule::where('section_id', $validated['section_id'])
                 ->where('school_year', $validated['school_year'])
-                ->where('semester', $validated['semester'])
                 ->get();
 
             foreach ($sectionSchedules as $schedule) {
@@ -108,7 +106,6 @@ class StudentController extends Controller
                     'student_id' => $student->id,
                     'class_schedule_id' => $schedule->id,
                     'school_year' => $validated['school_year'],
-                    'semester' => $validated['semester'],
                 ]);
             }
 
@@ -176,7 +173,6 @@ class StudentController extends Controller
             'year_level_id'  => 'required|exists:year_levels,id',
             'section_id'     => 'required|exists:sections,id',
             'school_year'    => 'required|string',
-            'semester'       => 'required|in:1st,2nd,Summer',
         ]);
 
         $student->update($request->except('_token', '_method'));
@@ -198,7 +194,6 @@ class StudentController extends Controller
         $schedules = ClassSchedule::with(['subject', 'teacher'])
             ->where('section_id', $student->section_id)
             ->where('school_year', request('school_year', $student->school_year))
-            ->where('semester', request('semester', $student->semester))
             ->orderBy('time_start')
             ->get();
 

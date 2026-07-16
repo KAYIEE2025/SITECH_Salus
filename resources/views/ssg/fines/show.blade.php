@@ -45,6 +45,7 @@
                         <th class="px-6 py-3 text-left">Attendance Status</th>
                         <th class="px-6 py-3 text-left">Fine Amount</th>
                         <th class="px-6 py-3 text-left">Payment Status</th>
+                        <th class="px-6 py-3 text-left">Scanned By</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -65,16 +66,23 @@
                                     {{ $record->payment_status ?? 'Unpaid' }}
                                 </span>
                             </td>
+                            <td class="px-6 py-4 text-gray-700">
+                                @if($record->is_present && $record->scanner)
+                                    {{ $record->scanner->name ?? 'N/A' }}
+                                @else
+                                    —
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-8 text-center text-gray-400">No fine records found for this student.</td>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-400">No fine records found for this student.</td>
                         </tr>
                     @endforelse
                 </tbody>
                 <tfoot class="bg-gray-50">
                     <tr>
-                        <td colspan="3" class="px-6 py-4 text-right text-sm font-semibold text-gray-800">Total Outstanding</td>
+                        <td colspan="4" class="px-6 py-4 text-right text-sm font-semibold text-gray-800">Total Outstanding</td>
                         <td colspan="2" class="px-6 py-4 text-sm font-bold text-green-800">PHP {{ number_format($totalOutstanding, 2) }}</td>
                     </tr>
                 </tfoot>

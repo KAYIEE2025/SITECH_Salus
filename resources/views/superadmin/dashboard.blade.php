@@ -42,6 +42,7 @@
         <div class="rounded-xl border border-gray-200 bg-white p-5">
             <p class="text-sm text-gray-500">SSG Officers</p>
             <p class="mt-1 text-2xl font-bold text-gray-800">{{ $totalSSG }}</p>
+            <p class="mt-1 text-xs text-gray-400">Manage via <a href="{{ route('superadmin.role-management') }}" class="text-[#1a5c1a] hover:underline">Role Management</a></p>
         </div>
     </div>
 

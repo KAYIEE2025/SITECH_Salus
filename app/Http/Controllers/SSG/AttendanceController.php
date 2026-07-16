@@ -9,7 +9,6 @@ use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
@@ -99,6 +98,7 @@ class AttendanceController extends Controller
         $attendance->update([
             'is_present' => true,
             'scanned_at' => now(),
+            'scanned_by_user_id' => auth()->id(),
             'actual_fine' => 0,
         ]);
 
@@ -139,14 +139,12 @@ class AttendanceController extends Controller
             'scan_end_time' => $newEndTime,
         ]);
 
-        // Log the extend time action
-        DB::table('activity_logs')->insert([
-            'user_id' => auth()->id(),
-            'action' => 'extend_scan_time',
-            'description' => "Extended scan end time for event '{$event->title}' from {$oldEndTime} to {$newEndTime}. Reason: {$reason}",
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Log the extend time action using the existing Activity Log system
+        activity()
+            ->event('attendance_extended')
+            ->causedBy(auth()->user())
+            ->performedOn($event)
+            ->log("Extended attendance time for event '{$event->title}' until {$newEndTime}. Reason: {$reason}");
 
         return response()->json([
             'success' => true,

@@ -94,10 +94,6 @@
                             <p class="text-base text-gray-800">{{ $student->school_year }}</p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-500 mb-1">Semester</label>
-                            <p class="text-base text-gray-800">{{ $student->semester }}</p>
-                        </div>
-                        <div>
                             <label class="block text-sm font-medium text-gray-500 mb-1">Student Status</label>
                             <p class="text-base text-gray-800">{{ $student->status }}</p>
                         </div>

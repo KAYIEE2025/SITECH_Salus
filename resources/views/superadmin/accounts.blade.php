@@ -68,12 +68,15 @@
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                         <option value="">Select role</option>
                         @foreach($assignableRoles as $role)
-                            <option value="{{ $role->name }}" @selected(old('role') === $role->name)>
-                                {{ $role->name }}
-                            </option>
+                            @if($role->name !== 'SSG')
+                                <option value="{{ $role->name }}" @selected(old('role') === $role->name)>
+                                    {{ $role->name }}
+                                </option>
+                            @endif
                         @endforeach
                     </select>
                     @error('role') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <p class="mt-1 text-xs text-gray-500">To assign SSG role, use the <a href="{{ route('superadmin.role-management') }}" class="text-[#1a5c1a] hover:underline">Manage Roles</a> page.</p>
                 </div>
 
                 <div>
@@ -151,9 +154,17 @@
                                     {{ $user->contact_number ?? 'Not provided' }}
                                 </td>
                                 <td class="px-6 py-3">
-                                    <span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
-                                        {{ $user->getRoleNames()->first() ?? 'Unassigned' }}
-                                    </span>
+                                    @if($user->roles->isNotEmpty())
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach($user->roles as $role)
+                                                <span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
+                                                    {{ $role->name }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-gray-400">Unassigned</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-3">
                                     @if($user->hasRole('Super Admin'))

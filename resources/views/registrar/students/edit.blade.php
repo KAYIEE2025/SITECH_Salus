@@ -160,15 +160,6 @@
                         <input type="text" name="school_year" value="{{ $student->school_year }}"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Semester <span class="text-red-500">*</span></label>
-                        <select name="semester"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                            <option value="1st" {{ $student->semester == '1st' ? 'selected' : '' }}>1st Semester</option>
-                            <option value="2nd" {{ $student->semester == '2nd' ? 'selected' : '' }}>2nd Semester</option>
-                            <option value="Summer" {{ $student->semester == 'Summer' ? 'selected' : '' }}>Summer</option>
-                        </select>
-                    </div>
                 </div>
             </div>
 

@@ -41,12 +41,6 @@
                     <div class="info-value">{{ request('school_year', $student->school_year) }}</div>
                 </div>
             </div>
-            <div class="info-col">
-                <div class="info-row">
-                    <div class="info-label">Semester:</div>
-                    <div class="info-value">{{ request('semester', $student->semester) }}</div>
-                </div>
-            </div>
         </div>
         @if($student->section->adviser ?? null)
         <div class="info-row">

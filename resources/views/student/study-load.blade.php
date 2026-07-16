@@ -36,10 +36,6 @@
                         <p class="text-sm text-gray-500">School Year</p>
                         <p class="font-medium text-gray-800">{{ $student->school_year }}</p>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Semester</p>
-                        <p class="font-medium text-gray-800">{{ $student->semester }}</p>
-                    </div>
                 </div>
             </div>
         </div>

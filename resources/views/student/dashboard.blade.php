@@ -55,10 +55,6 @@
                         <p class="text-sm text-gray-500 mb-1">School Year</p>
                         <p class="text-base font-medium text-gray-800">{{ $student->school_year }}</p>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Semester</p>
-                        <p class="text-base font-medium text-gray-800">{{ $student->semester }}</p>
-                    </div>
                 </div>
             </div>
 

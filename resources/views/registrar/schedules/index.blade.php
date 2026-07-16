@@ -86,15 +86,6 @@
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-                    <select name="semester" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                        <option value="1st">1st Semester</option>
-                        <option value="2nd">2nd Semester</option>
-                        <option value="Summer">Summer</option>
-                    </select>
-                </div>
-
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">School Year</label>
                     <input type="text" name="school_year" value="2025-2026"

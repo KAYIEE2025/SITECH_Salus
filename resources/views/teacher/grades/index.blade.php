@@ -3,7 +3,6 @@
 @section('content')
     @php
         $selectedSchoolYear = old('school_year', $classSchedule->school_year ?? '');
-        $selectedSemester = old('semester', $classSchedule->semester ?? '');
         $selectedSectionId = old('section_id', $classSchedule->section_id ?? '');
         $selectedClassScheduleId = old('class_schedule_id', $classSchedule->id ?? '');
     @endphp
@@ -14,7 +13,7 @@
         <!-- Selection Form -->
         <div class="bg-gray-50 rounded-lg p-6 mb-6">
             <h3 class="font-medium text-gray-800 mb-4">Select Class to Manage Grades</h3>
-            <form action="{{ route('teacher.grades.select') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <form action="{{ route('teacher.grades.select') }}" method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 @csrf
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">School Year</label>
@@ -27,18 +26,9 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Semester</label>
-                    <select id="semester" name="semester" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500" required>
-                        <option value="">Select...</option>
-                        <option value="1st" @selected($selectedSemester === '1st')>1st Semester</option>
-                        <option value="2nd" @selected($selectedSemester === '2nd')>2nd Semester</option>
-                        <option value="Summer" @selected($selectedSemester === 'Summer')>Summer</option>
-                    </select>
-                </div>
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Section</label>
                     <select id="section_id" name="section_id" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500" required disabled>
-                        <option value="">Select School Year and Semester First</option>
+                        <option value="">Select School Year First</option>
                     </select>
                 </div>
                 <div>
@@ -47,7 +37,7 @@
                         <option value="">Select Section First</option>
                     </select>
                 </div>
-                <div class="md:col-span-4">
+                <div class="md:col-span-3">
                     <button id="continue_button" type="submit" class="px-6 py-2 bg-green-700 text-white text-sm rounded hover:bg-green-800 transition disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
                         Continue to Upload
                     </button>
@@ -64,7 +54,7 @@
                 {{ $classSchedule->subject->name ?? 'Subject' }} - {{ $classSchedule->section->name ?? 'Section' }}
             </h2>
             <span class="text-sm text-gray-500">
-                {{ $classSchedule->school_year }} - {{ $classSchedule->semester }}
+                {{ $classSchedule->school_year }}
             </span>
         </div>
 
@@ -75,7 +65,6 @@
                 @csrf
                 <input type="hidden" name="class_schedule_id" value="{{ $classSchedule->id }}">
                 <input type="hidden" name="school_year" value="{{ $classSchedule->school_year }}">
-                <input type="hidden" name="semester" value="{{ $classSchedule->semester }}">
                 
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Select Excel File</label>
@@ -206,7 +195,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const schoolYearSelect = document.getElementById('school_year');
-            const semesterSelect = document.getElementById('semester');
             const sectionSelect = document.getElementById('section_id');
             const subjectSelect = document.getElementById('class_schedule_id');
             const continueButton = document.getElementById('continue_button');
@@ -237,7 +225,6 @@
             const updateContinueButton = () => {
                 continueButton.disabled = !(
                     schoolYearSelect.value &&
-                    semesterSelect.value &&
                     sectionSelect.value &&
                     subjectSelect.value
                 );
@@ -260,8 +247,8 @@
             const loadSections = async (selectedValue = '') => {
                 resetSubjects();
 
-                if (!schoolYearSelect.value || !semesterSelect.value) {
-                    setOptions(sectionSelect, 'Select School Year and Semester First', []);
+                if (!schoolYearSelect.value) {
+                    setOptions(sectionSelect, 'Select School Year First', []);
                     updateContinueButton();
                     return;
                 }
@@ -271,7 +258,6 @@
                 try {
                     const sections = await fetchJson(sectionsUrl, {
                         school_year: schoolYearSelect.value,
-                        semester: semesterSelect.value,
                     });
 
                     setOptions(sectionSelect, sections.length ? 'Select Section' : 'No sections assigned', sections, selectedValue);
@@ -287,7 +273,7 @@
             };
 
             const loadSubjects = async (selectedValue = '') => {
-                if (!schoolYearSelect.value || !semesterSelect.value || !sectionSelect.value) {
+                if (!schoolYearSelect.value || !sectionSelect.value) {
                     resetSubjects();
                     return;
                 }
@@ -297,7 +283,6 @@
                 try {
                     const subjects = await fetchJson(subjectsUrl, {
                         school_year: schoolYearSelect.value,
-                        semester: semesterSelect.value,
                         section_id: sectionSelect.value,
                     });
 
@@ -310,11 +295,10 @@
             };
 
             schoolYearSelect.addEventListener('change', () => loadSections());
-            semesterSelect.addEventListener('change', () => loadSections());
             sectionSelect.addEventListener('change', () => loadSubjects());
             subjectSelect.addEventListener('change', updateContinueButton);
 
-            if (schoolYearSelect.value && semesterSelect.value) {
+            if (schoolYearSelect.value) {
                 loadSections(selectedSectionId);
             } else {
                 updateContinueButton();

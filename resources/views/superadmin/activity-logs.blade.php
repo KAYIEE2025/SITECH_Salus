@@ -20,7 +20,7 @@
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('superadmin.activity-logs') }}" class="mt-4 grid grid-cols-4 gap-3">
+            <form method="GET" action="{{ route('superadmin.activity-logs') }}" class="mt-4 grid grid-cols-6 gap-3">
                 <input type="search" name="search" value="{{ request('search') }}" placeholder="Search description"
                     class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
 
@@ -33,14 +33,74 @@
                     @endforeach
                 </select>
 
+                <select name="role" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    <option value="">All Roles</option>
+                    <option value="Super Admin" @selected(request('role') === 'Super Admin')">Super Admin</option>
+                    <option value="Admin" @selected(request('role') === 'Admin')">Admin</option>
+                    <option value="Registrar" @selected(request('role') === 'Registrar')">Registrar</option>
+                    <option value="Teacher" @selected(request('role') === 'Teacher')">Teacher</option>
+                    <option value="SSG" @selected(request('role') === 'SSG')">SSG</option>
+                    <option value="Student" @selected(request('role') === 'Student')">Student</option>
+                </select>
+
                 <select name="event" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                     <option value="">All events</option>
-                    @foreach($events as $event)
-                        <option value="{{ $event }}" @selected(request('event') === $event)>
-                            {{ ucfirst($event) }}
-                        </option>
+                    @php
+                        $eventCategories = [
+                            'Authentication' => ['login', 'logout'],
+                            'Accounts' => ['account_created', 'account_updated', 'account_deleted'],
+                            'Roles' => ['roles_updated'],
+                            'Grades' => ['grade_approved'],
+                            'Other' => []
+                        ];
+
+                        // Categorize events
+                        $categorizedEvents = [];
+                        $uncategorizedEvents = [];
+
+                        foreach($events as $event) {
+                            $categorized = false;
+                            foreach($eventCategories as $category => $eventList) {
+                                if($category !== 'Other' && in_array($event, $eventList)) {
+                                    $categorizedEvents[$category][] = $event;
+                                    $categorized = true;
+                                    break;
+                                }
+                            }
+                            if(!$categorized) {
+                                $uncategorizedEvents[] = $event;
+                            }
+                        }
+                    @endphp
+
+                    @foreach($categorizedEvents as $category => $categoryEvents)
+                        @if(!empty($categoryEvents))
+                            <optgroup label="{{ $category }}">
+                                @foreach($categoryEvents as $event)
+                                    <option value="{{ $event }}" @selected(request('event') === $event)>
+                                        {{ ucfirst($event) }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endif
                     @endforeach
+
+                    @if(!empty($uncategorizedEvents))
+                        <optgroup label="Other">
+                            @foreach($uncategorizedEvents as $event)
+                                <option value="{{ $event }}" @selected(request('event') === $event)>
+                                    {{ ucfirst($event) }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                    @endif
                 </select>
+
+                <input type="date" name="date_from" value="{{ request('date_from') }}" placeholder="From Date"
+                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+
+                <input type="date" name="date_to" value="{{ request('date_to') }}" placeholder="To Date"
+                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
 
                 <button type="submit" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-200">
                     Apply Filters

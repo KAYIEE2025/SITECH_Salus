@@ -77,7 +77,6 @@
                                     <div class="text-sm text-gray-600 md:col-span-2">
                                         <span class="font-medium text-gray-500 md:hidden">Term: </span>
                                         {{ $class->school_year }}
-                                        <div class="text-xs text-gray-500">{{ $class->semester }} Semester</div>
                                     </div>
 
                                     <div class="text-sm text-gray-600 md:col-span-2">
