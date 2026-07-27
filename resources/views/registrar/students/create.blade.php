@@ -182,7 +182,7 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">School Year <span class="text-red-500">*</span></label>
-            <input type="text" name="school_year" value="{{ old('school_year', '2025-2026') }}"
+            <input type="text" name="school_year" value="{{ old('school_year', '2026-2027') }}"
                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 md:col-span-3">

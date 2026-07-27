@@ -12,19 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ssg_events', function (Blueprint $table) {
-            // Add event start and end times
-            $table->time('event_start_time')->nullable()->after('event_date');
-            $table->time('event_end_time')->nullable()->after('event_start_time');
-        });
-    }
+            if (!Schema::hasColumn('ssg_events', 'event_start_time')) {
+                $table->time('event_start_time')->nullable()->after('event_date');
+            }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('ssg_events', function (Blueprint $table) {
-            $table->dropColumn(['event_start_time', 'event_end_time']);
+            if (!Schema::hasColumn('ssg_events', 'event_end_time')) {
+                $table->time('event_end_time')->nullable()->after('event_start_time');
+            }
         });
     }
 };

@@ -66,7 +66,7 @@ class StudentAccountController extends Controller
 
     private function createStudentAccount(Student $student): array
     {
-        $temporaryPassword = Str::password(10);
+        $temporaryPassword = $this->generateTemporaryPassword($student->first_name, $student->student_number);
         $username = $this->uniqueUsername($student->student_number);
         $email = $this->uniqueEmailFor($student);
 
@@ -133,5 +133,20 @@ class StudentAccountController extends Controller
         }
 
         return $email;
+    }
+
+    private function generateTemporaryPassword(string $firstName, string $studentNumber): string
+    {
+        // Get the first name only (in case it contains spaces)
+        $firstName = trim(explode(' ', $firstName)[0]);
+        
+        // Take the first three letters (or entire name if fewer than 3 letters)
+        $firstThreeLetters = mb_substr($firstName, 0, 3);
+        
+        // Convert to uppercase
+        $firstThreeLetters = strtoupper($firstThreeLetters);
+        
+        // Combine with underscore and student number
+        return $firstThreeLetters . '_' . $studentNumber;
     }
 }
