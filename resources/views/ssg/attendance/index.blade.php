@@ -381,13 +381,10 @@
             if (scanner) {
                 scanner.stop().then(() => {
                     scanner.clear();
-                }).catch(() => {});
+                }).catch(err => {
+                    console.error("Error stopping scanner", err);
+                });
                 scanner = null;
-            }
-            // Clear the reader element to allow re-initialization
-            const readerElement = document.getElementById('reader');
-            if (readerElement) {
-                readerElement.innerHTML = '';
             }
         }
 

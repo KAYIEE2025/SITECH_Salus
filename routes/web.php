@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogControll
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Registrar\DashboardController as RegistrarDashboardController;
 use App\Http\Controllers\Registrar\GradeApprovalController;
+use App\Http\Controllers\Registrar\GradeSubmissionScheduleController;
 use App\Http\Controllers\Registrar\SectionController;
 use App\Http\Controllers\Registrar\StudentController;
 use App\Http\Controllers\Registrar\StudyLoadController;
@@ -123,6 +124,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
         Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
         Route::get('/students/{student}/print-class-schedule', [StudentController::class, 'printClassSchedule'])->name('students.print-class-schedule');
+        Route::post('/students/{student}/assign-qr', [StudentController::class, 'assignQR'])->name('students.assign-qr');
         Route::get('/study-load', [StudyLoadController::class, 'index'])->name('study-load');
         Route::post('/study-load', [StudyLoadController::class, 'store'])->name('study-load.store');
         Route::delete('/study-load/{schedule}', [StudyLoadController::class, 'destroy'])->name('study-load.destroy');
@@ -133,6 +135,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/grade-approval/{classSchedule}/view', [GradeApprovalController::class, 'view'])->name('grade-approval.view');
         Route::patch('/grade-approval/{classSchedule}/approve-class', [GradeApprovalController::class, 'approveClass'])->name('grade-approval.approve-class');
         Route::patch('/grade-approval/{classSchedule}/reject-class', [GradeApprovalController::class, 'rejectClass'])->name('grade-approval.reject-class');
+        Route::post('/grade-approval/approve-selected', [GradeApprovalController::class, 'approveSelected'])->name('grade-approval.approve-selected');
+        Route::post('/grade-approval/reject-selected', [GradeApprovalController::class, 'rejectSelected'])->name('grade-approval.reject-selected');
+        Route::prefix('grade-submission-schedules')->name('grade-submission-schedules.')->group(function () {
+            Route::get('/', [GradeSubmissionScheduleController::class, 'index'])->name('index');
+            Route::get('/create', [GradeSubmissionScheduleController::class, 'create'])->name('create');
+            Route::post('/', [GradeSubmissionScheduleController::class, 'store'])->name('store');
+            Route::get('/{schedule}/edit', [GradeSubmissionScheduleController::class, 'edit'])->name('edit');
+            Route::put('/{schedule}', [GradeSubmissionScheduleController::class, 'update'])->name('update');
+            Route::delete('/{schedule}', [GradeSubmissionScheduleController::class, 'destroy'])->name('destroy');
+        });
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
@@ -162,7 +174,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/{classSchedule}/upload', [TeacherGradeManagementController::class, 'upload'])->name('upload');
             Route::get('/{classSchedule}/import-preview', [TeacherGradeManagementController::class, 'importPreview'])->name('import-preview');
             Route::post('/process-upload', [TeacherGradeManagementController::class, 'processUpload'])->name('process-upload');
-            Route::post('/submit-grades', [TeacherGradeManagementController::class, 'submitGrades'])->name('submit-grades');
+            Route::post('/submit-grades', [TeacherGradeManagementController::class, 'submitGrades'])->name('submit-grades-old');
             // Old routes (preserved for reference, will be removed in Phase 2)
             // Route::get('/{classSchedule}', [TeacherGradeManagementController::class, 'indexOld'])->name('index-old');
             Route::post('/{classSchedule}/save-manual', [TeacherGradeManagementController::class, 'saveManual'])->name('save-manual');

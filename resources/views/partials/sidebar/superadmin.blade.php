@@ -5,4 +5,3 @@
 <x-nav-link href="{{ route('superadmin.role-management') }}" :active="request()->routeIs('superadmin.role-management*')">User Role Management</x-nav-link>
 <x-nav-link href="{{ route('superadmin.fine-records.index') }}" :active="request()->routeIs('superadmin.fine-records*')">Fine Records</x-nav-link>
 <x-nav-link href="{{ route('superadmin.activity-logs') }}" :active="request()->routeIs('superadmin.activity-logs')">Activity Logs</x-nav-link>
-<x-nav-link href="{{ route('superadmin.profile') }}" :active="request()->routeIs('superadmin.profile')">My Profile</x-nav-link>

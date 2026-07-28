@@ -215,4 +215,52 @@ class StudentController extends Controller
             'generatedBy', 'dateGenerated'
         ));
     }
+
+    public function assignQR(Request $request, Student $student)
+    {
+        $request->validate([
+            'qr_code_value' => 'required|string',
+        ]);
+
+        // Check if QR code already belongs to another student
+        $existingStudent = Student::where('qr_code_value', $request->qr_code_value)
+            ->where('id', '!=', $student->id)
+            ->first();
+
+        if ($existingStudent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This QR Code already belongs to another student.'
+            ], 409);
+        }
+
+        // Generate QR image file
+        $qrPath = 'qrcodes/' . $student->student_number . '-existing-' . Str::random(10) . '.svg';
+        $qrWritten = Storage::disk('public')->put(
+            $qrPath,
+            QrCode::format('svg')->size(200)->generate($request->qr_code_value)
+        );
+
+        if (! $qrWritten) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to generate QR code image.'
+            ], 500);
+        }
+
+        // Save the QR code value and path
+        $student->qr_code_value = $request->qr_code_value;
+        $student->qr_code_path = $qrPath;
+        $student->save();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($student)
+            ->log('Assigned existing QR Code to Student: ' . $student->last_name . ', ' . $student->first_name);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Existing QR assigned successfully.'
+        ]);
+    }
 }

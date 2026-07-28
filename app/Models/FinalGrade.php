@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class FinalGrade extends Model
 {
     protected $fillable = [
-        'student_id', 'class_schedule_id', 'final_grade', 'initial_grade', 
+        'student_id', 'class_schedule_id', 'final_grade', 'initial_grade',
         'transmuted_grade', 'quarterly_grade', 'remarks',
         'component_scores', 'computed_at', 'status', 'submitted_at', 'reviewed_by',
         'reviewed_at', 'rejection_reason',
         'written_works', 'performance_tasks', 'quarterly_assessment',
         'student_name', 'imported_data',
         'term_1', 'term_2', 'term_3', 'final_rating',
+        'grading_period',
     ];
 
     protected $casts = [

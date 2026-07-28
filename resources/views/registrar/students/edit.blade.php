@@ -172,8 +172,9 @@
                             <img src="{{ asset('storage/' . $student->qr_code_path) }}" alt="Student QR Code" class="w-32 h-32">
                         </div>
                         <div class="flex-1">
+                            <p class="text-sm font-medium text-green-700 mb-2">✓ QR Already Assigned</p>
                             <p class="text-sm text-gray-600 mb-2">QR Code Value: <code class="bg-gray-100 px-2 py-1 rounded text-xs">{{ $student->qr_code_value }}</code></p>
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 flex-wrap">
                                 <button onclick="viewQR()" class="px-3 py-1.5 bg-green-700 text-white text-sm rounded hover:bg-green-800 transition">
                                     View QR
                                 </button>
@@ -184,12 +185,18 @@
                                 <button onclick="printQR()" class="px-3 py-1.5 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition">
                                     Print QR
                                 </button>
+                                <button onclick="openReplaceQRConfirmation()" class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition">
+                                    Replace QR
+                                </button>
                             </div>
                         </div>
                     </div>
                 @else
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <p class="text-sm text-yellow-800">No QR code generated for this student. This is an old student record.</p>
+                        <p class="text-sm text-yellow-800 mb-3">No QR code generated for this student. This is an old student record.</p>
+                        <button type="button" onclick="openQRScannerModal()" class="px-4 py-2 bg-green-700 text-white text-sm rounded hover:bg-green-800 transition">
+                            Assign Existing QR
+                        </button>
                     </div>
                 @endif
             </div>
@@ -229,7 +236,69 @@
         </div>
     </div>
 
+    {{-- QR Scanner Modal --}}
+    <div id="qrScannerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Scan Existing QR Code</h3>
+                <button onclick="closeQRScannerModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="qr-reader" class="mb-4"></div>
+            
+            <div id="qrResult" class="hidden mb-4">
+                <p class="text-sm font-medium text-gray-700 mb-2">Detected QR:</p>
+                <p id="detectedQRValue" class="text-sm font-mono bg-gray-100 px-3 py-2 rounded"></p>
+            </div>
+            
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeQRScannerModal()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
+                    Cancel
+                </button>
+                <button id="saveQRBtn" onclick="saveQRCode()" class="hidden px-4 py-2 bg-green-700 hover:bg-green-800 text-white text-sm font-medium rounded-lg transition">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Replace QR Confirmation Modal --}}
+    <div id="replaceQRConfirmationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Replace QR Code</h3>
+                <button onclick="closeReplaceQRConfirmation()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <p class="text-sm text-gray-600 mb-6">
+                Are you sure you want to replace the existing QR code for this student? The old QR code will no longer work for attendance.
+            </p>
+            
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeReplaceQRConfirmation()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
+                    Cancel
+                </button>
+                <button onclick="confirmReplaceQR()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition">
+                    Yes, Replace QR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
     <script>
+        let html5QrCode;
+        let detectedQRValue = '';
+
         function viewQR() {
             document.getElementById('qrModal').classList.remove('hidden');
             document.getElementById('qrModal').classList.add('flex');
@@ -297,17 +366,127 @@
                                 window.close();
                             };
                         };
-                    </script>
+                    <\/script>
                 </body>
                 </html>
             `);
             printWindow.document.close();
         }
 
+        function openQRScannerModal() {
+            document.getElementById('qrScannerModal').classList.remove('hidden');
+            document.getElementById('qrScannerModal').classList.add('flex');
+            document.getElementById('qrResult').classList.add('hidden');
+            document.getElementById('saveQRBtn').classList.add('hidden');
+            
+            // Start QR scanner
+            html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.error("Error starting scanner", err);
+            });
+        }
+
+        function openReplaceQRConfirmation() {
+            document.getElementById('replaceQRConfirmationModal').classList.remove('hidden');
+            document.getElementById('replaceQRConfirmationModal').classList.add('flex');
+        }
+
+        function closeReplaceQRConfirmation() {
+            document.getElementById('replaceQRConfirmationModal').classList.add('hidden');
+            document.getElementById('replaceQRConfirmationModal').classList.remove('flex');
+        }
+
+        function confirmReplaceQR() {
+            closeReplaceQRConfirmation();
+            openQRScannerModal();
+        }
+
+        function closeQRScannerModal() {
+            document.getElementById('qrScannerModal').classList.add('hidden');
+            document.getElementById('qrScannerModal').classList.remove('flex');
+            
+            // Stop QR scanner
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                }).catch(err => {
+                    console.error("Error stopping scanner", err);
+                });
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Stop scanning after successful read
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+            }).catch(err => {
+                console.error("Error stopping scanner", err);
+            });
+            
+            // Display the detected QR value
+            detectedQRValue = decodedText;
+            document.getElementById('detectedQRValue').textContent = decodedText;
+            document.getElementById('qrResult').classList.remove('hidden');
+            document.getElementById('saveQRBtn').classList.remove('hidden');
+        }
+
+        function onScanFailure(error) {
+            // Handle scan failure silently
+        }
+
+        function saveQRCode() {
+            const studentId = '{{ $student->id }}';
+            
+            fetch(`/registrar/students/${studentId}/assign-qr`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    qr_code_value: detectedQRValue
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeQRScannerModal();
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while saving the QR code.');
+            });
+        }
+
         // Close modal on outside click
         document.getElementById('qrModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeQRModal();
+            }
+        });
+
+        document.getElementById('qrScannerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeQRScannerModal();
+            }
+        });
+
+        document.getElementById('replaceQRConfirmationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReplaceQRConfirmation();
             }
         });
     </script>

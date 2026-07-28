@@ -124,6 +124,8 @@ class GradeManagementController extends Controller
 
     public function submitGrades(Request $request)
     {
+        dd('SUBMIT METHOD REACHED - GradeManagementController::submitGrades');
+
         $request->validate([
             'class_schedule_id' => 'required',
         ]);
@@ -566,10 +568,10 @@ class GradeManagementController extends Controller
                         ],
                         [
                             'component_scores' => $componentScores,
-                            'initial_grade' => $computedGrades['initial_grade'],
-                            'transmuted_grade' => $computedGrades['transmuted_grade'],
-                            'quarterly_grade' => $computedGrades['quarterly_grade'],
-                            'final_grade' => $finalGradeValue,
+                            'initial_grade' => is_numeric($computedGrades['initial_grade']) ? $computedGrades['initial_grade'] : null,
+                            'transmuted_grade' => is_numeric($computedGrades['transmuted_grade']) ? $computedGrades['transmuted_grade'] : null,
+                            'quarterly_grade' => is_numeric($computedGrades['quarterly_grade']) ? $computedGrades['quarterly_grade'] : null,
+                            'final_grade' => is_numeric($finalGradeValue) ? $finalGradeValue : null,
                             'remarks' => $autoRemarks,
                             'computed_at' => now(),
                             'status' => 'draft',
@@ -582,10 +584,10 @@ class GradeManagementController extends Controller
                             'student_id' => $studentId,
                             'class_schedule_id' => $classSchedule->id,
                             'component_scores' => $componentScores,
-                            'initial_grade' => $computedGrades['initial_grade'],
-                            'transmuted_grade' => $computedGrades['transmuted_grade'],
-                            'quarterly_grade' => $computedGrades['quarterly_grade'],
-                            'final_grade' => $finalGradeValue,
+                            'initial_grade' => is_numeric($computedGrades['initial_grade']) ? $computedGrades['initial_grade'] : null,
+                            'transmuted_grade' => is_numeric($computedGrades['transmuted_grade']) ? $computedGrades['transmuted_grade'] : null,
+                            'quarterly_grade' => is_numeric($computedGrades['quarterly_grade']) ? $computedGrades['quarterly_grade'] : null,
+                            'final_grade' => is_numeric($finalGradeValue) ? $finalGradeValue : null,
                             'remarks' => $autoRemarks,
                             'computed_at' => now(),
                             'status' => 'draft',
@@ -949,10 +951,10 @@ class GradeManagementController extends Controller
                     ],
                     [
                         'component_scores' => $componentScores,
-                        'initial_grade' => $computedGrades['initial_grade'],
-                        'transmuted_grade' => $computedGrades['transmuted_grade'],
-                        'quarterly_grade' => $computedGrades['quarterly_grade'],
-                        'final_grade' => $finalGradeValue,
+                        'initial_grade' => is_numeric($computedGrades['initial_grade']) ? $computedGrades['initial_grade'] : null,
+                        'transmuted_grade' => is_numeric($computedGrades['transmuted_grade']) ? $computedGrades['transmuted_grade'] : null,
+                        'quarterly_grade' => is_numeric($computedGrades['quarterly_grade']) ? $computedGrades['quarterly_grade'] : null,
+                        'final_grade' => is_numeric($finalGradeValue) ? $finalGradeValue : null,
                         'remarks' => $finalRemarks,
                         'computed_at' => now(),
                         'status' => 'draft',

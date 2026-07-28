@@ -153,40 +153,86 @@
                 <div class="mb-6 rounded-lg bg-gray-50 border border-gray-200 p-4">
                     <h3 class="text-sm font-medium text-gray-800 mb-3">Grading Periods</h3>
                     <div class="space-y-2">
-                        <label class="flex items-center gap-3 p-2 rounded-lg border {{ $approvedTerms['term_1'] ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white' }} cursor-pointer {{ $approvedTerms['term_1'] ? 'opacity-60' : 'hover:border-green-300' }}">
-                            <input type="radio" name="grading_period" value="1" {{ $approvedTerms['term_1'] ? 'disabled' : '' }} required class="h-4 w-4 text-green-600 focus:ring-green-500 {{ $approvedTerms['term_1'] ? 'cursor-not-allowed' : 'cursor-pointer' }}">
+                        @php
+                            $term1Disabled = $approvedTerms['term_1'];
+                            $term1Status = $termStatus['term_1'] ?? null;
+                            $term1Class = $term1Status === 'approved' ? 'border-green-200 bg-green-50' : ($term1Status === 'rejected' ? 'border-red-200 bg-red-50' : ($term1Status === 'submitted' ? 'border-yellow-200 bg-yellow-50' : 'border-gray-200 bg-white'));
+                            $term1Opacity = $term1Disabled ? 'opacity-60' : '';
+                        @endphp
+                        <label class="flex items-center gap-3 p-2 rounded-lg border {{ $term1Class }} cursor-pointer {{ $term1Disabled ? 'opacity-60' : 'hover:border-green-300' }}">
+                            <input type="radio" name="grading_period" value="1" {{ $term1Disabled ? 'disabled' : '' }} required class="h-4 w-4 text-green-600 focus:ring-green-500 {{ $term1Disabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                             <span class="flex items-center gap-2">
-                                @if($approvedTerms['term_1'])
+                                @if($term1Status === 'approved')
                                     <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                     <span class="text-sm font-medium text-green-700">Term 1 (Approved)</span>
+                                @elseif($term1Status === 'rejected')
+                                    <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-red-700">Term 1 (Rejected)</span>
+                                @elseif($term1Status === 'submitted')
+                                    <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-yellow-700">Term 1 (Submitted)</span>
                                 @else
                                     <span class="text-sm font-medium text-gray-700">Term 1</span>
                                 @endif
                             </span>
                         </label>
-                        <label class="flex items-center gap-3 p-2 rounded-lg border {{ $approvedTerms['term_2'] ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white' }} cursor-pointer {{ $approvedTerms['term_2'] ? 'opacity-60' : 'hover:border-green-300' }}">
-                            <input type="radio" name="grading_period" value="2" {{ $approvedTerms['term_2'] ? 'disabled' : '' }} required class="h-4 w-4 text-green-600 focus:ring-green-500 {{ $approvedTerms['term_2'] ? 'cursor-not-allowed' : 'cursor-pointer' }}">
+                        @php
+                            $term2Disabled = $approvedTerms['term_2'];
+                            $term2Status = $termStatus['term_2'] ?? null;
+                            $term2Class = $term2Status === 'approved' ? 'border-green-200 bg-green-50' : ($term2Status === 'rejected' ? 'border-red-200 bg-red-50' : ($term2Status === 'submitted' ? 'border-yellow-200 bg-yellow-50' : 'border-gray-200 bg-white'));
+                        @endphp
+                        <label class="flex items-center gap-3 p-2 rounded-lg border {{ $term2Class }} cursor-pointer {{ $term2Disabled ? 'opacity-60' : 'hover:border-green-300' }}">
+                            <input type="radio" name="grading_period" value="2" {{ $term2Disabled ? 'disabled' : '' }} required class="h-4 w-4 text-green-600 focus:ring-green-500 {{ $term2Disabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                             <span class="flex items-center gap-2">
-                                @if($approvedTerms['term_2'])
+                                @if($term2Status === 'approved')
                                     <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                     <span class="text-sm font-medium text-green-700">Term 2 (Approved)</span>
+                                @elseif($term2Status === 'rejected')
+                                    <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-red-700">Term 2 (Rejected)</span>
+                                @elseif($term2Status === 'submitted')
+                                    <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-yellow-700">Term 2 (Submitted)</span>
                                 @else
                                     <span class="text-sm font-medium text-gray-700">Term 2</span>
                                 @endif
                             </span>
                         </label>
-                        <label class="flex items-center gap-3 p-2 rounded-lg border {{ $approvedTerms['term_3'] ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-white' }} cursor-pointer {{ $approvedTerms['term_3'] ? 'opacity-60' : 'hover:border-green-300' }}">
-                            <input type="radio" name="grading_period" value="3" {{ $approvedTerms['term_3'] ? 'disabled' : '' }} required class="h-4 w-4 text-green-600 focus:ring-green-500 {{ $approvedTerms['term_3'] ? 'cursor-not-allowed' : 'cursor-pointer' }}">
+                        @php
+                            $term3Disabled = $approvedTerms['term_3'];
+                            $term3Status = $termStatus['term_3'] ?? null;
+                            $term3Class = $term3Status === 'approved' ? 'border-green-200 bg-green-50' : ($term3Status === 'rejected' ? 'border-red-200 bg-red-50' : ($term3Status === 'submitted' ? 'border-yellow-200 bg-yellow-50' : 'border-gray-200 bg-white'));
+                        @endphp
+                        <label class="flex items-center gap-3 p-2 rounded-lg border {{ $term3Class }} cursor-pointer {{ $term3Disabled ? 'opacity-60' : 'hover:border-green-300' }}">
+                            <input type="radio" name="grading_period" value="3" {{ $term3Disabled ? 'disabled' : '' }} required class="h-4 w-4 text-green-600 focus:ring-green-500 {{ $term3Disabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                             <span class="flex items-center gap-2">
-                                @if($approvedTerms['term_3'])
+                                @if($term3Status === 'approved')
                                     <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                     <span class="text-sm font-medium text-green-700">Term 3 (Approved)</span>
+                                @elseif($term3Status === 'rejected')
+                                    <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-red-700">Term 3 (Rejected)</span>
+                                @elseif($term3Status === 'submitted')
+                                    <svg class="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span class="text-sm font-medium text-yellow-700">Term 3 (Submitted)</span>
                                 @else
                                     <span class="text-sm font-medium text-gray-700">Term 3</span>
                                 @endif
@@ -194,7 +240,7 @@
                         </label>
                     </div>
                     @if($approvedTerms['term_1'] || $approvedTerms['term_2'] || $approvedTerms['term_3'])
-                        <p class="text-xs text-gray-500 mt-2">Approved grading periods cannot be modified.</p>
+                        <p class="text-xs text-gray-500 mt-2">Approved grading periods cannot be modified. Rejected grading periods can be resubmitted.</p>
                     @endif
                 </div>
 
@@ -280,41 +326,53 @@
         </div>
     @endif
 
-    <!-- Submit Grades Button -->
-    @if($gradeStatus === 'draft' && $existingGrades && $existingGrades->isNotEmpty())
-        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-800">Ready to Submit</h3>
-                    <p class="text-xs text-gray-500 mt-1">Submit your draft grades to the Registrar for approval.</p>
+    {{-- PHASE 2: Submission Timeframe Card --}}
+    <div id="submission-timeframe-card" class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                    <span id="status-indicator" class="text-2xl"></span>
+                    <h3 id="status-message" class="text-sm font-medium text-gray-800"></h3>
                 </div>
-                <button type="button" id="submit-grades-btn" class="px-6 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition">
-                    Submit Grades
-                </button>
+                <div id="status-details" class="text-xs text-gray-500 mt-1"></div>
+            </div>
+            <div id="submit-button-container">
+                {{-- Submit Grades button will be dynamically shown/hidden --}}
             </div>
         </div>
+    </div>
 
-        <!-- Confirmation Dialog -->
-        <div id="submit-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Submit Grades?</h3>
-                <p class="text-sm text-gray-600 mb-6">
-                    Once submitted, you can no longer edit these grades unless the Registrar rejects them.
-                </p>
-                <div class="flex justify-end gap-3">
-                    <button type="button" id="cancel-submit-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                        Cancel
+    {{-- Submit Grades Confirmation Dialog --}}
+    <div id="submit-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Submit Grades?</h3>
+            <p class="text-sm text-gray-600 mb-6">
+                Once submitted, you can no longer edit these grades unless the Registrar rejects them.
+            </p>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-submit-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                <form id="submit-grades-form" action="{{ route('teacher.classes.submit-grades', $classSchedule) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="grading_period" id="submit-grading-period" value="">
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 transition">
+                        Submit
                     </button>
-                    <form id="submit-grades-form" action="{{ route('teacher.classes.submit-grades', $classSchedule) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 transition">
-                            Submit
-                        </button>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
-    @endif
+    </div>
+
+    @php
+        // Pass submission statuses data to JavaScript
+        $submissionStatusesJson = json_encode($submissionStatuses ?? []);
+        $hasDraftGradesJson = json_encode([
+            1 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 1)->where('status', 'draft')->exists(),
+            2 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 2)->where('status', 'draft')->exists(),
+            3 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 3)->where('status', 'draft')->exists(),
+        ]);
+    @endphp
 
     <!-- Class Roster (Hidden for now, will be shown in Phase 2) -->
     <div class="hidden rounded-xl border border-gray-200 bg-white">
@@ -481,14 +539,89 @@
             });
 
             // Submit Grades confirmation dialog
-            const submitGradesBtn = document.getElementById('submit-grades-btn');
             const submitConfirmationModal = document.getElementById('submit-confirmation-modal');
             const cancelSubmitBtn = document.getElementById('cancel-submit-btn');
+            const submitGradingPeriodInput = document.getElementById('submit-grading-period');
 
-            if (submitGradesBtn) {
-                submitGradesBtn.addEventListener('click', () => {
-                    submitConfirmationModal.classList.remove('hidden');
+            // PHASE 2: Dynamic submission timeframe card
+            const submissionStatuses = {{ $submissionStatusesJson }};
+            const hasDraftGrades = {{ $hasDraftGradesJson }};
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusMessage = document.getElementById('status-message');
+            const statusDetails = document.getElementById('status-details');
+            const submitButtonContainer = document.getElementById('submit-button-container');
+
+            const updateSubmissionTimeframe = (gradingPeriod) => {
+                const status = submissionStatuses[gradingPeriod];
+                if (!status) {
+                    statusIndicator.textContent = '';
+                    statusMessage.textContent = 'No schedule configured';
+                    statusDetails.textContent = '';
+                    submitButtonContainer.innerHTML = '';
+                    return;
+                }
+
+                // Set status indicator and message
+                switch (status.status) {
+                    case 'open':
+                        statusIndicator.textContent = '🟢';
+                        statusMessage.textContent = status.message;
+                        statusDetails.innerHTML = `Start: ${status.start_at}<br>Deadline: ${status.end_at}`;
+                        break;
+                    case 'not_yet_open':
+                        statusIndicator.textContent = '🟡';
+                        statusMessage.textContent = status.message;
+                        statusDetails.innerHTML = `Opens: ${status.start_at}`;
+                        break;
+                    case 'closed':
+                        statusIndicator.textContent = '🔴';
+                        statusMessage.textContent = status.message;
+                        statusDetails.innerHTML = `Deadline was: ${status.end_at}`;
+                        break;
+                    case 'no_schedule':
+                        statusIndicator.textContent = '⚠️';
+                        statusMessage.textContent = status.message;
+                        statusDetails.innerHTML = 'Please wait for the Registrar to configure the grade submission period.';
+                        break;
+                }
+
+                // Show/hide Submit Grades button
+                if (status.status === 'open' && status.can_submit && hasDraftGrades[gradingPeriod]) {
+                    submitButtonContainer.innerHTML = `
+                        <button type="button" id="submit-grades-btn" class="px-6 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition">
+                            Submit Grades
+                        </button>
+                    `;
+                    // Attach event listener to new button
+                    const newSubmitBtn = document.getElementById('submit-grades-btn');
+                    if (newSubmitBtn) {
+                        newSubmitBtn.addEventListener('click', () => {
+                            submitGradingPeriodInput.value = gradingPeriod;
+                            submitConfirmationModal.classList.remove('hidden');
+                        });
+                    }
+                } else {
+                    submitButtonContainer.innerHTML = '';
+                }
+            };
+
+            // Listen for grading period radio button changes
+            const gradingPeriodRadios = document.querySelectorAll('input[name="grading_period"]');
+            gradingPeriodRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (radio.checked) {
+                        updateSubmissionTimeframe(parseInt(radio.value));
+                    }
                 });
+            });
+
+            // Initialize with the currently selected grading period
+            const selectedRadio = document.querySelector('input[name="grading_period"]:checked');
+            if (selectedRadio) {
+                updateSubmissionTimeframe(parseInt(selectedRadio.value));
+            } else {
+                // Default to Term 1 if nothing selected
+                updateSubmissionTimeframe(1);
             }
 
             if (cancelSubmitBtn) {

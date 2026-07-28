@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassSchedule;
+use App\Models\GradeSubmissionSchedule;
 use App\Models\StudyLoad;
 use App\Models\Student;
 use App\Models\FinalGrade;
@@ -77,80 +78,160 @@ class ClassController extends Controller
         $gradeStatus = null;
         $gradeTimeline = collect();
         
-        // Check which terms are approved and their individual statuses
+        // Check which terms are approved and their individual statuses using grading_period
         $approvedTerms = [
             'term_1' => false,
             'term_2' => false,
             'term_3' => false,
         ];
-        
+
         $termStatus = [
             'term_1' => null,
             'term_2' => null,
             'term_3' => null,
         ];
-        
-        if ($existingGrades->isNotEmpty()) {
-            // Set overall gradeStatus for backward compatibility with existing UI elements
-            $gradeStatus = $existingGrades->first()->status;
-            
-            // Check each term for approval and status
-            foreach ($existingGrades as $grade) {
-                // Track approved terms
-                if ($grade->status === 'approved') {
-                    if ($grade->term_1) $approvedTerms['term_1'] = true;
-                    if ($grade->term_2) $approvedTerms['term_2'] = true;
-                    if ($grade->term_3) $approvedTerms['term_3'] = true;
+
+        // Query each grading period independently to determine status
+        for ($period = 1; $period <= 3; $period++) {
+            $periodGrades = FinalGrade::where('class_schedule_id', $classSchedule->id)
+                ->where('grading_period', $period)
+                ->whereNotNull('grading_period')
+                ->get();
+
+            if ($periodGrades->isNotEmpty()) {
+                $termKey = 'term_' . $period;
+                $firstGrade = $periodGrades->first();
+
+                // Set overall gradeStatus for backward compatibility (use most recent grading period)
+                if (!$gradeStatus) {
+                    $gradeStatus = $firstGrade->status;
                 }
-                
-                // Track individual term statuses (use the most recent status for each term)
-                if ($grade->term_1 && $termStatus['term_1'] !== 'approved') {
-                    $termStatus['term_1'] = $grade->status;
-                }
-                if ($grade->term_2 && $termStatus['term_2'] !== 'approved') {
-                    $termStatus['term_2'] = $grade->status;
-                }
-                if ($grade->term_3 && $termStatus['term_3'] !== 'approved') {
-                    $termStatus['term_3'] = $grade->status;
-                }
+
+                // Check if this grading period is approved
+                $approvedTerms[$termKey] = ($firstGrade->status === 'approved');
+
+                // Set the status for this grading period
+                $termStatus[$termKey] = $firstGrade->status;
             }
-            
-            // Get grade history for timeline
-            $gradeTimeline = \App\Models\GradeHistory::whereHas('finalGrade', function($query) use ($classSchedule) {
-                $query->where('class_schedule_id', $classSchedule->id);
-            })
-            ->with('user')
-            ->orderBy('created_at')
-            ->get()
-            ->groupBy(function($history) {
-                return $history->created_at->format('Y-m-d H:i:s');
-            })
-            ->map(function($group) {
-                $first = $group->first();
-                return [
-                    'timestamp' => $first->created_at,
-                    'action' => ucfirst($first->action),
-                    'status' => ucfirst($first->status),
-                    'description' => $first->description,
-                    'user' => $first->user->name ?? 'System',
-                    'rejection_reason' => $first->rejection_reason,
-                ];
-            })
-            ->values();
         }
+
+        // Get grade history for timeline
+        $gradeTimeline = \App\Models\GradeHistory::whereHas('finalGrade', function($query) use ($classSchedule) {
+            $query->where('class_schedule_id', $classSchedule->id);
+        })
+        ->with('user')
+        ->orderBy('created_at')
+        ->get()
+        ->groupBy(function($history) {
+            return $history->created_at->format('Y-m-d H:i:s');
+        })
+        ->map(function($group) {
+            $first = $group->first();
+            return [
+                'timestamp' => $first->created_at,
+                'action' => ucfirst($first->action),
+                'status' => ucfirst($first->status),
+                'description' => $first->description,
+                'user' => $first->user->name ?? 'System',
+                'rejection_reason' => $first->rejection_reason,
+            ];
+        })
+        ->values();
 
         // Check if all terms are approved
         $allTermsApproved = $approvedTerms['term_1'] && $approvedTerms['term_2'] && $approvedTerms['term_3'];
 
+        // Get current grading period from session (if teacher just imported)
+        $currentGradingPeriod = session('import_grading_period_' . $classSchedule->id);
+
+        // Check if current grading period has draft grades
+        $hasDraftGradesForCurrentPeriod = false;
+        if ($currentGradingPeriod) {
+            $draftCount = FinalGrade::where('class_schedule_id', $classSchedule->id)
+                ->where('grading_period', $currentGradingPeriod)
+                ->where('status', 'draft')
+                ->count();
+            $hasDraftGradesForCurrentPeriod = ($draftCount > 0);
+
+            \Log::info('GRADES PAGE - Current grading period check', [
+                'class_schedule_id' => $classSchedule->id,
+                'current_grading_period' => $currentGradingPeriod,
+                'draft_count' => $draftCount,
+                'has_draft_grades' => $hasDraftGradesForCurrentPeriod,
+            ]);
+        }
+
+        // PHASE 2: Get submission schedules for ALL grading periods
+        $submissionSchedules = GradeSubmissionSchedule::where('school_year', $classSchedule->school_year)
+            ->get()
+            ->keyBy('grading_period');
+
+        // Calculate status for each grading period
+        $submissionStatuses = [];
+        $currentTime = now();
+
+        for ($period = 1; $period <= 3; $period++) {
+            $schedule = $submissionSchedules->get($period);
+
+            if ($schedule) {
+                if ($currentTime->lt($schedule->start_at)) {
+                    $submissionStatuses[$period] = [
+                        'status' => 'not_yet_open',
+                        'message' => 'Submission Period: NOT YET OPEN',
+                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
+                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
+                        'can_submit' => false,
+                    ];
+                } elseif ($currentTime->gt($schedule->end_at)) {
+                    $submissionStatuses[$period] = [
+                        'status' => 'closed',
+                        'message' => 'Submission Period: CLOSED',
+                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
+                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
+                        'can_submit' => false,
+                    ];
+                } else {
+                    $submissionStatuses[$period] = [
+                        'status' => 'open',
+                        'message' => 'Submission Period: OPEN',
+                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
+                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
+                        'can_submit' => true,
+                    ];
+                }
+            } else {
+                $submissionStatuses[$period] = [
+                    'status' => 'no_schedule',
+                    'message' => 'Submission Schedule Not Configured',
+                    'start_at' => null,
+                    'end_at' => null,
+                    'can_submit' => false,
+                ];
+            }
+        }
+
+        // Get current grading period status for backward compatibility
+        $submissionSchedule = $submissionSchedules->get($currentGradingPeriod);
+        $submissionStatus = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['status'] ?? null) : null;
+        $submissionStatusMessage = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['message'] ?? null) : null;
+        $canSubmit = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['can_submit'] ?? false) : false;
+
         return view('teacher.classes.grades', compact(
-            'classSchedule', 
-            'students', 
-            'existingGrades', 
-            'gradeStatus', 
+            'classSchedule',
+            'students',
+            'existingGrades',
+            'gradeStatus',
             'gradeTimeline',
             'approvedTerms',
             'termStatus',
-            'allTermsApproved'
+            'allTermsApproved',
+            'currentGradingPeriod',
+            'hasDraftGradesForCurrentPeriod',
+            'submissionSchedule',
+            'submissionStatus',
+            'submissionStatusMessage',
+            'canSubmit',
+            'submissionStatuses'
         ));
     }
 
@@ -166,12 +247,11 @@ class ClassController extends Controller
         ]);
 
         $gradingPeriod = $request->grading_period;
-        $termField = 'term_' . $gradingPeriod;
 
-        // Check if this grading period is already approved
+        // Check if this grading period is already approved using grading_period column
         $alreadyApproved = FinalGrade::where('class_schedule_id', $classSchedule->id)
+            ->where('grading_period', $gradingPeriod)
             ->where('status', 'approved')
-            ->whereNotNull($termField)
             ->exists();
 
         if ($alreadyApproved) {
@@ -363,47 +443,97 @@ class ClassController extends Controller
     private function readAllLearners($worksheet, $headerRow, $columnMapping, $highestRow)
     {
         $allLearners = [];
-        
+
         // Start from the row after header and read until the end
         $startRow = $headerRow + 1;
-        
+
         for ($row = $startRow; $row <= $highestRow; $row++) {
             // Extract learners name to check if it's a valid learner row
-            $learnersName = $columnMapping['learners_name'] !== null 
-                ? trim($worksheet->getCellByColumnAndRow($columnMapping['learners_name'], $row)->getCalculatedValue()) 
+            $learnersName = $columnMapping['learners_name'] !== null
+                ? trim($worksheet->getCellByColumnAndRow($columnMapping['learners_name'], $row)->getCalculatedValue())
                 : '';
-            
+
             // Skip empty rows or non-learner rows
             if (empty($learnersName) || !$this->isValidLearnerRow($learnersName)) {
                 continue;
             }
-            
+
+            // Get cell coordinates for logging
+            $term1Coord = $columnMapping['term_1'] !== null ? Coordinate::stringFromColumnIndex($columnMapping['term_1']) . $row : 'N/A';
+            $term2Coord = $columnMapping['term_2'] !== null ? Coordinate::stringFromColumnIndex($columnMapping['term_2']) . $row : 'N/A';
+            $term3Coord = $columnMapping['term_3'] !== null ? Coordinate::stringFromColumnIndex($columnMapping['term_3']) . $row : 'N/A';
+
+            // Extract data for all required columns with detailed logging
+            $term1Value = null;
+            $term2Value = null;
+            $term3Value = null;
+
+            if ($columnMapping['term_1'] !== null) {
+                $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_1'], $row);
+                $term1Value = $cell->getCalculatedValue();
+                \Log::info('Term 1 Cell Read', [
+                    'learner_name' => $learnersName,
+                    'row' => $row,
+                    'cell_coordinate' => $term1Coord,
+                    'column_index' => $columnMapping['term_1'],
+                    'raw_value' => $term1Value,
+                    'value_type' => gettype($term1Value),
+                    'is_null' => is_null($term1Value),
+                    'is_empty_string' => $term1Value === '',
+                    'cell_formula' => $cell->getValue() instanceof \PhpOffice\PhpSpreadsheet\Cell\DataType ? $cell->getValue() : 'N/A',
+                ]);
+            }
+
+            if ($columnMapping['term_2'] !== null) {
+                $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_2'], $row);
+                $term2Value = $cell->getCalculatedValue();
+                \Log::info('Term 2 Cell Read', [
+                    'learner_name' => $learnersName,
+                    'row' => $row,
+                    'cell_coordinate' => $term2Coord,
+                    'column_index' => $columnMapping['term_2'],
+                    'raw_value' => $term2Value,
+                    'value_type' => gettype($term2Value),
+                    'is_null' => is_null($term2Value),
+                    'is_empty_string' => $term2Value === '',
+                ]);
+            }
+
+            if ($columnMapping['term_3'] !== null) {
+                $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_3'], $row);
+                $term3Value = $cell->getCalculatedValue();
+                \Log::info('Term 3 Cell Read', [
+                    'learner_name' => $learnersName,
+                    'row' => $row,
+                    'cell_coordinate' => $term3Coord,
+                    'column_index' => $columnMapping['term_3'],
+                    'raw_value' => $term3Value,
+                    'value_type' => gettype($term3Value),
+                    'is_null' => is_null($term3Value),
+                    'is_empty_string' => $term3Value === '',
+                ]);
+            }
+
             // Extract data for all required columns
             $learnerData = [
                 'learners_name' => $learnersName,
-                'term_1' => $columnMapping['term_1'] !== null 
-                    ? $worksheet->getCellByColumnAndRow($columnMapping['term_1'], $row)->getCalculatedValue() 
+                'term_1' => $term1Value,
+                'term_2' => $term2Value,
+                'term_3' => $term3Value,
+                'final_grade' => $columnMapping['final_grade'] !== null
+                    ? $worksheet->getCellByColumnAndRow($columnMapping['final_grade'], $row)->getCalculatedValue()
                     : null,
-                'term_2' => $columnMapping['term_2'] !== null 
-                    ? $worksheet->getCellByColumnAndRow($columnMapping['term_2'], $row)->getCalculatedValue() 
-                    : null,
-                'term_3' => $columnMapping['term_3'] !== null 
-                    ? $worksheet->getCellByColumnAndRow($columnMapping['term_3'], $row)->getCalculatedValue() 
-                    : null,
-                'final_grade' => $columnMapping['final_grade'] !== null 
-                    ? $worksheet->getCellByColumnAndRow($columnMapping['final_grade'], $row)->getCalculatedValue() 
-                    : null,
-                'descriptor' => $columnMapping['descriptor'] !== null 
-                    ? trim($worksheet->getCellByColumnAndRow($columnMapping['descriptor'], $row)->getCalculatedValue()) 
+                'descriptor' => $columnMapping['descriptor'] !== null
+                    ? trim($worksheet->getCellByColumnAndRow($columnMapping['descriptor'], $row)->getCalculatedValue())
                     : '',
-                'remarks' => $columnMapping['remarks'] !== null 
-                    ? trim($worksheet->getCellByColumnAndRow($columnMapping['remarks'], $row)->getCalculatedValue()) 
+                'remarks' => $columnMapping['remarks'] !== null
+                    ? trim($worksheet->getCellByColumnAndRow($columnMapping['remarks'], $row)->getCalculatedValue())
                     : '',
             ];
-            
+
             $allLearners[] = $learnerData;
         }
-        
+
         return $allLearners;
     }
 
@@ -475,15 +605,16 @@ class ClassController extends Controller
                 $studentId = $matched['student_id'];
                 $learnerData = $allLearners[$index];
                 $gradeValue = $learnerData[$termColumn] ?? null;
-                
-                // Check if grade already exists
+
+                // Check if grade already exists for this grading period
                 $existingGrade = FinalGrade::where('student_id', $studentId)
                     ->where('class_schedule_id', $classSchedule->id)
+                    ->where('grading_period', $gradingPeriod)
                     ->first();
-                
+
                 // Check if the specific grading period is already approved (locked)
-                $termField = 'term_' . $gradingPeriod;
-                if ($existingGrade && $existingGrade->status === 'approved' && $existingGrade->$termField) {
+                // Rejected records can be updated
+                if ($existingGrade && $existingGrade->status === 'approved' && $existingGrade->grading_period === $gradingPeriod) {
                     $skippedApprovedCount++;
                     continue;
                 }
@@ -493,8 +624,17 @@ class ClassController extends Controller
                     'student_id' => $studentId,
                     'class_schedule_id' => $classSchedule->id,
                     'student_name' => $learnerData['learners_name'],
+                    'grading_period' => $gradingPeriod,
                     'computed_at' => now(),
                 ];
+
+                // If updating a rejected record, reset status to draft
+                if ($existingGrade && $existingGrade->status === 'rejected') {
+                    $gradeData['status'] = 'draft';
+                    $gradeData['rejection_reason'] = null;
+                    $gradeData['reviewed_by'] = null;
+                    $gradeData['reviewed_at'] = null;
+                }
                 
                 // Only set status to draft if this is a new record
                 // If updating an existing approved record, keep the approved status
@@ -502,13 +642,13 @@ class ClassController extends Controller
                     $gradeData['status'] = 'draft';
                 }
                 
-                // Map term to appropriate field
+                // Map term to appropriate field with null conversion
                 if ($gradingPeriod == 1) {
-                    $gradeData['term_1'] = $gradeValue;
+                    $gradeData['term_1'] = is_numeric($gradeValue) ? $gradeValue : null;
                 } elseif ($gradingPeriod == 2) {
-                    $gradeData['term_2'] = $gradeValue;
+                    $gradeData['term_2'] = is_numeric($gradeValue) ? $gradeValue : null;
                 } elseif ($gradingPeriod == 3) {
-                    $gradeData['term_3'] = $gradeValue;
+                    $gradeData['term_3'] = is_numeric($gradeValue) ? $gradeValue : null;
                 }
                 
                 // Add remarks if descriptor is available
@@ -1091,10 +1231,10 @@ class ClassController extends Controller
                     ->where('class_schedule_id', $classSchedule->id)
                     ->first();
 
-                // If record is submitted or approved, skip it
-                if ($existingGrade && in_array($existingGrade->status, ['submitted', 'approved'])) {
+                // If record is approved, skip it (rejected records can be updated)
+                if ($existingGrade && $existingGrade->status === 'approved') {
                     $skippedCount++;
-                    $warnings[] = "Student {$record['student_name']} ({$record['student_number']}) grades already submitted/approved and cannot be modified.";
+                    $warnings[] = "Student {$record['student_name']} ({$record['student_number']}) grades already approved and cannot be modified.";
                     continue;
                 }
 
@@ -1106,9 +1246,9 @@ class ClassController extends Controller
                     'written_works' => null,
                     'performance_tasks' => null,
                     'quarterly_assessment' => null,
-                    'initial_grade' => $record['initial_grade'] ?? null,
-                    'quarterly_grade' => $record['quarterly_grade'] ?? null,
-                    'final_grade' => $record['quarterly_grade'] ?? null, // Use quarterly as final for now
+                    'initial_grade' => is_numeric($record['initial_grade'] ?? null) ? $record['initial_grade'] : null,
+                    'quarterly_grade' => is_numeric($record['quarterly_grade'] ?? null) ? $record['quarterly_grade'] : null,
+                    'final_grade' => is_numeric($record['quarterly_grade'] ?? null) ? $record['quarterly_grade'] : null, // Use quarterly as final for now
                     'remarks' => $record['remarks'] ?? '',
                     'imported_data' => $record,
                     'status' => 'draft',
@@ -1225,11 +1365,16 @@ class ClassController extends Controller
         $gradingPeriod = $previewData['grading_period'];
         $termColumn = $previewData['term_column'];
 
-        // Check if this grading period is already approved
-        $termField = 'term_' . $gradingPeriod;
+        \Log::info('IMPORT CONFIRM - Grading period selected', [
+            'class_schedule_id' => $classSchedule->id,
+            'grading_period' => $gradingPeriod,
+            'term_column' => $termColumn,
+        ]);
+
+        // Check if this grading period is already approved using grading_period column
         $alreadyApproved = FinalGrade::where('class_schedule_id', $classSchedule->id)
+            ->where('grading_period', $gradingPeriod)
             ->where('status', 'approved')
-            ->whereNotNull($termField)
             ->exists();
 
         if ($alreadyApproved) {
@@ -1243,6 +1388,15 @@ class ClassController extends Controller
 
         // Save grades for matched students
         $saveResult = $this->saveGradesForPeriod($matchedLearners, $allLearners, $classSchedule, $termColumn, $gradingPeriod);
+
+        \Log::info('IMPORT CONFIRM - Save result', [
+            'class_schedule_id' => $classSchedule->id,
+            'grading_period' => $gradingPeriod,
+            'save_result' => $saveResult,
+        ]);
+
+        // Store grading period in session for submission
+        session(['import_grading_period_' . $classSchedule->id => $gradingPeriod]);
 
         // Clear session data
         session()->forget('import_preview_' . $classSchedule->id);
@@ -1285,72 +1439,281 @@ class ClassController extends Controller
 
     public function submitGrades(Request $request, ClassSchedule $classSchedule)
     {
+        \Log::info('STEP 0 - Method entered', [
+            'class_schedule_id' => $classSchedule->id,
+            'teacher_id' => auth()->id(),
+            'class_teacher_id' => $classSchedule->teacher_id,
+            'request_grading_period' => $request->grading_period,
+        ]);
+
         if ($classSchedule->teacher_id !== auth()->id()) {
+            \Log::warning('Submit Grades: Teacher mismatch', [
+                'auth_teacher_id' => auth()->id(),
+                'class_teacher_id' => $classSchedule->teacher_id,
+            ]);
             abort(403);
         }
+
+        \Log::info('STEP 1 - Teacher check passed');
+
+        // Get grading period from request (set during import)
+        $gradingPeriod = $request->grading_period ?? session('import_grading_period_' . $classSchedule->id);
+
+        \Log::info('SUBMIT - Grading period determination', [
+            'class_schedule_id' => $classSchedule->id,
+            'request_grading_period' => $request->grading_period,
+            'session_grading_period' => session('import_grading_period_' . $classSchedule->id),
+            'final_grading_period' => $gradingPeriod,
+        ]);
+
+        if (!$gradingPeriod || !in_array($gradingPeriod, [1, 2, 3])) {
+            \Log::warning('STEP 1.1 - Invalid or missing grading period', [
+                'request_grading_period' => $request->grading_period,
+                'session_grading_period' => session('import_grading_period_' . $classSchedule->id),
+            ]);
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'Unable to determine grading period. Please import grades again.');
+        }
+
+        \Log::info('STEP 2 - Grading period from request', [
+            'grading_period' => $gradingPeriod,
+        ]);
+
+        // PHASE 2: Validate submission timeframe
+        $schoolYear = $classSchedule->school_year;
+        $currentTime = now();
+
+        \Log::info('STEP 2.5 - Timeframe validation check', [
+            'school_year' => $schoolYear,
+            'grading_period' => $gradingPeriod,
+            'current_time' => $currentTime->toDateTimeString(),
+        ]);
+
+        // Find the matching GradeSubmissionSchedule
+        $schedule = GradeSubmissionSchedule::where('school_year', $schoolYear)
+            ->where('grading_period', $gradingPeriod)
+            ->first();
+
+        if (!$schedule) {
+            \Log::warning('GRADE SUBMISSION BLOCKED - NO SCHEDULE', [
+                'teacher_id' => auth()->id(),
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'current_timestamp' => $currentTime->toDateTimeString(),
+                'result' => 'BLOCKED',
+                'reason' => 'NO SCHEDULE',
+            ]);
+
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'class_schedule_id' => $classSchedule->id,
+                    'school_year' => $schoolYear,
+                    'grading_period' => $gradingPeriod,
+                    'current_timestamp' => $currentTime->toDateTimeString(),
+                    'result' => 'BLOCKED',
+                    'reason' => 'NO SCHEDULE',
+                ])
+                ->log('grade_submission_blocked_no_schedule');
+
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'Grade submission is currently unavailable because no submission period has been configured.');
+        }
+
+        \Log::info('STEP 2.6 - Schedule found', [
+            'schedule_id' => $schedule->id,
+            'start_at' => $schedule->start_at->toDateTimeString(),
+            'end_at' => $schedule->end_at->toDateTimeString(),
+        ]);
+
+        // Check if current time is before start_at
+        if ($currentTime->lt($schedule->start_at)) {
+            \Log::warning('GRADE SUBMISSION BLOCKED - NOT YET OPEN', [
+                'teacher_id' => auth()->id(),
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'current_timestamp' => $currentTime->toDateTimeString(),
+                'schedule_id' => $schedule->id,
+                'start_at' => $schedule->start_at->toDateTimeString(),
+                'end_at' => $schedule->end_at->toDateTimeString(),
+                'result' => 'BLOCKED',
+                'reason' => 'NOT YET OPEN',
+            ]);
+
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'class_schedule_id' => $classSchedule->id,
+                    'school_year' => $schoolYear,
+                    'grading_period' => $gradingPeriod,
+                    'current_timestamp' => $currentTime->toDateTimeString(),
+                    'schedule_id' => $schedule->id,
+                    'start_at' => $schedule->start_at->toDateTimeString(),
+                    'end_at' => $schedule->end_at->toDateTimeString(),
+                    'result' => 'BLOCKED',
+                    'reason' => 'NOT YET OPEN',
+                ])
+                ->log('grade_submission_blocked_not_yet_open');
+
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'Grade submission is not yet open. Submission opens on ' . $schedule->start_at->format('M d, Y g:i A') . '.');
+        }
+
+        // Check if current time is after end_at
+        if ($currentTime->gt($schedule->end_at)) {
+            \Log::warning('GRADE SUBMISSION BLOCKED - DEADLINE PASSED', [
+                'teacher_id' => auth()->id(),
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'current_timestamp' => $currentTime->toDateTimeString(),
+                'schedule_id' => $schedule->id,
+                'start_at' => $schedule->start_at->toDateTimeString(),
+                'end_at' => $schedule->end_at->toDateTimeString(),
+                'result' => 'BLOCKED',
+                'reason' => 'DEADLINE PASSED',
+            ]);
+
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'class_schedule_id' => $classSchedule->id,
+                    'school_year' => $schoolYear,
+                    'grading_period' => $gradingPeriod,
+                    'current_timestamp' => $currentTime->toDateTimeString(),
+                    'schedule_id' => $schedule->id,
+                    'start_at' => $schedule->start_at->toDateTimeString(),
+                    'end_at' => $schedule->end_at->toDateTimeString(),
+                    'result' => 'BLOCKED',
+                    'reason' => 'DEADLINE PASSED',
+                ])
+                ->log('grade_submission_blocked_deadline_passed');
+
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'Grade submission is closed. The submission deadline was ' . $schedule->end_at->format('M d, Y g:i A') . '.');
+        }
+
+        // Timeframe is valid - log and continue
+        \Log::info('GRADE SUBMISSION ALLOWED', [
+            'teacher_id' => auth()->id(),
+            'class_schedule_id' => $classSchedule->id,
+            'school_year' => $schoolYear,
+            'grading_period' => $gradingPeriod,
+            'current_timestamp' => $currentTime->toDateTimeString(),
+            'schedule_id' => $schedule->id,
+            'start_at' => $schedule->start_at->toDateTimeString(),
+            'end_at' => $schedule->end_at->toDateTimeString(),
+            'result' => 'ALLOWED',
+        ]);
+
+        activity()
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'current_timestamp' => $currentTime->toDateTimeString(),
+                'schedule_id' => $schedule->id,
+                'start_at' => $schedule->start_at->toDateTimeString(),
+                'end_at' => $schedule->end_at->toDateTimeString(),
+                'result' => 'ALLOWED',
+            ])
+            ->log('grade_submission_allowed');
+
+        \Log::info('STEP 2.7 - Timeframe validation passed');
 
         try {
             DB::beginTransaction();
 
-            // Get all draft grades for this class
+            \Log::info('STEP 3 - Transaction started');
+
+            // Get ONLY draft grades for this class and grading period
             $draftGrades = FinalGrade::where('class_schedule_id', $classSchedule->id)
+                ->where('grading_period', $gradingPeriod)
                 ->where('status', 'draft')
                 ->get();
 
+            \Log::info('TEACHER SUBMIT - Draft grades query', [
+                'class_schedule_id' => $classSchedule->id,
+                'grading_period' => $gradingPeriod,
+                'draft_count_before' => $draftGrades->count(),
+                'draft_grades_ids' => $draftGrades->pluck('id'),
+                'draft_grades_status' => $draftGrades->pluck('status'),
+            ]);
+
             if ($draftGrades->isEmpty()) {
+                \Log::warning('TEACHER SUBMIT - No draft grades found', [
+                    'class_schedule_id' => $classSchedule->id,
+                    'grading_period' => $gradingPeriod,
+                    'all_grades_for_class' => FinalGrade::where('class_schedule_id', $classSchedule->id)
+                        ->get(['id', 'student_id', 'status', 'grading_period']),
+                ]);
                 return redirect()
                     ->route('teacher.classes.grades', $classSchedule)
-                    ->with('error', 'No draft grades found to submit.');
+                    ->with('error', 'No draft grades found to submit for Term ' . $gradingPeriod . '.');
             }
 
-            // Determine which grading period is being submitted
-            $firstGrade = $draftGrades->first();
-            $gradingPeriod = null;
-            if ($firstGrade->term_1 && !$firstGrade->term_2 && !$firstGrade->term_3) {
-                $gradingPeriod = 1;
-            } elseif ($firstGrade->term_2 && !$firstGrade->term_3) {
-                $gradingPeriod = 2;
-            } elseif ($firstGrade->term_3) {
-                $gradingPeriod = 3;
-            }
+            \Log::info('STEP 5 - Draft grades not empty');
 
-            if (!$gradingPeriod) {
-                return redirect()
-                    ->route('teacher.classes.grades', $classSchedule)
-                    ->with('error', 'Unable to determine which grading period is being submitted.');
-            }
-
-            // Check if this specific grading period is already submitted
-            $termField = 'term_' . $gradingPeriod;
-            $alreadySubmitted = FinalGrade::where('class_schedule_id', $classSchedule->id)
-                ->where('status', 'submitted')
-                ->whereNotNull($termField)
-                ->exists();
-            
-            if ($alreadySubmitted) {
-                return redirect()
-                    ->route('teacher.classes.grades', $classSchedule)
-                    ->with('error', "Term {$gradingPeriod} grades for this class have already been submitted and are pending review.");
-            }
-
-            // Update all draft grades to submitted status
-            $submittedCount = FinalGrade::where('class_schedule_id', $classSchedule->id)
+            // Update ONLY draft grades to submitted status
+            $affected = FinalGrade::where('class_schedule_id', $classSchedule->id)
+                ->where('grading_period', $gradingPeriod)
                 ->where('status', 'draft')
                 ->update([
                     'status' => 'submitted',
                     'submitted_at' => now(),
                 ]);
 
+            \Log::info('TEACHER SUBMIT RESULT', [
+                'class_schedule_id' => $classSchedule->id,
+                'grading_period' => $gradingPeriod,
+                'draft_count_before' => $draftGrades->count(),
+                'affected_rows' => $affected,
+            ]);
+
+            // Verify the update
+            $verify = FinalGrade::where('class_schedule_id', $classSchedule->id)
+                ->where('grading_period', $gradingPeriod)
+                ->get();
+
+            \Log::info('TEACHER SUBMIT VERIFY', [
+                'grading_period' => $gradingPeriod,
+                'statuses' => $verify->pluck('status')->unique()->values(),
+                'record_count' => $verify->count(),
+            ]);
+
+            if ($affected == 0) {
+                \Log::error('TEACHER SUBMIT ERROR - No records updated', [
+                    'class_schedule_id' => $classSchedule->id,
+                    'grading_period' => $gradingPeriod,
+                    'expected_count' => $draftGrades->count(),
+                ]);
+                DB::rollBack();
+                return redirect()
+                    ->route('teacher.classes.grades', $classSchedule)
+                    ->with('error', 'Error: No grade records were updated. Please try again.');
+            }
+
             // Record history for each grade
             $draftGrades->each(function ($grade) use ($gradingPeriod) {
                 $grade->recordHistory('submitted', 'submitted', "Term {$gradingPeriod} grades submitted for Registrar approval");
             });
 
+            \Log::info('STEP 9 - History recorded');
+
             DB::commit();
+
+            \Log::info('STEP 10 - Transaction committed');
 
             return redirect()
                 ->route('teacher.classes.grades', $classSchedule)
-                ->with('success', "Grades successfully submitted to the Registrar. {$submittedCount} student grades are now waiting for approval.");
+                ->with('success', "Grades successfully submitted to the Registrar. {$affected} student grades are now waiting for approval.");
 
         } catch (\Exception $e) {
             DB::rollBack();

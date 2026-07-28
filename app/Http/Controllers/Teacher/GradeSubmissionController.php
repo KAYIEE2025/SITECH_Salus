@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use App\Models\ClassSchedule;
 use App\Models\FinalGrade;
+use App\Models\GradeSubmissionSchedule;
 use Illuminate\Http\Request;
 
 class GradeSubmissionController extends Controller
@@ -54,6 +55,105 @@ class GradeSubmissionController extends Controller
                 ->route('teacher.grades.index', $classSchedule)
                 ->with('error', 'Only rejected grades can be resubmitted.');
         }
+
+        // PHASE 2: Validate submission timeframe for resubmission
+        $schoolYear = $classSchedule->school_year;
+        $currentTime = now();
+
+        // Determine grading period from rejected grades
+        $rejectedGrade = FinalGrade::where('class_schedule_id', $classSchedule->id)
+            ->where('status', 'rejected')
+            ->first();
+
+        $gradingPeriod = $rejectedGrade->grading_period;
+
+        if (!$gradingPeriod || !in_array($gradingPeriod, [1, 2, 3])) {
+            return redirect()
+                ->route('teacher.grades.index', $classSchedule)
+                ->with('error', 'Unable to determine grading period for resubmission.');
+        }
+
+        // Find the matching GradeSubmissionSchedule
+        $schedule = GradeSubmissionSchedule::where('school_year', $schoolYear)
+            ->where('grading_period', $gradingPeriod)
+            ->first();
+
+        if (!$schedule) {
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'class_schedule_id' => $classSchedule->id,
+                    'school_year' => $schoolYear,
+                    'grading_period' => $gradingPeriod,
+                    'current_timestamp' => $currentTime->toDateTimeString(),
+                    'result' => 'BLOCKED',
+                    'reason' => 'NO SCHEDULE',
+                ])
+                ->log('grade_resubmission_blocked_no_schedule');
+
+            return redirect()
+                ->route('teacher.grades.index', $classSchedule)
+                ->with('error', 'Grade resubmission is currently unavailable because no submission period has been configured.');
+        }
+
+        // Check if current time is before start_at
+        if ($currentTime->lt($schedule->start_at)) {
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'class_schedule_id' => $classSchedule->id,
+                    'school_year' => $schoolYear,
+                    'grading_period' => $gradingPeriod,
+                    'current_timestamp' => $currentTime->toDateTimeString(),
+                    'schedule_id' => $schedule->id,
+                    'start_at' => $schedule->start_at->toDateTimeString(),
+                    'end_at' => $schedule->end_at->toDateTimeString(),
+                    'result' => 'BLOCKED',
+                    'reason' => 'NOT YET OPEN',
+                ])
+                ->log('grade_resubmission_blocked_not_yet_open');
+
+            return redirect()
+                ->route('teacher.grades.index', $classSchedule)
+                ->with('error', 'Grade resubmission is not yet open. Submission opens on ' . $schedule->start_at->format('M d, Y g:i A') . '.');
+        }
+
+        // Check if current time is after end_at
+        if ($currentTime->gt($schedule->end_at)) {
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'class_schedule_id' => $classSchedule->id,
+                    'school_year' => $schoolYear,
+                    'grading_period' => $gradingPeriod,
+                    'current_timestamp' => $currentTime->toDateTimeString(),
+                    'schedule_id' => $schedule->id,
+                    'start_at' => $schedule->start_at->toDateTimeString(),
+                    'end_at' => $schedule->end_at->toDateTimeString(),
+                    'result' => 'BLOCKED',
+                    'reason' => 'DEADLINE PASSED',
+                ])
+                ->log('grade_resubmission_blocked_deadline_passed');
+
+            return redirect()
+                ->route('teacher.grades.index', $classSchedule)
+                ->with('error', 'Grade resubmission is closed. The submission deadline was ' . $schedule->end_at->format('M d, Y g:i A') . '.');
+        }
+
+        // Timeframe is valid - log and continue
+        activity()
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'current_timestamp' => $currentTime->toDateTimeString(),
+                'schedule_id' => $schedule->id,
+                'start_at' => $schedule->start_at->toDateTimeString(),
+                'end_at' => $schedule->end_at->toDateTimeString(),
+                'result' => 'ALLOWED',
+            ])
+            ->log('grade_resubmission_allowed');
 
         // Update status back to submitted
         FinalGrade::where('class_schedule_id', $classSchedule->id)

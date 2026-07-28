@@ -74,42 +74,42 @@
                         </h3>
                     </div>
                     
-                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                         <table class="w-full text-sm">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-600">Subject Code</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-600">Subject Name</th>
-                                    <th class="text-left py-3 px-4 font-medium text-gray-600">Teacher</th>
-                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Term 1</th>
-                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Term 2</th>
-                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Term 3</th>
-                                    <th class="text-center py-3 px-4 font-medium text-gray-600">Final Rating</th>
+                                    <th class="text-left py-4 px-5 font-semibold text-gray-700 whitespace-nowrap">Subject Code</th>
+                                    <th class="text-left py-4 px-5 font-semibold text-gray-700 whitespace-nowrap">Subject Name</th>
+                                    <th class="text-left py-4 px-5 font-semibold text-gray-700 whitespace-nowrap">Teacher</th>
+                                    <th class="text-center py-4 px-5 font-semibold text-gray-700 whitespace-nowrap">Term 1</th>
+                                    <th class="text-center py-4 px-5 font-semibold text-gray-700 whitespace-nowrap">Term 2</th>
+                                    <th class="text-center py-4 px-5 font-semibold text-gray-700 whitespace-nowrap">Term 3</th>
+                                    <th class="text-center py-4 px-5 font-semibold text-gray-700 whitespace-nowrap">Final Rating</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($group['grades'] as $grade)
-                                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                                        <td class="py-3 px-4 text-gray-800 font-medium">
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                        <td class="py-4 px-5 text-gray-800 font-medium whitespace-nowrap">
                                             {{ $grade->classSchedule->subject->code ?? 'N/A' }}
                                         </td>
-                                        <td class="py-3 px-4 text-gray-700">
+                                        <td class="py-4 px-5 text-gray-700 whitespace-nowrap">
                                             {{ $grade->classSchedule->subject->name ?? 'N/A' }}
                                         </td>
-                                        <td class="py-3 px-4 text-gray-600">
+                                        <td class="py-4 px-5 text-gray-600 whitespace-nowrap">
                                             {{ $grade->classSchedule->teacher->name ?? 'N/A' }}
                                         </td>
-                                        <td class="py-3 px-4 text-center font-medium text-gray-800">
-                                            {{ $grade->term_1 ?? '-' }}
+                                        <td class="py-4 px-5 text-center text-gray-800 font-mono">
+                                            {{ $grade->term_1 ? number_format($grade->term_1, 2) : '-' }}
                                         </td>
-                                        <td class="py-3 px-4 text-center font-medium text-gray-800">
-                                            {{ $grade->term_2 ?? '-' }}
+                                        <td class="py-4 px-5 text-center text-gray-800 font-mono">
+                                            {{ $grade->term_2 ? number_format($grade->term_2, 2) : '-' }}
                                         </td>
-                                        <td class="py-3 px-4 text-center font-medium text-gray-800">
-                                            {{ $grade->term_3 ?? '-' }}
+                                        <td class="py-4 px-5 text-center text-gray-800 font-mono">
+                                            {{ $grade->term_3 ? number_format($grade->term_3, 2) : '-' }}
                                         </td>
-                                        <td class="py-3 px-4 text-center font-bold text-gray-800">
-                                            {{ $grade->final_rating ?? '-' }}
+                                        <td class="py-4 px-5 text-center font-bold text-green-700 font-mono bg-green-50/50">
+                                            {{ $grade->final_rating ? number_format($grade->final_rating, 2) : '-' }}
                                         </td>
                                     </tr>
                                 @endforeach
@@ -118,6 +118,21 @@
                     </div>
                 </div>
             @endforeach
+        @endif
+
+        <!-- GWA Section -->
+        @if(isset($gwa))
+            <div class="mt-8 rounded-lg bg-blue-50 border border-blue-200 p-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-semibold text-blue-800">General Weighted Average</h3>
+                        <p class="text-xs text-blue-600 mt-1">Based on approved final ratings</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-blue-700">{{ $gwa }}</p>
+                    </div>
+                </div>
+            </div>
         @endif
     </div>
 @endsection

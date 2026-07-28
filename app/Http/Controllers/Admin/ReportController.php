@@ -54,8 +54,10 @@ class ReportController extends Controller
 
         $subject = Subject::find($request->subject_id);
         
-        $grades = FinalGrade::with(['student', 'subject'])
-            ->where('subject_id', $request->subject_id)
+        $grades = FinalGrade::with(['student', 'classSchedule.subject'])
+            ->whereHas('classSchedule', function ($query) use ($request) {
+                $query->where('subject_id', $request->subject_id);
+            })
             ->where('status', 'approved')
             ->get();
 

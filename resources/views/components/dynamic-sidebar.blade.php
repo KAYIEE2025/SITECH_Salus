@@ -20,6 +20,15 @@
         'SSG' => 'partials.sidebar.ssg',
     ];
     
+    $routeProfileMap = [
+        'superadmin.*' => 'superadmin.profile',
+        'admin.*' => 'admin.profile.index',
+        'registrar.*' => 'registrar.profile',
+        'teacher.*' => 'teacher.profile.index',
+        'student.*' => 'student.profile.index',
+        'ssg.*' => 'ssg.profile.index',
+    ];
+    
     $currentSidebar = null;
     foreach($routeSidebarMap as $routePattern => $sidebar) {
         if(request()->routeIs($routePattern)) {
@@ -31,6 +40,14 @@
     $currentRole = null;
     if($currentSidebar) {
         $currentRole = array_search($currentSidebar, $roleSidebarMap);
+    }
+    
+    $profileRoute = 'student.profile.index';
+    foreach($routeProfileMap as $routePattern => $route) {
+        if(request()->routeIs($routePattern)) {
+            $profileRoute = $route;
+            break;
+        }
     }
 @endphp
 
@@ -46,3 +63,7 @@
         </div>
     @endif
 @endforeach
+
+<div class="mt-6 border-t border-green-800 pt-4">
+    <x-nav-link href="{{ route($profileRoute) }}" :active="request()->routeIs('*profile*')">My Profile</x-nav-link>
+</div>

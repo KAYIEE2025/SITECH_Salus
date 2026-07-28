@@ -256,18 +256,18 @@
                                 <p class="student-number">{{ $student->student_number }}</p>
                             </div>
                         </div>
-                        <script>
-                            window.onload = function() {
-                                window.print();
-                                window.onafterprint = function() {
-                                    window.close();
-                                };
-                            };
-                        </script>
                     </body>
                     </html>
                 `);
                 printWindow.document.close();
+
+                printWindow.onload = function () {
+                    printWindow.print();
+
+                    printWindow.onafterprint = function () {
+                        printWindow.close();
+                    };
+                };
             }
 
             // Close modal on outside click

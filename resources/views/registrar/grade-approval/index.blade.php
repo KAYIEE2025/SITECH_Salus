@@ -10,24 +10,46 @@
 
     {{-- Pending Approvals --}}
     <div class="bg-white rounded-xl border border-gray-200 mb-6">
-        <div class="px-6 py-4 border-b border-gray-100">
-            <h2 class="text-base font-semibold text-gray-800">Pending Grade Submissions</h2>
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <input type="checkbox"
+                       id="select-all-checkbox"
+                       class="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
+                       onchange="toggleSelectAll()">
+                <h2 class="text-base font-semibold text-gray-800">Pending Grade Submissions</h2>
+            </div>
+            <div class="flex gap-2">
+                <button id="approve-selected-btn" disabled onclick="approveSelected()" class="text-xs bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition">
+                    Approve Selected
+                </button>
+                <button id="reject-selected-btn" disabled onclick="showRejectModal()" class="text-xs bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition">
+                    Reject Selected
+                </button>
+            </div>
         </div>
 
         @forelse($pendingGrades as $classScheduleId => $grades)
             @php $first = $grades->first(); @endphp
             <div class="px-6 py-4 border-b border-gray-100">
                 <div class="flex items-center justify-between mb-3">
-                    <div>
-                        <p class="font-semibold text-gray-800">
-                            {{ $first->classSchedule->subject->code ?? '—' }} —
-                            {{ $first->classSchedule->subject->name ?? '' }}
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            Teacher: {{ $first->classSchedule->teacher->name ?? '—' }} ·
-                            {{ $first->classSchedule->section->yearLevel->name ?? '' }}
-                            Sec {{ $first->classSchedule->section->name ?? '' }}
-                        </p>
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox"
+                               class="class-checkbox w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-green-500"
+                               name="class_schedule_ids[]"
+                               value="{{ $first->classSchedule->id }}"
+                               data-grading-period="{{ $first->grading_period ?? '' }}"
+                               onchange="updateButtons()">
+                        <div>
+                            <p class="font-semibold text-gray-800">
+                                {{ $first->classSchedule->subject->code ?? '—' }} —
+                                {{ $first->classSchedule->subject->name ?? '' }}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                Teacher: {{ $first->classSchedule->teacher->name ?? '—' }} ·
+                                {{ $first->classSchedule->section->yearLevel->name ?? '' }}
+                                Sec {{ $first->classSchedule->section->name ?? '' }}
+                            </p>
+                        </div>
                     </div>
                     <div class="flex gap-2">
                         <a href="{{ route('registrar.grade-approval.view', $first->classSchedule) }}" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg transition">
@@ -170,4 +192,160 @@
         </table>
     </div>
 
+    {{-- Reject Selected Modal --}}
+    <div id="reject-selected-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Reject Selected Classes</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Reason for Rejection <span class="text-red-600">*</span>
+                </label>
+                <textarea id="rejection-reason" required rows="3"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                    placeholder="Please provide a reason for rejecting these grades..."></textarea>
+            </div>
+            <div class="flex gap-2 justify-end">
+                <button onclick="hideRejectModal()" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg transition">
+                    Cancel
+                </button>
+                <button onclick="rejectSelected()" class="text-sm bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition">
+                    Confirm Rejection
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSelectAll() {
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const classCheckboxes = document.querySelectorAll('.class-checkbox');
+
+            classCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+
+            updateButtons();
+        }
+
+        function updateButtons() {
+            const checkboxes = document.querySelectorAll('.class-checkbox:checked');
+            const approveBtn = document.getElementById('approve-selected-btn');
+            const rejectBtn = document.getElementById('reject-selected-btn');
+
+            approveBtn.disabled = checkboxes.length === 0;
+            rejectBtn.disabled = checkboxes.length === 0;
+        }
+
+        function getSelectedData() {
+            const checkboxes = document.querySelectorAll('.class-checkbox:checked');
+            const data = {
+                class_schedule_ids: []
+            };
+
+            checkboxes.forEach(checkbox => {
+                const classId = checkbox.value;
+                data.class_schedule_ids.push(classId);
+            });
+
+            return data;
+        }
+
+        function approveSelected() {
+            const data = getSelectedData();
+
+            console.log('APPROVE SELECTED - Data being sent:', data);
+
+            if (data.class_schedule_ids.length === 0) {
+                alert('Please select at least one class to approve.');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to approve ${data.class_schedule_ids.length} selected class(es)?`)) {
+                return;
+            }
+
+            console.log('APPROVE SELECTED - Sending to route:', '{{ route('registrar.grade-approval.approve-selected') }}');
+
+            fetch('{{ route('registrar.grade-approval.approve-selected') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('APPROVE SELECTED - Response received:', data);
+                if (data.success) {
+                    console.log('APPROVE SELECTED - Success, reloading page');
+                    window.location.href = '{{ route('registrar.grade-approval') }}';
+                } else {
+                    console.error('APPROVE SELECTED - Server error:', data.message);
+                    alert(data.message || 'Error approving selected classes.');
+                }
+            })
+            .catch(error => {
+                console.error('APPROVE SELECTED - Network error:', error);
+                alert('Error approving selected classes.');
+            });
+        }
+
+        function showRejectModal() {
+            const checkboxes = document.querySelectorAll('.class-checkbox:checked');
+
+            if (checkboxes.length === 0) {
+                alert('Please select at least one class to reject.');
+                return;
+            }
+
+            document.getElementById('reject-selected-modal').classList.remove('hidden');
+        }
+
+        function hideRejectModal() {
+            document.getElementById('reject-selected-modal').classList.add('hidden');
+            document.getElementById('rejection-reason').value = '';
+        }
+
+        function rejectSelected() {
+            const data = getSelectedData();
+            const rejectionReason = document.getElementById('rejection-reason').value.trim();
+
+            console.log('REJECT SELECTED - Data being sent:', data);
+            console.log('REJECT SELECTED - Rejection reason:', rejectionReason);
+
+            if (!rejectionReason) {
+                alert('Please provide a rejection reason.');
+                return;
+            }
+
+            data.rejection_reason = rejectionReason;
+
+            console.log('REJECT SELECTED - Sending to route:', '{{ route('registrar.grade-approval.reject-selected') }}');
+
+            fetch('{{ route('registrar.grade-approval.reject-selected') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('REJECT SELECTED - Response received:', data);
+                if (data.success) {
+                    console.log('REJECT SELECTED - Success, reloading page');
+                    window.location.href = '{{ route('registrar.grade-approval') }}';
+                } else {
+                    console.error('REJECT SELECTED - Server error:', data.message);
+                    alert(data.message || 'Error rejecting selected classes.');
+                }
+            })
+            .catch(error => {
+                console.error('REJECT SELECTED - Network error:', error);
+                alert('Error rejecting selected classes.');
+            });
+        }
+    </script>
 @endsection
