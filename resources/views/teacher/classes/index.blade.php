@@ -12,7 +12,7 @@
     </div>
 
     @if($sectionGroups->isEmpty())
-        <div class="rounded-xl border border-gray-200 bg-white px-6 py-12 text-center">
+        <div class="tc-card px-6 py-12 text-center">
             <p class="text-sm text-gray-500">No classes assigned yet.</p>
         </div>
     @else
@@ -23,7 +23,7 @@
                     $classes = $group['classes'];
                 @endphp
 
-                <details class="group overflow-hidden rounded-xl border border-gray-200 bg-white" @if($loop->first) open @endif>
+                <details class="tc-card group overflow-hidden" @if($loop->first) open @endif>
                     <summary class="flex cursor-pointer list-none flex-col gap-3 px-5 py-4 transition hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">

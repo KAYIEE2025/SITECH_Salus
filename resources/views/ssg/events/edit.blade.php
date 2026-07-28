@@ -8,7 +8,7 @@
         <a href="{{ route('ssg.events.index') }}" class="text-sm text-gray-600 hover:text-gray-800">Back to Events</a>
     </div>
 
-    <div class="rounded-xl border border-gray-200 bg-white p-6">
+    <div class="sg-card p-6 sm:p-8">
         <form method="POST" action="{{ route('ssg.events.update', $event) }}">
             @include('ssg.events._form', ['event' => $event])
         </form>

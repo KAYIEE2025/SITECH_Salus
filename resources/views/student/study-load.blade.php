@@ -8,7 +8,7 @@
         </div>
     @else
         <!-- Student Information Header -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div class="st-card mb-6 p-6 sm:p-8">
             <div class="flex items-center gap-4 mb-4">
                 @if(file_exists(public_path('images/salus-logo.png')))
                     <img src="{{ asset('images/salus-logo.png') }}" alt="School Logo" class="h-16 w-16 object-contain">
@@ -41,7 +41,7 @@
         </div>
 
         <!-- Study Load Table -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="st-card overflow-hidden p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Class Schedule</h2>
             
             @if($schedules->isEmpty())

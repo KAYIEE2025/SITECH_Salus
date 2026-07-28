@@ -16,7 +16,7 @@
             </div>
         @endif
 
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="ra-card p-6 sm:p-8">
             <h2 class="text-base font-semibold text-gray-800 mb-6">Edit Grade Submission Schedule</h2>
 
             <form method="POST" action="{{ route('registrar.grade-submission-schedules.update', $schedule) }}">

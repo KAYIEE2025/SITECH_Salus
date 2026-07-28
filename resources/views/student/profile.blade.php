@@ -2,7 +2,7 @@
 @section('title', 'My Profile')
 @section('content')
     @if(!$student)
-        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center">
+        <div class="rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 p-8 text-center">
             <h2 class="text-xl font-semibold text-yellow-800 mb-2">Student Profile Not Found</h2>
             <p class="text-yellow-700">Your student profile has not yet been created. Please contact the Registrar.</p>
         </div>
@@ -23,7 +23,7 @@
             <!-- Profile Photo and QR Code -->
             <div class="space-y-6">
                 <!-- Profile Photo -->
-                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="st-card p-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Profile Photo</h2>
                     @if($student->photo_path)
                         <div class="flex justify-center">
@@ -37,7 +37,7 @@
                 </div>
 
                 <!-- QR Code -->
-                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="st-card p-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">QR Code</h2>
                     @if($student && $student->qr_code_path)
                         <div class="flex justify-center mb-4">
@@ -66,7 +66,7 @@
             <!-- Profile Information -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Read-Only Information -->
-                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="st-card p-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-6">Profile Information</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -101,7 +101,7 @@
                 </div>
 
                 <!-- Editable Contact Number -->
-                <div class="bg-white rounded-xl border border-gray-200 p-6">
+                <div class="st-card p-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-6">Contact Information</h2>
                     <form action="{{ route('student.profile.update-contact') }}" method="POST">
                         @csrf

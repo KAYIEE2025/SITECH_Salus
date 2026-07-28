@@ -8,8 +8,8 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-xl border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+    <div class="ra-card overflow-hidden">
+        <div class="ra-card-header flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <h2 class="text-base font-semibold text-gray-800">All Students</h2>
             <a href="{{ route('registrar.students.create') }}"
                 class="bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
@@ -17,7 +17,7 @@
             </a>
         </div>
 
-        <table class="w-full text-sm">
+        <div class="overflow-x-auto"><table class="w-full text-sm">
     <thead class="bg-gray-50 text-gray-500 text-xs">
         <tr>
             <th class="text-left px-6 py-3">Student Number</th>
@@ -53,7 +53,7 @@
         </tr>
         @endforelse
     </tbody>
-</table>
+</table></div>
 
         @if($students->hasPages())
             <div class="px-6 py-4 border-t border-gray-100">

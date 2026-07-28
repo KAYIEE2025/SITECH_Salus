@@ -2,9 +2,9 @@
 @section('title', 'Roles & Access')
 @section('content')
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         @foreach($roles as $role)
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="sa-card p-6 transition hover:-translate-y-0.5 hover:shadow-md">
             <div class="mb-4">
                 <span class="text-xs font-semibold px-3 py-1 rounded-full {{ $role['color'] }}">
                     {{ $role['role'] }}

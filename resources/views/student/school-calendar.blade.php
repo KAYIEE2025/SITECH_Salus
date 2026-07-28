@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('title', 'School Calendar')
 @section('content')
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-4">
         <!-- Calendar Section -->
-        <div class="lg:col-span-3 bg-white rounded-xl border border-gray-200 p-6">
+        <div class="st-card p-6 lg:col-span-3">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-gray-800">School Calendar</h2>
                 <div class="relative">
@@ -50,7 +50,7 @@
         </div>
 
         <!-- Upcoming Events Panel -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="st-card p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Upcoming Events</h2>
             
             @if($upcomingEvents->isEmpty())
@@ -60,7 +60,7 @@
             @else
                 <div class="space-y-4">
                     @foreach($upcomingEvents as $event)
-                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer event-card" 
+        <div class="event-card cursor-pointer rounded-xl border border-green-100 p-4 transition hover:-translate-y-0.5 hover:shadow-md"
                              data-event-id="{{ $event->id }}"
                              data-event-title="{{ $event->title }}"
                              data-event-description="{{ $event->description }}"

@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="max-w-2xl">
-        <div class="rounded-xl border border-gray-200 bg-white p-6">
+        <div class="sa-card p-6 sm:p-8">
             <div class="mb-6 flex items-start justify-between gap-4">
                 <div>
                     <h2 class="text-base font-semibold text-gray-800">Edit Account</h2>
@@ -51,15 +51,13 @@
                         <select id="role" name="role" required
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                             @foreach($roles as $role)
-                                @if($role->name !== 'SSG')
-                                    <option value="{{ $role->name }}" @selected(old('role', $user->getRoleNames()->first()) === $role->name)">
-                                        {{ $role->name }}
-                                    </option>
-                                @endif
+                                <option value="{{ $role->name }}" @selected(old('role', $user->getRoleNames()->first()) === $role->name)>
+                                    {{ $role->name }}
+                                </option>
                             @endforeach
                         </select>
                         @error('role') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        <p class="mt-1 text-xs text-gray-500">To assign SSG role, use the <a href="{{ route('superadmin.role-management') }}" class="text-[#1a5c1a] hover:underline">Manage Roles</a> page.</p>
+                        <p class="mt-1 text-xs text-gray-500">Use <a href="{{ route('superadmin.role-management') }}" class="text-[#1a5c1a] hover:underline">Role Management</a> when a user needs multiple roles.</p>
                     </div>
                 @endif
 

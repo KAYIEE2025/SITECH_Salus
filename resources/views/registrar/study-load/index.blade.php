@@ -14,7 +14,7 @@
     @endif
 
     {{-- Tabs --}}
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+    <div class="ra-card mb-6 p-5 sm:p-6">
         <div class="flex gap-4 border-b border-gray-200 mb-4">
             <button onclick="showTab('section-schedule')" id="tab-section-schedule"
                 class="pb-3 px-1 text-sm font-medium border-b-2 border-green-600 text-green-700">
@@ -106,10 +106,10 @@
     </script>
 
     @if($selected && request('view') != 'students')
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
         {{-- Add Schedule Entry to Section --}}
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="ra-card p-6">
             <h2 class="text-base font-semibold text-gray-800">
                 Add Schedule Entry — {{ $selected->yearLevel->name ?? '' }} Section {{ $selected->name }}
             </h2>
@@ -204,15 +204,15 @@
         </div>
 
         {{-- Section Schedule Table (sorted by time) --}}
-        <div class="col-span-2 bg-white rounded-xl border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-100">
+        <div class="ra-card overflow-hidden xl:col-span-2">
+            <div class="ra-card-header">
                 <h2 class="text-base font-semibold text-gray-800">
                     Class Schedule — {{ $selected->yearLevel->name ?? '' }} Section {{ $selected->name }}
                 </h2>
                 <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year','2026-2027') }} · Sorted by time</p>
             </div>
 
-            <table class="w-full text-sm">
+            <div class="overflow-x-auto"><table class="w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 text-xs">
                     <tr>
                         <th class="text-left px-6 py-3">Subject</th>
@@ -267,7 +267,7 @@
                     </tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
 
     </div>
@@ -275,8 +275,8 @@
 
     {{-- Student Study Load View --}}
     @if($selected && request('view') == 'students')
-    <div class="bg-white rounded-xl border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-100">
+        <div class="ra-card overflow-hidden">
+            <div class="ra-card-header">
             <h2 class="text-base font-semibold text-gray-800">
                 Students in {{ $selected->yearLevel->name ?? '' }} Section {{ $selected->name }}
             </h2>
@@ -290,7 +290,7 @@
         @endphp
 
         @forelse($students as $student)
-            <div class="px-6 py-4 border-b border-gray-100">
+            <div class="border-b border-green-50 px-5 py-4 sm:px-6">
                 <div class="flex items-center justify-between mb-3">
                     <div>
                         <p class="font-semibold text-gray-800">

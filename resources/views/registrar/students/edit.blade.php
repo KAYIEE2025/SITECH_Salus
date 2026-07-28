@@ -8,7 +8,7 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <div class="ra-card p-6 sm:p-8">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-base font-semibold text-gray-800">Edit Student Profile</h2>
             <a href="{{ route('registrar.students') }}" 

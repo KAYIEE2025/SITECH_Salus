@@ -14,7 +14,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $roles = Role::orderBy('name')->get();
-        $assignableRoles = $roles->reject(fn ($role) => in_array($role->name, ['SSG', 'Student']));
+        $assignableRoles = $roles;
 
         $users = User::with('roles')
             ->when($request->filled('role'), function ($query) use ($request) {
@@ -59,14 +59,9 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users',
             'password' => 'required|min:8|confirmed',
-            'role'     => 'required|exists:roles,name|not_in:Student',
+            'role'     => 'required|exists:roles,name',
             'contact_number' => 'nullable|string|max:20',
         ]);
-
-        // Defense-in-depth: Abort if Student role is attempted
-        if ($request->role === 'Student') {
-            abort(403, 'Super Admin cannot create Student accounts. Please use the Registrar module.');
-        }
 
         $user = User::create([
             'name'     => $request->name,
@@ -91,8 +86,8 @@ class UserController extends Controller
     {
         $isProtectedUser = $user->id === 1;
         $roles = $isProtectedUser
-            ? Role::whereNotIn('name', ['Super Admin', 'SSG', 'Student'])->orderBy('name')->get()
-            : Role::whereNotIn('name', ['SSG', 'Student'])->orderBy('name')->get();
+            ? Role::whereNotIn('name', ['Super Admin', 'SSG'])->orderBy('name')->get()
+            : Role::orderBy('name')->get();
         return view('superadmin.accounts-edit', compact('user', 'roles'));
     }
 
@@ -106,15 +101,9 @@ class UserController extends Controller
             'role'  => [
                 $isProtectedUser ? 'nullable' : 'required',
                 'exists:roles,name',
-                'not_in:Student',
             ],
             'contact_number' => 'nullable|string|max:20',
         ]);
-
-        // Defense-in-depth: Abort if Student role is attempted
-        if (!$isProtectedUser && $request->role === 'Student') {
-            abort(403, 'Super Admin cannot assign Student role. Please use the Registrar module.');
-        }
 
         $user->update([
             'name'  => $request->name,

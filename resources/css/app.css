@@ -1,3 +1,102 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .superadmin-panel .sa-card {
+        @apply rounded-2xl border border-green-100 bg-white shadow-sm shadow-green-900/5;
+    }
+
+    .superadmin-panel .sa-card-header {
+        @apply border-b border-green-50 px-5 py-4 sm:px-6;
+    }
+
+    .superadmin-panel .sa-label {
+        @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-green-800/70;
+    }
+
+    .superadmin-panel input:not([type='checkbox']),
+    .superadmin-panel select {
+        @apply rounded-xl border-green-100 bg-white text-sm shadow-sm transition placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20;
+    }
+
+    .superadmin-panel table thead {
+        @apply bg-green-50/70 text-[11px] uppercase tracking-wider text-green-900/70;
+    }
+
+    .superadmin-panel table tbody tr {
+        @apply transition-colors hover:bg-green-50/40;
+    }
+
+    .registrar-panel .ra-card {
+        @apply rounded-2xl border border-green-100 bg-white shadow-sm shadow-green-900/5;
+    }
+
+    .registrar-panel .ra-card-header {
+        @apply border-b border-green-50 px-5 py-4 sm:px-6;
+    }
+
+    .registrar-panel .ra-label {
+        @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-green-800/70;
+    }
+
+    .registrar-panel input:not([type='checkbox']),
+    .registrar-panel input:not([type='radio']),
+    .registrar-panel select,
+    .registrar-panel textarea {
+        @apply rounded-xl border-green-100 bg-white text-sm shadow-sm transition placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20;
+    }
+
+    .registrar-panel table thead {
+        @apply bg-green-50/70 text-[11px] uppercase tracking-wider text-green-900/70;
+    }
+
+    .registrar-panel table tbody tr {
+        @apply transition-colors hover:bg-green-50/40;
+    }
+
+    .student-panel .st-card {
+        @apply rounded-2xl border border-green-100 bg-white shadow-sm shadow-green-900/5;
+    }
+
+    .student-panel input:not([type='checkbox']),
+    .student-panel input:not([type='radio']),
+    .student-panel select,
+    .student-panel textarea {
+        @apply rounded-xl border-green-100 bg-white text-sm shadow-sm transition placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20;
+    }
+
+    .student-panel table thead {
+        @apply bg-green-50/70 text-[11px] uppercase tracking-wider text-green-900/70;
+    }
+
+    .student-panel table tbody tr {
+        @apply transition-colors hover:bg-green-50/40;
+    }
+
+    .ssg-panel .sg-card,
+    .teacher-panel .tc-card {
+        @apply rounded-2xl border border-green-100 bg-white shadow-sm shadow-green-900/5;
+    }
+
+    .ssg-panel input:not([type='checkbox']),
+    .ssg-panel input:not([type='radio']),
+    .ssg-panel select,
+    .ssg-panel textarea,
+    .teacher-panel input:not([type='checkbox']),
+    .teacher-panel input:not([type='radio']),
+    .teacher-panel select,
+    .teacher-panel textarea {
+        @apply rounded-xl border-green-100 bg-white text-sm shadow-sm transition placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20;
+    }
+
+    .ssg-panel table thead,
+    .teacher-panel table thead {
+        @apply bg-green-50/70 text-[11px] uppercase tracking-wider text-green-900/70;
+    }
+
+    .ssg-panel table tbody tr,
+    .teacher-panel table tbody tr {
+        @apply transition-colors hover:bg-green-50/40;
+    }
+}

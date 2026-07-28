@@ -14,25 +14,25 @@
     </div>
 
     <div class="mb-6 grid gap-6 md:grid-cols-4">
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
+        <div class="sg-card p-5">
             <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Student Number</p>
             <p class="mt-1 font-semibold text-gray-800">{{ $student->student_number }}</p>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
+        <div class="sg-card p-5">
             <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Grade Level</p>
             <p class="mt-1 font-semibold text-gray-800">{{ $student->yearLevel->name ?? 'N/A' }}</p>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
+        <div class="sg-card p-5">
             <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Section</p>
             <p class="mt-1 font-semibold text-gray-800">{{ $student->section ? 'Section ' . $student->section->name : 'N/A' }}</p>
         </div>
-        <div class="rounded-xl border border-green-200 bg-green-50 p-5">
+        <div class="rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-5">
             <p class="text-xs font-semibold uppercase tracking-wide text-green-700">Total Outstanding</p>
             <p class="mt-1 text-2xl font-bold text-green-900">PHP {{ number_format($totalOutstanding, 2) }}</p>
         </div>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div class="sg-card overflow-hidden">
         <div class="border-b border-gray-100 px-6 py-4">
             <h2 class="text-base font-semibold text-gray-800">Event Fine Details</h2>
         </div>

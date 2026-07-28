@@ -7,7 +7,7 @@
         $selectedClassScheduleId = old('class_schedule_id', $classSchedule->id ?? '');
     @endphp
 
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+    <div class="tc-card mb-6 p-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-6">Grade Management</h2>
 
         <!-- Selection Form -->
@@ -48,7 +48,7 @@
 
     <!-- Upload Section (Hidden until selection) -->
     @if(isset($classSchedule))
-    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+    <div class="tc-card mb-6 p-6">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-lg font-semibold text-gray-800">
                 {{ $classSchedule->subject->name ?? 'Subject' }} - {{ $classSchedule->section->name ?? 'Section' }}

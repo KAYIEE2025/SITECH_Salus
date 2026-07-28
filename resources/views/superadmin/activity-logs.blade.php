@@ -3,8 +3,8 @@
 @section('title', 'Activity Logs')
 
 @section('content')
-    <div class="rounded-xl border border-gray-200 bg-white">
-        <div class="border-b border-gray-100 px-6 py-4">
+    <div class="sa-card overflow-hidden">
+        <div class="sa-card-header">
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <h2 class="text-base font-semibold text-gray-800">System Activity Logs</h2>
@@ -20,7 +20,7 @@
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('superadmin.activity-logs') }}" class="mt-4 grid grid-cols-6 gap-3">
+            <form method="GET" action="{{ route('superadmin.activity-logs') }}" class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <input type="search" name="search" value="{{ request('search') }}" placeholder="Search description"
                     class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
 

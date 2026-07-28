@@ -9,8 +9,8 @@
     @endif
 
     {{-- Pending Approvals --}}
-    <div class="bg-white rounded-xl border border-gray-200 mb-6">
-        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+    <div class="ra-card mb-6 overflow-hidden">
+        <div class="ra-card-header flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div class="flex items-center gap-3">
                 <input type="checkbox"
                        id="select-all-checkbox"
@@ -150,11 +150,11 @@
     </div>
 
     {{-- Review History --}}
-    <div class="bg-white rounded-xl border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-100">
+    <div class="ra-card overflow-hidden">
+        <div class="ra-card-header">
             <h2 class="text-base font-semibold text-gray-800">Review History</h2>
         </div>
-        <table class="w-full text-sm">
+        <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="bg-gray-50 text-gray-500 text-xs">
                 <tr>
                     <th class="text-left px-6 py-3">Student</th>
@@ -189,7 +189,7 @@
                 </tr>
                 @endforelse
             </tbody>
-        </table>
+        </table></div>
     </div>
 
     {{-- Reject Selected Modal --}}

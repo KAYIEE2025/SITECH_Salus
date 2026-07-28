@@ -15,7 +15,7 @@
 
     <div class="grid gap-6 xl:grid-cols-[360px_1fr]">
         <div class="space-y-6">
-            <section class="rounded-xl border border-gray-200 bg-white p-6">
+            <section class="sg-card p-6">
                 <h2 class="mb-4 text-base font-semibold text-gray-800">Event Information</h2>
                 <dl class="space-y-3 text-sm">
                     <div>
@@ -43,7 +43,7 @@
                 </dl>
             </section>
 
-            <section class="rounded-xl border border-gray-200 bg-white p-6">
+            <section class="sg-card p-6">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-base font-semibold text-gray-800">QR Scanner</h2>
                     <div id="attendance-status-badge">
@@ -106,7 +106,7 @@
             </section>
         </div>
 
-        <section class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <section class="sg-card overflow-hidden">
             <div class="border-b border-gray-100 px-6 py-4">
                 <h2 class="text-base font-semibold text-gray-800">Attendance List</h2>
                 <p class="mt-0.5 text-xs text-gray-500">Refreshes automatically every 5 seconds.</p>

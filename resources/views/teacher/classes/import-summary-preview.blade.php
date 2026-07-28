@@ -10,7 +10,7 @@
     </div>
 
     <!-- Class Information Card -->
-    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+    <div class="tc-card mb-6 p-6">
         <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 flex-1">
                 <div>
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Import Summary Card -->
-    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+    <div class="tc-card mb-6 p-6">
         <div class="mb-4">
             <h2 class="text-lg font-semibold text-gray-800">Import Summary Preview</h2>
             <p class="mt-1 text-sm text-gray-500">Review the parsed data before importing grades for Quarter {{ $gradingPeriod }}.</p>

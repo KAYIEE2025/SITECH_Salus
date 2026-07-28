@@ -10,7 +10,7 @@
     </div>
 
     <!-- Class Information -->
-    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+    <div class="ra-card mb-6 p-5 sm:p-6">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
                 <p class="text-xs text-gray-500 uppercase tracking-wide">School Year</p>
@@ -44,7 +44,7 @@
     </div>
 
     <!-- Student Grades Table -->
-    <div class="rounded-xl border border-gray-200 bg-white p-6 mb-6">
+    <div class="ra-card mb-6 p-5 sm:p-6">
         <div class="mb-4">
             <h2 class="text-lg font-semibold text-gray-800">Student Grades</h2>
             <p class="mt-1 text-sm text-gray-500">Review the imported grades submitted by the teacher.</p>
@@ -132,7 +132,7 @@
 
     {{-- Grade Timeline --}}
     @if($gradeTimeline && $gradeTimeline->isNotEmpty())
-        <div class="rounded-xl border border-gray-200 bg-white p-6">
+    <div class="ra-card p-5 sm:p-6">
             <div class="mb-4">
                 <h3 class="text-sm font-medium text-gray-800">Grade Timeline</h3>
                 <p class="text-xs text-gray-500 mt-1">Track the history of grade changes for this class</p>

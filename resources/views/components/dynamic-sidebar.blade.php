@@ -65,5 +65,8 @@
 @endforeach
 
 <div class="mt-6 border-t border-green-800 pt-4">
-    <x-nav-link href="{{ route($profileRoute) }}" :active="request()->routeIs('*profile*')">My Profile</x-nav-link>
+    <x-nav-link href="{{ route($profileRoute) }}" :active="request()->routeIs('*profile*')">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>My Profile</span>
+    </x-nav-link>
 </div>

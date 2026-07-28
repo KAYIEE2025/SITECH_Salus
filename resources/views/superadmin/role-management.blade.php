@@ -15,13 +15,13 @@
         </div>
     @endif
 
-    <div class="rounded-xl border border-gray-200 bg-white">
-        <div class="border-b border-gray-100 px-6 py-4">
+    <div class="sa-card overflow-hidden">
+        <div class="sa-card-header">
             <h2 class="text-base font-semibold text-gray-800">User Role Management</h2>
             <p class="mt-1 text-xs text-gray-500">Manage user roles and permissions.</p>
         </div>
 
-        <div class="border-b border-gray-100 px-6 py-4">
+        <div class="border-b border-green-50 px-5 py-4 sm:px-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="relative flex-1">
                     <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

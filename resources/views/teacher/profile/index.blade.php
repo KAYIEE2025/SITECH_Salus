@@ -19,7 +19,7 @@
     <div class="grid grid-cols-2 gap-6">
 
         {{-- Personal Information --}}
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="tc-card p-6">
             <h2 class="text-base font-semibold text-gray-800 mb-4">Personal Information</h2>
 
             <form method="POST" action="{{ route('teacher.profile.update') }}">
@@ -61,7 +61,7 @@
         </div>
 
         {{-- Change Password --}}
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="tc-card p-6">
             <h2 class="text-base font-semibold text-gray-800 mb-4">Change Password</h2>
 
             <form method="POST" action="{{ route('teacher.profile.password') }}">

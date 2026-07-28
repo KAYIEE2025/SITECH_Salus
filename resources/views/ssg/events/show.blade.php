@@ -15,7 +15,7 @@
     </div>
 
     <div class="grid gap-6 md:grid-cols-3">
-        <div class="rounded-xl border border-gray-200 bg-white p-6 md:col-span-2">
+    <div class="sg-card p-6 md:col-span-2">
             <h2 class="mb-4 text-base font-semibold text-gray-800">Event Details</h2>
             <dl class="grid gap-4 text-sm md:grid-cols-2">
                 <div>
@@ -69,7 +69,7 @@
             </div>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-6">
+    <div class="sg-card p-6">
             <p class="text-sm text-gray-500">Prepared Attendance Records</p>
             <p class="mt-2 text-3xl font-bold text-green-800">{{ $event->attendances_count }}</p>
         </div>

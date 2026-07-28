@@ -13,9 +13,9 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="ra-card p-6">
             <h2 class="text-base font-semibold text-gray-800 mb-4">Add Section</h2>
 
             <form method="POST" action="{{ route('registrar.sections.store') }}">
@@ -63,8 +63,8 @@
             </form>
         </div>
 
-        <div class="col-span-2 bg-white rounded-xl border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-100">
+        <div class="ra-card overflow-hidden xl:col-span-2">
+            <div class="ra-card-header">
                 <h2 class="text-base font-semibold text-gray-800">All Sections</h2>
                 <p class="text-xs text-gray-500 mt-0.5">Total: {{ $sections->count() }} sections</p>
             </div>

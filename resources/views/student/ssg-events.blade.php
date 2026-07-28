@@ -2,33 +2,33 @@
 @section('title', 'SSG Events & Fines')
 @section('content')
     @if(!$student)
-        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-8 text-center">
+        <div class="rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 p-8 text-center">
             <h2 class="text-xl font-semibold text-yellow-800 mb-2">Student Profile Not Found</h2>
             <p class="text-yellow-700">Your student profile has not yet been created. Please contact the Registrar.</p>
         </div>
     @else
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <div class="st-card p-6">
                 <p class="text-sm text-gray-500 mb-1">Total SSG Events</p>
                 <p class="text-2xl font-bold text-gray-800">{{ $totalEvents }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <div class="st-card p-6">
                 <p class="text-sm text-gray-500 mb-1">Events Attended</p>
                 <p class="text-2xl font-bold text-green-700">{{ $eventsAttended }}</p>
             </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <div class="st-card p-6">
                 <p class="text-sm text-gray-500 mb-1">Events Missed</p>
                 <p class="text-2xl font-bold text-red-600">{{ $eventsMissed }}</p>
             </div>
-            <div class="bg-green-50 rounded-xl border border-green-200 p-6">
+            <div class="rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 p-6">
                 <p class="text-sm text-green-700 mb-1">Outstanding Balance</p>
                 <p class="text-2xl font-bold text-green-800">₱{{ number_format($outstandingBalance, 2) }}</p>
             </div>
         </div>
 
         <!-- Filters -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+        <div class="st-card mb-6 p-6">
             <form action="{{ route('student.ssg-events.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">School Year</label>
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Attendance Records Table -->
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="st-card overflow-hidden p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">SSG Event Records</h2>
             
             @if($attendances->isEmpty())

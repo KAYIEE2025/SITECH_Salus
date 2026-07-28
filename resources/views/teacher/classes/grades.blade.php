@@ -10,7 +10,7 @@
     </div>
 
     <!-- Class Information Card -->
-    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+    <div class="tc-card mb-6 p-6">
         <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 flex-1">
                 <div>
@@ -80,7 +80,7 @@
 
     {{-- Grade Timeline --}}
     @if($gradeTimeline && $gradeTimeline->isNotEmpty())
-        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div class="tc-card mb-6 p-6">
             <div class="mb-4">
                 <h3 class="text-sm font-medium text-gray-800">Grade Timeline</h3>
                 <p class="text-xs text-gray-500 mt-1">Track the history of grade changes for this class</p>
@@ -125,7 +125,7 @@
 
     {{-- Import Official SALUS Grading Sheet Card --}}
     @if($allTermsApproved)
-        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div class="tc-card mb-6 p-6">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
                     <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,7 +139,7 @@
             </div>
         </div>
     @elseif(!$allTermsApproved)
-        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div class="tc-card mb-6 p-6">
             <div class="mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">Import Official SALUS Grading Sheet</h2>
                 <p class="mt-1 text-sm text-gray-500">Upload the official SALUS/DepEd grading sheet for this assigned class.</p>
@@ -309,7 +309,7 @@
         </div>
     @else
         <!-- Locked Status Message -->
-        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+        <div class="tc-card mb-6 p-6">
             <div class="flex items-center gap-3">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100">
                     <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,7 +327,7 @@
     @endif
 
     {{-- PHASE 2: Submission Timeframe Card --}}
-    <div id="submission-timeframe-card" class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+    <div id="submission-timeframe-card" class="tc-card mb-6 p-6">
         <div class="flex justify-between items-start">
             <div class="flex-1">
                 <div class="flex items-center gap-2 mb-2">
@@ -375,7 +375,7 @@
     @endphp
 
     <!-- Class Roster (Hidden for now, will be shown in Phase 2) -->
-    <div class="hidden rounded-xl border border-gray-200 bg-white">
+    <div class="tc-card hidden">
         <div class="border-b border-gray-100 px-6 py-4">
             <h3 class="text-base font-semibold text-gray-800">Class Roster</h3>
         </div>

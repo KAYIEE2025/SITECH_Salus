@@ -16,7 +16,7 @@
     @endif
 
     <div class="grid gap-6 md:grid-cols-2">
-        <div class="rounded-xl border border-gray-200 bg-white p-6">
+        <div class="sg-card p-6">
             <h2 class="mb-4 text-base font-semibold text-gray-800">Personal Information</h2>
             <form method="POST" action="{{ route('ssg.profile.update') }}">
                 @csrf
@@ -54,7 +54,7 @@
             </form>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-6">
+        <div class="sg-card p-6">
             <h2 class="mb-4 text-base font-semibold text-gray-800">Change Password</h2>
             <form method="POST" action="{{ route('ssg.profile.password') }}">
                 @csrf

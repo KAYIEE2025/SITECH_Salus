@@ -15,27 +15,27 @@
         </div>
     @endif
 
-    <div class="mb-6 grid grid-cols-4 gap-4">
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="sa-card p-5">
             <p class="text-sm text-gray-500">Total Accounts</p>
             <p class="mt-1 text-3xl font-bold text-[#1a5c1a]">{{ $activeUsers + $inactiveUsers }}</p>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
+        <div class="sa-card p-5">
             <p class="text-sm text-gray-500">Active</p>
             <p class="mt-1 text-3xl font-bold text-[#1a5c1a]">{{ $activeUsers }}</p>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
+        <div class="sa-card p-5">
             <p class="text-sm text-gray-500">Inactive</p>
             <p class="mt-1 text-3xl font-bold text-red-600">{{ $inactiveUsers }}</p>
         </div>
-        <div class="rounded-xl border border-gray-200 bg-white p-5">
+        <div class="sa-card p-5">
             <p class="text-sm text-gray-500">Students</p>
             <p class="mt-1 text-3xl font-bold text-[#c8a000]">{{ $roleCounts['Student'] ?? 0 }}</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-6">
-        <div class="rounded-xl border border-gray-200 bg-white p-6">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div class="sa-card p-6">
             <h2 class="mb-4 text-base font-semibold text-gray-800">Create Account</h2>
 
             <form method="POST" action="{{ route('superadmin.accounts.store') }}" class="space-y-4">
@@ -68,15 +68,13 @@
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                         <option value="">Select role</option>
                         @foreach($assignableRoles as $role)
-                            @if($role->name !== 'SSG')
-                                <option value="{{ $role->name }}" @selected(old('role') === $role->name)>
-                                    {{ $role->name }}
-                                </option>
-                            @endif
+                            <option value="{{ $role->name }}" @selected(old('role') === $role->name)>
+                                {{ $role->name }}
+                            </option>
                         @endforeach
                     </select>
                     @error('role') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                    <p class="mt-1 text-xs text-gray-500">To assign SSG role, use the <a href="{{ route('superadmin.role-management') }}" class="text-[#1a5c1a] hover:underline">Manage Roles</a> page.</p>
+                    <p class="mt-1 text-xs text-gray-500">Use <a href="{{ route('superadmin.role-management') }}" class="text-[#1a5c1a] hover:underline">Role Management</a> when a user needs multiple roles.</p>
                 </div>
 
                 <div>
@@ -98,8 +96,8 @@
             </form>
         </div>
 
-        <div class="col-span-2 rounded-xl border border-gray-200 bg-white">
-            <div class="border-b border-gray-100 px-6 py-4">
+        <div class="sa-card xl:col-span-2">
+            <div class="sa-card-header">
                 <div class="flex items-center justify-between gap-4">
                     <div>
                         <h2 class="text-base font-semibold text-gray-800">All Accounts</h2>
@@ -110,9 +108,9 @@
                     </a>
                 </div>
 
-                <form method="GET" action="{{ route('superadmin.accounts') }}" class="mt-4 grid grid-cols-4 gap-3">
+                <form method="GET" action="{{ route('superadmin.accounts') }}" class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <input type="search" name="search" value="{{ request('search') }}" placeholder="Search accounts"
-                        class="col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                        class="sm:col-span-2">
                     <select name="role" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                         <option value="">All roles</option>
                         @foreach($roles as $role)
@@ -126,7 +124,7 @@
                         <option value="active" @selected(request('status') === 'active')>Active</option>
                         <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
                     </select>
-                    <button type="submit" class="col-span-4 rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-200">
+                    <button type="submit" class="rounded-xl bg-green-50 px-4 py-2 text-sm font-semibold text-green-900 transition hover:bg-green-100 sm:col-span-2">
                         Apply Filters
                     </button>
                 </form>

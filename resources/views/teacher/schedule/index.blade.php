@@ -16,7 +16,7 @@
         </button>
     </div>
 
-    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+    <div class="tc-card mb-6 p-6">
         <form method="GET" action="{{ route('teacher.schedule.index') }}" class="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">School Year</label>
@@ -34,7 +34,7 @@
         </form>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div class="tc-card overflow-hidden">
         <div class="border-b border-gray-100 px-6 py-4">
             <h3 class="text-base font-semibold text-gray-800">Teacher Information</h3>
         </div>
@@ -50,7 +50,7 @@
         </div>
     </div>
 
-    <div class="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div class="tc-card mt-6 overflow-hidden">
         <div class="border-b border-gray-100 px-6 py-4">
             <h3 class="text-base font-semibold text-gray-800">Assigned Classes</h3>
             <p class="mt-0.5 text-xs text-gray-500">{{ $schoolYear ?? 'N/A' }}</p>

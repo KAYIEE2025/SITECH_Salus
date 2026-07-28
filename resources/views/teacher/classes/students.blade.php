@@ -7,7 +7,7 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <div class="tc-card p-6">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-lg font-semibold text-gray-800">
                 {{ $classSchedule->subject->name ?? 'Subject' }} - 

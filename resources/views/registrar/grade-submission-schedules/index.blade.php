@@ -13,8 +13,8 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-xl border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+    <div class="ra-card overflow-hidden">
+        <div class="ra-card-header flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
                 <h2 class="text-base font-semibold text-gray-800">Grade Submission Schedules</h2>
                 <p class="text-xs text-gray-500 mt-0.5">Total: {{ $schedules->count() }} schedule(s)</p>
@@ -24,7 +24,7 @@
                 Add Schedule
             </a>
         </div>
-        <table class="w-full text-sm">
+        <div class="overflow-x-auto"><table class="w-full text-sm">
             <thead class="bg-gray-50 text-gray-500 text-xs">
                 <tr>
                     <th class="text-left px-6 py-3">School Year</th>
@@ -88,7 +88,7 @@
                 </tr>
                 @endforelse
             </tbody>
-        </table>
+        </table></div>
     </div>
 
 @endsection

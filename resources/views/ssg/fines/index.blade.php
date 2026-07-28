@@ -8,7 +8,7 @@
         <p class="mt-1 text-sm text-gray-500">Computed from SSG event attendance records.</p>
     </div>
 
-    <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+    <div class="sg-card mb-6 p-6">
         <form method="GET" action="{{ route('ssg.fines.index') }}" class="grid gap-4 lg:grid-cols-5 lg:items-end">
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">School Year</label>
@@ -60,7 +60,7 @@
         </form>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+    <div class="sg-card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-xs uppercase text-gray-500">

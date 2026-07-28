@@ -22,7 +22,7 @@
     @endif
 
     @if(session('generatedCredentials'))
-        <div class="mb-6 rounded-xl border border-yellow-200 bg-yellow-50">
+        <div class="mb-6 overflow-hidden rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50">
             <div class="border-b border-yellow-100 px-6 py-4">
                 <h2 class="text-base font-semibold text-yellow-900">Generated Credentials</h2>
                 <p class="mt-1 text-xs text-yellow-700">Temporary passwords are shown once. Record them before leaving this page.</p>
@@ -54,8 +54,8 @@
         </div>
     @endif
 
-    <div class="rounded-xl border border-gray-200 bg-white">
-        <div class="flex items-center justify-between gap-4 border-b border-gray-100 px-6 py-4">
+    <div class="sa-card overflow-hidden">
+        <div class="flex flex-col items-start justify-between gap-4 border-b border-green-50 px-5 py-4 sm:flex-row sm:items-center sm:px-6">
             <div>
                 <h2 class="text-base font-semibold text-gray-800">Students Awaiting Account Creation</h2>
                 <p class="mt-1 text-xs text-gray-500">Accounts use the student number as the default username.</p>

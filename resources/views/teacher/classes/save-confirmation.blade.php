@@ -9,7 +9,7 @@
         </a>
     </div>
 
-    <div class="rounded-xl border border-gray-200 bg-white p-6 mb-6">
+    <div class="tc-card mb-6 p-6">
         <div class="mb-6">
             <h2 class="text-lg font-semibold text-gray-800">Import Completed</h2>
             <p class="mt-2 text-sm text-gray-600">

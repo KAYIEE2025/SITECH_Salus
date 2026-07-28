@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', 'My Grades')
 @section('content')
-    <div class="bg-white rounded-xl border border-gray-200 p-6">
+    <div class="st-card p-6 sm:p-8">
         <div class="mb-6">
             <div>
                 <h2 class="text-lg font-semibold text-gray-800">My Grades</h2>
@@ -11,7 +11,7 @@
 
         <!-- Grade Summary -->
         @if($gradeSummary['total_subjects'] > 0)
-            <div class="mb-6 rounded-lg bg-gray-50 border border-gray-200 p-4">
+            <div class="mb-6 rounded-2xl border border-green-100 bg-green-50/60 p-4">
                 <h3 class="text-sm font-medium text-gray-800 mb-3">Grade Summary</h3>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
@@ -74,7 +74,7 @@
                         </h3>
                     </div>
                     
-                    <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+                    <div class="overflow-x-auto rounded-xl border border-green-100 shadow-sm">
                         <table class="w-full text-sm">
                             <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
@@ -122,14 +122,14 @@
 
         <!-- GWA Section -->
         @if(isset($gwa))
-            <div class="mt-8 rounded-lg bg-blue-50 border border-blue-200 p-5">
+            <div class="mt-8 rounded-2xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-5">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-sm font-semibold text-blue-800">General Weighted Average</h3>
-                        <p class="text-xs text-blue-600 mt-1">Based on approved final ratings</p>
+                        <h3 class="text-sm font-semibold text-green-800">General Weighted Average</h3>
+                        <p class="text-xs text-green-600 mt-1">Based on approved final ratings</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-2xl font-bold text-blue-700">{{ $gwa }}</p>
+                        <p class="text-2xl font-bold text-green-700">{{ $gwa }}</p>
                     </div>
                 </div>
             </div>

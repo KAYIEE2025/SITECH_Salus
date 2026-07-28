@@ -8,10 +8,10 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
         {{-- Create Schedule Form --}}
-        <div class="bg-white rounded-xl border border-gray-200 p-6">
+        <div class="ra-card p-6">
             <h2 class="text-base font-semibold text-gray-800 mb-4">Add Class Schedule</h2>
             <form method="POST" action="{{ route('registrar.schedules.store') }}">
                 @csrf
@@ -100,11 +100,11 @@
         </div>
 
         {{-- Schedules Table --}}
-        <div class="col-span-2 bg-white rounded-xl border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-100">
+        <div class="ra-card overflow-hidden xl:col-span-2">
+            <div class="ra-card-header">
                 <h2 class="text-base font-semibold text-gray-800">All Class Schedules</h2>
             </div>
-            <table class="w-full text-sm">
+            <div class="overflow-x-auto"><table class="w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 text-xs">
                     <tr>
                         <th class="text-left px-6 py-3">Subject</th>
@@ -150,7 +150,7 @@
                     </tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </div>
 
     </div>
