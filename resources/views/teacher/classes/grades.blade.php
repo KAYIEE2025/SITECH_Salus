@@ -326,6 +326,7 @@
         </div>
     @endif
 
+<<<<<<< Updated upstream
     {{-- PHASE 2: Submission Timeframe Card --}}
     <div id="submission-timeframe-card" class="tc-card mb-6 p-6">
         <div class="flex justify-between items-start">
@@ -333,46 +334,44 @@
                 <div class="flex items-center gap-2 mb-2">
                     <span id="status-indicator" class="text-2xl"></span>
                     <h3 id="status-message" class="text-sm font-medium text-gray-800"></h3>
+=======
+    <!-- Submit Grades Button -->
+    @if($hasDraftGradesForCurrentPeriod && $currentGradingPeriod)
+        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-800">Ready to Submit</h3>
+                    <p class="text-xs text-gray-500 mt-1">Submit your Term {{ $currentGradingPeriod }} draft grades to the Registrar for approval.</p>
+>>>>>>> Stashed changes
                 </div>
-                <div id="status-details" class="text-xs text-gray-500 mt-1"></div>
-            </div>
-            <div id="submit-button-container">
-                {{-- Submit Grades button will be dynamically shown/hidden --}}
-            </div>
-        </div>
-    </div>
-
-    {{-- Submit Grades Confirmation Dialog --}}
-    <div id="submit-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Submit Grades?</h3>
-            <p class="text-sm text-gray-600 mb-6">
-                Once submitted, you can no longer edit these grades unless the Registrar rejects them.
-            </p>
-            <div class="flex justify-end gap-3">
-                <button type="button" id="cancel-submit-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                    Cancel
+                <button type="button" id="submit-grades-btn" class="px-6 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition">
+                    Submit Grades
                 </button>
-                <form id="submit-grades-form" action="{{ route('teacher.classes.submit-grades', $classSchedule) }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="grading_period" id="submit-grading-period" value="">
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 transition">
-                        Submit
-                    </button>
-                </form>
             </div>
         </div>
-    </div>
 
-    @php
-        // Pass submission statuses data to JavaScript
-        $submissionStatusesJson = json_encode($submissionStatuses ?? []);
-        $hasDraftGradesJson = json_encode([
-            1 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 1)->where('status', 'draft')->exists(),
-            2 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 2)->where('status', 'draft')->exists(),
-            3 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 3)->where('status', 'draft')->exists(),
-        ]);
-    @endphp
+        <!-- Confirmation Dialog -->
+        <div id="submit-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Submit Grades?</h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Once submitted, you can no longer edit these grades unless the Registrar rejects them.
+                </p>
+                <div class="flex justify-end gap-3">
+                    <button type="button" id="cancel-submit-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <form id="submit-grades-form" action="{{ route('teacher.classes.submit-grades', $classSchedule) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="grading_period" value="{{ $currentGradingPeriod }}">
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 transition">
+                            Submit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Class Roster (Hidden for now, will be shown in Phase 2) -->
     <div class="tc-card hidden">
@@ -539,89 +538,14 @@
             });
 
             // Submit Grades confirmation dialog
+            const submitGradesBtn = document.getElementById('submit-grades-btn');
             const submitConfirmationModal = document.getElementById('submit-confirmation-modal');
             const cancelSubmitBtn = document.getElementById('cancel-submit-btn');
-            const submitGradingPeriodInput = document.getElementById('submit-grading-period');
 
-            // PHASE 2: Dynamic submission timeframe card
-            const submissionStatuses = {{ $submissionStatusesJson }};
-            const hasDraftGrades = {{ $hasDraftGradesJson }};
-            const statusIndicator = document.getElementById('status-indicator');
-            const statusMessage = document.getElementById('status-message');
-            const statusDetails = document.getElementById('status-details');
-            const submitButtonContainer = document.getElementById('submit-button-container');
-
-            const updateSubmissionTimeframe = (gradingPeriod) => {
-                const status = submissionStatuses[gradingPeriod];
-                if (!status) {
-                    statusIndicator.textContent = '';
-                    statusMessage.textContent = 'No schedule configured';
-                    statusDetails.textContent = '';
-                    submitButtonContainer.innerHTML = '';
-                    return;
-                }
-
-                // Set status indicator and message
-                switch (status.status) {
-                    case 'open':
-                        statusIndicator.textContent = '🟢';
-                        statusMessage.textContent = status.message;
-                        statusDetails.innerHTML = `Start: ${status.start_at}<br>Deadline: ${status.end_at}`;
-                        break;
-                    case 'not_yet_open':
-                        statusIndicator.textContent = '🟡';
-                        statusMessage.textContent = status.message;
-                        statusDetails.innerHTML = `Opens: ${status.start_at}`;
-                        break;
-                    case 'closed':
-                        statusIndicator.textContent = '🔴';
-                        statusMessage.textContent = status.message;
-                        statusDetails.innerHTML = `Deadline was: ${status.end_at}`;
-                        break;
-                    case 'no_schedule':
-                        statusIndicator.textContent = '⚠️';
-                        statusMessage.textContent = status.message;
-                        statusDetails.innerHTML = 'Please wait for the Registrar to configure the grade submission period.';
-                        break;
-                }
-
-                // Show/hide Submit Grades button
-                if (status.status === 'open' && status.can_submit && hasDraftGrades[gradingPeriod]) {
-                    submitButtonContainer.innerHTML = `
-                        <button type="button" id="submit-grades-btn" class="px-6 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition">
-                            Submit Grades
-                        </button>
-                    `;
-                    // Attach event listener to new button
-                    const newSubmitBtn = document.getElementById('submit-grades-btn');
-                    if (newSubmitBtn) {
-                        newSubmitBtn.addEventListener('click', () => {
-                            submitGradingPeriodInput.value = gradingPeriod;
-                            submitConfirmationModal.classList.remove('hidden');
-                        });
-                    }
-                } else {
-                    submitButtonContainer.innerHTML = '';
-                }
-            };
-
-            // Listen for grading period radio button changes
-            const gradingPeriodRadios = document.querySelectorAll('input[name="grading_period"]');
-            gradingPeriodRadios.forEach(radio => {
-                radio.addEventListener('change', () => {
-                    if (radio.checked) {
-                        updateSubmissionTimeframe(parseInt(radio.value));
-                    }
+            if (submitGradesBtn) {
+                submitGradesBtn.addEventListener('click', () => {
+                    submitConfirmationModal.classList.remove('hidden');
                 });
-            });
-
-            // Initialize with the currently selected grading period
-            const selectedRadio = document.querySelector('input[name="grading_period"]:checked');
-            if (selectedRadio) {
-                updateSubmissionTimeframe(parseInt(selectedRadio.value));
-            } else {
-                // Default to Term 1 if nothing selected
-                updateSubmissionTimeframe(1);
             }
 
             if (cancelSubmitBtn) {

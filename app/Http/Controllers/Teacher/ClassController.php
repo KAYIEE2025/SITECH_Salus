@@ -161,60 +161,39 @@ class ClassController extends Controller
             ]);
         }
 
-        // PHASE 2: Get submission schedules for ALL grading periods
-        $submissionSchedules = GradeSubmissionSchedule::where('school_year', $classSchedule->school_year)
-            ->get()
-            ->keyBy('grading_period');
+        // PHASE 2: Get submission schedule status for current grading period
+        $submissionSchedule = null;
+        $submissionStatus = null;
+        $submissionStatusMessage = null;
+        $canSubmit = false;
 
-        // Calculate status for each grading period
-        $submissionStatuses = [];
-        $currentTime = now();
+        if ($currentGradingPeriod) {
+            $submissionSchedule = GradeSubmissionSchedule::where('school_year', $classSchedule->school_year)
+                ->where('grading_period', $currentGradingPeriod)
+                ->first();
 
-        for ($period = 1; $period <= 3; $period++) {
-            $schedule = $submissionSchedules->get($period);
+            if ($submissionSchedule) {
+                $currentTime = now();
 
-            if ($schedule) {
-                if ($currentTime->lt($schedule->start_at)) {
-                    $submissionStatuses[$period] = [
-                        'status' => 'not_yet_open',
-                        'message' => 'Submission Period: NOT YET OPEN',
-                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
-                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
-                        'can_submit' => false,
-                    ];
-                } elseif ($currentTime->gt($schedule->end_at)) {
-                    $submissionStatuses[$period] = [
-                        'status' => 'closed',
-                        'message' => 'Submission Period: CLOSED',
-                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
-                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
-                        'can_submit' => false,
-                    ];
+                if ($currentTime->lt($submissionSchedule->start_at)) {
+                    $submissionStatus = 'not_yet_open';
+                    $submissionStatusMessage = 'Submission Period: NOT YET OPEN';
+                    $canSubmit = false;
+                } elseif ($currentTime->gt($submissionSchedule->end_at)) {
+                    $submissionStatus = 'closed';
+                    $submissionStatusMessage = 'Submission Period: CLOSED';
+                    $canSubmit = false;
                 } else {
-                    $submissionStatuses[$period] = [
-                        'status' => 'open',
-                        'message' => 'Submission Period: OPEN',
-                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
-                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
-                        'can_submit' => true,
-                    ];
+                    $submissionStatus = 'open';
+                    $submissionStatusMessage = 'Submission Period: OPEN';
+                    $canSubmit = true;
                 }
             } else {
-                $submissionStatuses[$period] = [
-                    'status' => 'no_schedule',
-                    'message' => 'Submission Schedule Not Configured',
-                    'start_at' => null,
-                    'end_at' => null,
-                    'can_submit' => false,
-                ];
+                $submissionStatus = 'no_schedule';
+                $submissionStatusMessage = 'Submission Period: NOT CONFIGURED';
+                $canSubmit = false;
             }
         }
-
-        // Get current grading period status for backward compatibility
-        $submissionSchedule = $submissionSchedules->get($currentGradingPeriod);
-        $submissionStatus = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['status'] ?? null) : null;
-        $submissionStatusMessage = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['message'] ?? null) : null;
-        $canSubmit = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['can_submit'] ?? false) : false;
 
         return view('teacher.classes.grades', compact(
             'classSchedule',
@@ -230,8 +209,7 @@ class ClassController extends Controller
             'submissionSchedule',
             'submissionStatus',
             'submissionStatusMessage',
-            'canSubmit',
-            'submissionStatuses'
+            'canSubmit'
         ));
     }
 

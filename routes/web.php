@@ -8,7 +8,6 @@ use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogControll
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Registrar\DashboardController as RegistrarDashboardController;
 use App\Http\Controllers\Registrar\GradeApprovalController;
-use App\Http\Controllers\Registrar\GradeSubmissionScheduleController;
 use App\Http\Controllers\Registrar\SectionController;
 use App\Http\Controllers\Registrar\StudentController;
 use App\Http\Controllers\Registrar\StudyLoadController;
@@ -137,14 +136,6 @@ Route::middleware('auth')->group(function () {
         Route::patch('/grade-approval/{classSchedule}/reject-class', [GradeApprovalController::class, 'rejectClass'])->name('grade-approval.reject-class');
         Route::post('/grade-approval/approve-selected', [GradeApprovalController::class, 'approveSelected'])->name('grade-approval.approve-selected');
         Route::post('/grade-approval/reject-selected', [GradeApprovalController::class, 'rejectSelected'])->name('grade-approval.reject-selected');
-        Route::prefix('grade-submission-schedules')->name('grade-submission-schedules.')->group(function () {
-            Route::get('/', [GradeSubmissionScheduleController::class, 'index'])->name('index');
-            Route::get('/create', [GradeSubmissionScheduleController::class, 'create'])->name('create');
-            Route::post('/', [GradeSubmissionScheduleController::class, 'store'])->name('store');
-            Route::get('/{schedule}/edit', [GradeSubmissionScheduleController::class, 'edit'])->name('edit');
-            Route::put('/{schedule}', [GradeSubmissionScheduleController::class, 'update'])->name('update');
-            Route::delete('/{schedule}', [GradeSubmissionScheduleController::class, 'destroy'])->name('destroy');
-        });
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');

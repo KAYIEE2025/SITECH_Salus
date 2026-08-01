@@ -13,16 +13,7 @@ return new class extends Migration
     {
         Schema::create('grade_submission_schedules', function (Blueprint $table) {
             $table->id();
-            $table->string('school_year');
-            $table->unsignedTinyInteger('grading_period');
-            $table->datetime('start_at');
-            $table->datetime('end_at');
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
-
-            $table->unique(['school_year', 'grading_period']);
-            $table->index('school_year');
-            $table->index('grading_period');
         });
     }
 
