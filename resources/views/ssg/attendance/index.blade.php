@@ -84,7 +84,34 @@
 
                 @if($event->status === 'Ongoing')
                     <div id="reader" class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50"></div>
-                    <p class="mt-3 text-xs text-gray-500">Camera starts automatically. Keep the student QR code inside the scanner frame.</p>
+                    <p class="mt-3 text-xs text-gray-500">Camera starts automatically. Keep the student QR code inside the scanner frame. For old QR codes, ensure good lighting and hold steady.</p>
+
+                    <div class="mt-4">
+                        <p class="mb-2 text-xs font-semibold text-gray-600">Alternative Scan Methods:</p>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="mb-1 text-xs text-gray-600">Upload QR Image:</p>
+                                <input type="file" id="qr-file-input" accept="image/*"
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                            </div>
+                            <div>
+                                <p class="mb-1 text-xs text-gray-600">Manual Entry:</p>
+                                <div class="flex gap-2">
+                                    <input type="text" id="manual-qr-input" placeholder="Enter QR value or student number"
+                                        class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                                    <button type="button" id="manual-scan-btn" class="rounded-lg bg-green-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-900">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="button" id="restart-scanner-btn" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                            Restart Camera Scanner
+                        </button>
+                    </div>
                 @else
                     <div class="rounded-lg border border-gray-200 bg-gray-50 px-4 py-10 text-center text-sm text-gray-500">
                         Scanning is available only while the event status is Ongoing.
@@ -240,6 +267,12 @@
                 return;
             }
 
+            console.log('SSG Scanner - Submitting:', {
+                qrValue: qrValue,
+                eventId: eventId,
+                timestamp: new Date().toISOString()
+            });
+
             scanLocked = true;
 
             fetch(scanUrl, {
@@ -364,15 +397,29 @@
                     scanner.start(
                         cameraId,
                         {
-                            fps: 10,
-                            qrbox: { width: 250, height: 250 },
+                            fps: 20, // Higher frame rate for better detection
+                            qrbox: { width: 350, height: 350 }, // Even larger scan area
+                            aspectRatio: 1.0,
+                            videoConstraints: {
+                                facingMode: 'environment', // Use back camera on mobile
+                                width: { ideal: 1280 },
+                                height: { ideal: 720 }
+                            }
                         },
-                        decodedText => submitScan(decodedText)
-                    ).catch(() => {
+                        decodedText => {
+                            console.log('QR Code detected:', decodedText);
+                            submitScan(decodedText);
+                        },
+                        (errorMessage) => {
+                            // Suppress frequent error messages during scanning
+                        }
+                    ).catch((error) => {
+                        console.error('Camera start error:', error);
                         showScanAlert(false, 'Unable to start the camera.');
                     });
                 })
-                .catch(() => {
+                .catch((error) => {
+                    console.error('Camera permission error:', error);
                     showScanAlert(false, 'Camera permission is required to scan QR codes.');
                 });
         }
@@ -473,6 +520,65 @@
                     .catch(() => {
                         showScanAlert(false, 'Unable to extend attendance time.');
                     });
+            });
+        }
+
+        // Manual QR entry
+        const manualQrInput = document.getElementById('manual-qr-input');
+        const manualScanBtn = document.getElementById('manual-scan-btn');
+        const restartScannerBtn = document.getElementById('restart-scanner-btn');
+        const qrFileInput = document.getElementById('qr-file-input');
+
+        if (manualScanBtn && manualQrInput) {
+            manualScanBtn.addEventListener('click', () => {
+                const qrValue = manualQrInput.value.trim();
+                if (qrValue) {
+                    console.log('Manual QR entry:', qrValue);
+                    submitScan(qrValue);
+                    manualQrInput.value = '';
+                } else {
+                    showScanAlert(false, 'Please enter a QR value or student number.');
+                }
+            });
+
+            // Allow Enter key to submit
+            manualQrInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    manualScanBtn.click();
+                }
+            });
+        }
+
+        // QR file upload
+        if (qrFileInput) {
+            qrFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('QR file selected:', file.name);
+
+                    // Use html5-qrcode to scan the uploaded file
+                    const fileScanner = new Html5Qrcode('reader');
+                    fileScanner.scanFile(file, true)
+                        .then(decodedText => {
+                            console.log('QR decoded from file:', decodedText);
+                            submitScan(decodedText);
+                            qrFileInput.value = '';
+                        })
+                        .catch(err => {
+                            console.error('File scan error:', err);
+                            showScanAlert(false, 'Unable to read QR code from image. Try manual entry.');
+                        });
+                }
+            });
+        }
+
+        // Restart scanner button
+        if (restartScannerBtn) {
+            restartScannerBtn.addEventListener('click', () => {
+                stopScanner();
+                setTimeout(() => {
+                    startScanner();
+                }, 500);
             });
         }
 

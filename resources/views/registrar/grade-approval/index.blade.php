@@ -2,11 +2,11 @@
 @section('title', 'Grade Approval')
 @section('content')
 
-    @if(session('success'))
+    @session('success')
         <div class="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3 mb-6">
-            {{ session('success') }}
+            {{ $value }}
         </div>
-    @endif
+    @endsession
 
     {{-- Pending Approvals --}}
     <div class="ra-card mb-6 overflow-hidden">

@@ -34,10 +34,26 @@ class AttendanceController extends Controller
             'qr_value' => ['required', 'string'],
         ]);
 
+        // TEMPORARY LOGGING: Log exact QR value received from scanner
+        \Log::info('SSG Scanner - QR Value Received', [
+            'qr_value' => $validated['qr_value'],
+            'qr_value_length' => strlen($validated['qr_value']),
+        ]);
+
+        // COMPREHENSIVE LOGGING: Log entire scan process
+        \Log::info('SSG Scanner - Scan Started', [
+            'qr_value' => $validated['qr_value'],
+            'qr_value_length' => strlen($validated['qr_value']),
+            'event_id' => $validated['event_id'],
+        ]);
+
         $event = SsgEvent::findOrFail($validated['event_id']);
 
         // Use computed status (automatic based on event times)
         if ($event->status !== 'Ongoing') {
+            \Log::info('SSG Scanner - Event Not Ongoing', [
+                'event_status' => $event->status,
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Attendance Closed.',
@@ -48,9 +64,20 @@ class AttendanceController extends Controller
         $now = Carbon::now('Asia/Manila');
         $eventDate = $event->event_date;
 
+        \Log::info('SSG Scanner - Time Check', [
+            'now' => $now->format('Y-m-d H:i:s'),
+            'event_date' => $eventDate->format('Y-m-d'),
+            'scan_start_time' => $event->scan_start_time,
+            'scan_end_time' => $event->scan_end_time,
+        ]);
+
         if ($event->scan_start_time) {
             $startTime = Carbon::parse($eventDate->format('Y-m-d') . ' ' . $event->scan_start_time, 'Asia/Manila');
             if ($now->lt($startTime)) {
+                \Log::info('SSG Scanner - Too Early', [
+                    'now' => $now->format('Y-m-d H:i:s'),
+                    'start_time' => $startTime->format('Y-m-d H:i:s'),
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Attendance Closed.',
@@ -61,6 +88,10 @@ class AttendanceController extends Controller
         if ($event->scan_end_time) {
             $endTime = Carbon::parse($eventDate->format('Y-m-d') . ' ' . $event->scan_end_time, 'Asia/Manila');
             if ($now->gt($endTime)) {
+                \Log::info('SSG Scanner - Too Late', [
+                    'now' => $now->format('Y-m-d H:i:s'),
+                    'end_time' => $endTime->format('Y-m-d H:i:s'),
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Attendance Closed.',
@@ -70,7 +101,37 @@ class AttendanceController extends Controller
 
         $student = Student::where('qr_code_value', $validated['qr_value'])->first();
 
+        \Log::info('SSG Scanner - Primary Lookup', [
+            'qr_value' => $validated['qr_value'],
+            'found_by_qr_code_value' => $student ? true : false,
+            'student_id' => $student ? $student->id : null,
+        ]);
+
+        // Fallback: Try to find student by student number extracted from QR value
+        // This handles old students with uploaded QR codes that may have different formats
         if (! $student) {
+            $studentNumber = $this->extractStudentNumberFromQR($validated['qr_value']);
+
+            \Log::info('SSG Scanner - Fallback Extraction', [
+                'qr_value' => $validated['qr_value'],
+                'extracted_student_number' => $studentNumber,
+            ]);
+
+            if ($studentNumber) {
+                $student = Student::where('student_number', $studentNumber)->first();
+
+                \Log::info('SSG Scanner - Fallback Lookup', [
+                    'extracted_student_number' => $studentNumber,
+                    'found_by_student_number' => $student ? true : false,
+                    'student_id' => $student ? $student->id : null,
+                ]);
+            }
+        }
+
+        if (! $student) {
+            \Log::info('SSG Scanner - Student Not Found', [
+                'qr_value' => $validated['qr_value'],
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Student not found.',
@@ -185,5 +246,36 @@ class AttendanceController extends Controller
                 'payment_status' => 'Unpaid',
             ]);
         }
+    }
+
+    private function extractStudentNumberFromQR(string $qrValue): ?string
+    {
+        // Try to extract student number from various QR code formats
+        // Format 1: SITech-STUDENT|{student_number}|{uuid}
+        if (preg_match('/SITech-STUDENT\|([^|]+)/', $qrValue, $matches)) {
+            return $matches[1];
+        }
+
+        // Format 2: YYYYMMDD-{student_number} (old student QR format)
+        if (preg_match('/^\d{8}-\d+$/', $qrValue)) {
+            return $qrValue;
+        }
+
+        // Format 3: Just the student number (for old students with simple QR codes)
+        if (preg_match('/^\d+$/', $qrValue)) {
+            return $qrValue;
+        }
+
+        // Format 4: Any pipe-separated format where second part might be student number
+        if (str_contains($qrValue, '|')) {
+            $parts = explode('|', $qrValue);
+            foreach ($parts as $part) {
+                if (preg_match('/^\d+$/', trim($part))) {
+                    return trim($part);
+                }
+            }
+        }
+
+        return null;
     }
 }

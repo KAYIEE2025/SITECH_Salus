@@ -7,11 +7,11 @@
             <p class="text-yellow-700">Your student profile has not yet been created. Please contact the Registrar.</p>
         </div>
     @else
-        @if(session('success'))
+        @session('success')
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
-                {{ session('success') }}
+                {{ $value }}
             </div>
-        @endif
+        @endsession
 
         @if(session('error'))
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">

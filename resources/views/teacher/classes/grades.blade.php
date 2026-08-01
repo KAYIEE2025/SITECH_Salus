@@ -250,11 +250,11 @@
                     </div>
                 @endif
 
-                @if(session('success'))
+                @session('success')
                     <div class="mb-4 rounded-lg bg-green-50 border border-green-200 p-3">
-                        <p class="text-sm text-green-700">{{ session('success') }}</p>
+                        <p class="text-sm text-green-700">{{ $value }}</p>
                     </div>
-                @endif
+                @endsession
 
                 <!-- Upload Area -->
                 <div id="upload-area" class="mb-4">

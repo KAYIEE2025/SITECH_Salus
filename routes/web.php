@@ -124,6 +124,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
         Route::get('/students/{student}/print-class-schedule', [StudentController::class, 'printClassSchedule'])->name('students.print-class-schedule');
         Route::post('/students/{student}/assign-qr', [StudentController::class, 'assignQR'])->name('students.assign-qr');
+        Route::post('/students/{student}/replace-qr', [StudentController::class, 'replaceQR'])->name('students.replace-qr');
+        Route::post('/students/decode-qr', [StudentController::class, 'decodeQR'])->name('students.decode-qr');
         Route::get('/study-load', [StudyLoadController::class, 'index'])->name('study-load');
         Route::post('/study-load', [StudyLoadController::class, 'store'])->name('study-load.store');
         Route::delete('/study-load/{schedule}', [StudyLoadController::class, 'destroy'])->name('study-load.destroy');

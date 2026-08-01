@@ -3,11 +3,11 @@
 @section('title', 'SSG Events')
 
 @section('content')
-    @if(session('success'))
+    @session('success')
         <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            {{ session('success') }}
+            {{ $value }}
         </div>
-    @endif
+    @endsession
 
     <div class="mb-6 flex items-center justify-between">
         <div>
@@ -80,10 +80,10 @@
 
     <script>
         const eventIds = @json($events->pluck('id'));
-        const statusBaseUrl = @json(route('ssg.events.status', ['event' => 'PLACEHOLDER'])).replace('PLACEHOLDER', '');
+        const statusBaseUrl = @json(route('ssg.events.status', ['event' => '__EVENT_ID__']));
 
         function updateEventStatus(eventId) {
-            fetch(statusBaseUrl + eventId)
+            fetch(statusBaseUrl.replace('__EVENT_ID__', eventId))
                 .then(response => response.json())
                 .then(data => {
                     const row = document.querySelector(`tr[data-event-id="${eventId}"]`);
