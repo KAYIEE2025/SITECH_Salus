@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use chillerlan\QRCode\QRCode as ChillerlanQRCode;
+use chillerlan\QRCode\QROptions;
 
 class StudentController extends Controller
 {
@@ -62,6 +64,7 @@ class StudentController extends Controller
                 Rule::exists('sections', 'id')->where(fn ($query) => $query->where('year_level_id', $request->year_level_id)),
             ],
             'school_year'    => 'required|string|max:20',
+            'qr_code_file'   => 'nullable|file|mimes:png,jpg,jpeg,svg|max:2048',
         ]);
 
         if (! empty($validated['user_id']) && ! User::role('Student')->whereKey($validated['user_id'])->whereDoesntHave('student')->exists()) {
@@ -70,7 +73,14 @@ class StudentController extends Controller
             ]);
         }
 
-        $student = DB::transaction(function () use ($validated) {
+        // Validate that old students must have a QR code file
+        if ($validated['student_type'] === 'old' && !$request->hasFile('qr_code_file')) {
+            throw ValidationException::withMessages([
+                'qr_code_file' => 'Old students must have an existing QR code uploaded.',
+            ]);
+        }
+
+        $student = DB::transaction(function () use ($validated, $request) {
             $studentData = array_merge($validated, [
                 'status' => 'Pending Student Account',
                 'encoded_by' => auth()->id(),
@@ -89,6 +99,32 @@ class StudentController extends Controller
 
                 if (! $qrWritten) {
                     throw new \RuntimeException('Unable to generate the student QR code.');
+                }
+
+                $studentData['qr_code_value'] = $qrValue;
+                $studentData['qr_code_path'] = $qrPath;
+            }
+            // Handle uploaded QR code for old students
+            elseif ($validated['student_type'] === 'old' && $request->hasFile('qr_code_file')) {
+                $file = $request->file('qr_code_file');
+                $extension = $file->getClientOriginalExtension();
+                $qrPath = 'qrcodes/' . $validated['student_number'] . '-existing.' . $extension;
+
+                $qrWritten = Storage::disk('public')->putFileAs(
+                    'qrcodes',
+                    $file,
+                    $validated['student_number'] . '-existing.' . $extension
+                );
+
+                if (! $qrWritten) {
+                    throw new \RuntimeException('Unable to upload the student QR code.');
+                }
+
+                // Decode the actual QR value from the uploaded image
+                $qrValue = $this->decodeQRCode($file);
+
+                if (! $qrValue) {
+                    throw new \RuntimeException('Unable to decode the QR code from the uploaded image. Please ensure the image contains a valid QR code.');
                 }
 
                 $studentData['qr_code_value'] = $qrValue;
@@ -140,17 +176,24 @@ class StudentController extends Controller
             ->performedOn($student)
             ->log('Encoded student profile: ' . $student->last_name . ', ' . $student->first_name);
 
-        // Log QR code generation if applicable
+        // Log QR code generation or upload
         if ($validated['student_type'] === 'new' && $student->qr_code_path) {
             activity()
                 ->causedBy(auth()->user())
                 ->performedOn($student)
                 ->log('Generated QR Code for Student: ' . $student->last_name . ', ' . $student->first_name);
+        } elseif ($validated['student_type'] === 'old' && $student->qr_code_path) {
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($student)
+                ->log('Uploaded existing QR Code for Student: ' . $student->last_name . ', ' . $student->first_name);
         }
 
         $message = 'Student profile encoded successfully. ';
         if ($validated['student_type'] === 'new') {
             $message .= 'QR code generated, ';
+        } elseif ($validated['student_type'] === 'old') {
+            $message .= 'QR code uploaded, ';
         }
         $message .= $student->study_loads_count . ' study load record(s) created. ' . $student->ssg_attendance_count . ' SSG attendance record(s) prepared.';
 
@@ -262,5 +305,22 @@ class StudentController extends Controller
             'success' => true,
             'message' => 'Existing QR assigned successfully.'
         ]);
+    }
+
+    private function decodeQRCode($file): ?string
+    {
+        try {
+            $filePath = $file->getRealPath();
+            $qrCode = new ChillerlanQRCode(new QROptions);
+            $result = $qrCode->readFromFile($filePath);
+
+            return $result ? $result->data : null;
+        } catch (\Exception $e) {
+            \Log::error('QR Code decode error', [
+                'error' => $e->getMessage(),
+                'file' => $file->getClientOriginalName(),
+            ]);
+            return null;
+        }
     }
 }

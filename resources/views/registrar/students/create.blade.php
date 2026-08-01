@@ -5,7 +5,7 @@
     <div class="ra-card p-6 sm:p-8">
         <h2 class="text-base font-semibold text-gray-800 mb-6">Encode Student Profile</h2>
 
-        <form method="POST" action="{{ route('registrar.students.store') }}">
+        <form method="POST" action="{{ route('registrar.students.store') }}" enctype="multipart/form-data">
             @csrf
 
             {{-- Link to existing user account --}}
@@ -50,7 +50,17 @@
 
                 <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
                     <p class="text-sm font-medium text-green-800">QR Code</p>
-                    <p class="mt-1 text-xs text-green-700">A unique QR code will be generated automatically after saving.</p>
+                    <p class="mt-1 text-xs text-green-700" id="qr-code-hint">A unique QR code will be generated automatically after saving.</p>
+                </div>
+
+                {{-- QR Code Upload for Old Students --}}
+                <div class="mb-4 hidden" id="qr-code-upload-container">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Existing QR Code <span class="text-red-500">*</span></label>
+                    <input type="file" name="qr_code_file" id="qr_code_file"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        accept="image/png,image/jpeg,image/svg+xml">
+                    @error('qr_code_file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <p class="text-xs text-gray-500 mt-1">Upload the student's existing QR code image (PNG, JPG, or SVG).</p>
                 </div>
 
                 {{-- Gender --}}
@@ -204,6 +214,31 @@
             </div>
 
         </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const studentTypeSelect = document.querySelector('select[name="student_type"]');
+                const qrCodeUploadContainer = document.getElementById('qr-code-upload-container');
+                const qrCodeHint = document.getElementById('qr-code-hint');
+                const qrCodeFile = document.getElementById('qr_code_file');
+
+                function toggleQRCodeUpload() {
+                    if (studentTypeSelect.value === 'old') {
+                        qrCodeUploadContainer.classList.remove('hidden');
+                        qrCodeHint.textContent = 'Upload the student\'s existing QR code.';
+                        qrCodeFile.required = true;
+                    } else {
+                        qrCodeUploadContainer.classList.add('hidden');
+                        qrCodeHint.textContent = 'A unique QR code will be generated automatically after saving.';
+                        qrCodeFile.required = false;
+                        qrCodeFile.value = '';
+                    }
+                }
+
+                studentTypeSelect.addEventListener('change', toggleQRCodeUpload);
+                toggleQRCodeUpload();
+            });
+        </script>
     </div>
 
 @endsection

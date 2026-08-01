@@ -70,6 +70,15 @@ class AttendanceController extends Controller
 
         $student = Student::where('qr_code_value', $validated['qr_value'])->first();
 
+        // Fallback: Try to find student by student number extracted from QR value
+        // This handles old students with uploaded QR codes that may have different formats
+        if (! $student) {
+            $studentNumber = $this->extractStudentNumberFromQR($validated['qr_value']);
+            if ($studentNumber) {
+                $student = Student::where('student_number', $studentNumber)->first();
+            }
+        }
+
         if (! $student) {
             return response()->json([
                 'success' => false,
@@ -185,5 +194,36 @@ class AttendanceController extends Controller
                 'payment_status' => 'Unpaid',
             ]);
         }
+    }
+
+    private function extractStudentNumberFromQR(string $qrValue): ?string
+    {
+        // Try to extract student number from various QR code formats
+        // Format 1: SITech-STUDENT|{student_number}|{uuid}
+        if (preg_match('/SITech-STUDENT\|([^|]+)/', $qrValue, $matches)) {
+            return $matches[1];
+        }
+
+        // Format 2: YYYYMMDD-{student_number} (old student QR format)
+        if (preg_match('/-(\d+)$/', $qrValue, $matches)) {
+            return $matches[1];
+        }
+
+        // Format 3: Just the student number (for old students with simple QR codes)
+        if (preg_match('/^\d+$/', $qrValue)) {
+            return $qrValue;
+        }
+
+        // Format 4: Any pipe-separated format where second part might be student number
+        if (str_contains($qrValue, '|')) {
+            $parts = explode('|', $qrValue);
+            foreach ($parts as $part) {
+                if (preg_match('/^\d+$/', trim($part))) {
+                    return trim($part);
+                }
+            }
+        }
+
+        return null;
     }
 }
