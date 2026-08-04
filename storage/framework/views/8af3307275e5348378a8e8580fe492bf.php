@@ -1,0 +1,2 @@
+<img src="<?php echo e(asset('images/salus-logo.png')); ?>" alt="Salus Institute of Technology seal" <?php echo e($attributes->merge(['class' => 'object-contain'])); ?>>
+<?php /**PATH C:\Users\Toshiba\sitech\resources\views/components/application-logo.blade.php ENDPATH**/ ?>

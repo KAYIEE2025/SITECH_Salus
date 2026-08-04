@@ -14,8 +14,7 @@ class EventController extends Controller
     public function index()
     {
         $events = SsgEvent::withCount('attendances')
-            ->latest('event_date')
-            ->latest()
+            ->latest('created_at')
             ->paginate(10);
 
         return view('ssg.events.index', compact('events'));

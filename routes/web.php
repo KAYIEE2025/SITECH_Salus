@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogControll
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Registrar\DashboardController as RegistrarDashboardController;
 use App\Http\Controllers\Registrar\GradeApprovalController;
+use App\Http\Controllers\Registrar\GradeReopeningRequestController as RegistrarGradeReopeningRequestController;
+use App\Http\Controllers\Registrar\GradeSubmissionScheduleController;
 use App\Http\Controllers\Registrar\SectionController;
 use App\Http\Controllers\Registrar\StudentController;
 use App\Http\Controllers\Registrar\StudyLoadController;
@@ -34,6 +36,7 @@ use App\Http\Controllers\Teacher\AnnouncementController as TeacherAnnouncementCo
 use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Http\Controllers\Teacher\GradeManagementController as TeacherGradeManagementController;
+use App\Http\Controllers\Teacher\GradeReopeningRequestController as TeacherGradeReopeningRequestController;
 use App\Http\Controllers\Teacher\GradeSubmissionController as TeacherGradeSubmissionController;
 use App\Http\Controllers\Teacher\ProfileController as TeacherProfileController;
 use App\Http\Controllers\Teacher\ScheduleController as TeacherScheduleController;
@@ -138,6 +141,20 @@ Route::middleware('auth')->group(function () {
         Route::patch('/grade-approval/{classSchedule}/reject-class', [GradeApprovalController::class, 'rejectClass'])->name('grade-approval.reject-class');
         Route::post('/grade-approval/approve-selected', [GradeApprovalController::class, 'approveSelected'])->name('grade-approval.approve-selected');
         Route::post('/grade-approval/reject-selected', [GradeApprovalController::class, 'rejectSelected'])->name('grade-approval.reject-selected');
+        Route::prefix('grade-submission-schedules')->name('grade-submission-schedules.')->group(function () {
+            Route::get('/', [GradeSubmissionScheduleController::class, 'index'])->name('index');
+            Route::get('/create', [GradeSubmissionScheduleController::class, 'create'])->name('create');
+            Route::post('/', [GradeSubmissionScheduleController::class, 'store'])->name('store');
+            Route::get('/{schedule}/edit', [GradeSubmissionScheduleController::class, 'edit'])->name('edit');
+            Route::put('/{schedule}', [GradeSubmissionScheduleController::class, 'update'])->name('update');
+            Route::delete('/{schedule}', [GradeSubmissionScheduleController::class, 'destroy'])->name('destroy');
+        });
+        Route::prefix('grade-reopening-requests')->name('grade-reopening-requests.')->group(function () {
+            Route::get('/', [RegistrarGradeReopeningRequestController::class, 'index'])->name('index');
+            Route::get('/{reopeningRequest}', [RegistrarGradeReopeningRequestController::class, 'show'])->name('show');
+            Route::post('/{reopeningRequest}/approve', [RegistrarGradeReopeningRequestController::class, 'approve'])->name('approve');
+            Route::post('/{reopeningRequest}/reject', [RegistrarGradeReopeningRequestController::class, 'reject'])->name('reject');
+        });
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
@@ -177,6 +194,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/{classSchedule}/submit', [TeacherGradeSubmissionController::class, 'submit'])->name('submit');
             Route::post('/{classSchedule}/resubmit', [TeacherGradeSubmissionController::class, 'resubmit'])->name('resubmit');
         });
+        Route::prefix('grade-reopening-requests')->name('grade-reopening-requests.')->group(function () {
+            Route::post('/{classSchedule}', [TeacherGradeReopeningRequestController::class, 'create'])->name('create');
+            Route::get('/{classSchedule}/check-status', [TeacherGradeReopeningRequestController::class, 'checkStatus'])->name('check-status');
+        });
         Route::prefix('announcements')->name('announcements.')->group(function () {
             Route::get('/', [TeacherAnnouncementController::class, 'index'])->name('index');
         });
@@ -191,6 +212,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [SsgDashboardController::class, 'index'])->name('dashboard');
         Route::get('/attendance/{event}', [SsgAttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance/scan', [SsgAttendanceController::class, 'scan'])->name('attendance.scan');
+        Route::post('/attendance/manual-entry', [SsgAttendanceController::class, 'manualEntry'])->name('attendance.manual-entry');
+        Route::post('/attendance/manual-entry-full', [SsgAttendanceController::class, 'manualEntryWithFullId'])->name('attendance.manual-entry-full');
         Route::get('/attendance/{event}/list', [SsgAttendanceController::class, 'list'])->name('attendance.list');
         Route::post('/attendance/{event}/extend-time', [SsgAttendanceController::class, 'extendTime'])->name('attendance.extend-time');
         Route::get('/fines', [SsgFineController::class, 'index'])->name('fines.index');

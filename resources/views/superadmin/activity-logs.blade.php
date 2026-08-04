@@ -5,26 +5,26 @@
 @section('content')
     <div class="sa-card overflow-hidden">
         <div class="sa-card-header">
-            <div class="flex items-center justify-between gap-4">
+            <div class="flex flex-col items-start justify-between gap-3 md:gap-4 md:flex-row md:items-center">
                 <div>
                     <h2 class="text-base font-semibold text-gray-800">System Activity Logs</h2>
                     <p class="mt-1 text-xs text-gray-500">Review login, account, grade, QR, and other system activity.</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="openPdfModal()" class="rounded-lg bg-[#1a5c1a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-900">
+                <div class="flex items-center gap-2 md:gap-3 flex-wrap">
+                    <button onclick="openPdfModal()" class="rounded-lg bg-[#1a5c1a] px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold text-white transition hover:bg-green-900 whitespace-nowrap">
                         Generate Report
                     </button>
-                    <a href="{{ route('superadmin.activity-logs') }}" class="text-xs font-semibold text-[#1a5c1a] hover:text-green-900">
+                    <a href="{{ route('superadmin.activity-logs') }}" class="text-xs md:text-sm font-semibold text-[#1a5c1a] hover:text-green-900 whitespace-nowrap">
                         Reset filters
                     </a>
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('superadmin.activity-logs') }}" class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <form method="GET" action="{{ route('superadmin.activity-logs') }}" class="mt-3 md:mt-4 grid grid-cols-1 gap-2 md:gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 <input type="search" name="search" value="{{ request('search') }}" placeholder="Search description"
-                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
 
-                <select name="causer_id" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                <select name="causer_id" class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                     <option value="">All users</option>
                     @foreach($users as $user)
                         <option value="{{ $user->id }}" @selected((string) request('causer_id') === (string) $user->id)>
@@ -33,7 +33,7 @@
                     @endforeach
                 </select>
 
-                <select name="role" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                <select name="role" class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                     <option value="">All Roles</option>
                     <option value="Super Admin" @selected(request('role') === 'Super Admin')">Super Admin</option>
                     <option value="Admin" @selected(request('role') === 'Admin')">Admin</option>
@@ -43,7 +43,7 @@
                     <option value="Student" @selected(request('role') === 'Student')">Student</option>
                 </select>
 
-                <select name="event" class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                <select name="event" class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                     <option value="">All events</option>
                     @php
                         $eventCategories = [
@@ -97,48 +97,48 @@
                 </select>
 
                 <input type="date" name="date_from" value="{{ request('date_from') }}" placeholder="From Date"
-                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
 
                 <input type="date" name="date_to" value="{{ request('date_to') }}" placeholder="To Date"
-                    class="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
 
-                <button type="submit" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-200">
+                <button type="submit" class="rounded-lg bg-gray-100 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold text-gray-700 transition hover:bg-gray-200 whitespace-nowrap">
                     Apply Filters
                 </button>
             </form>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50 text-xs text-gray-500">
+            <table class="w-full min-w-max text-xs md:text-sm">
+                <thead class="bg-gray-50 text-[10px] md:text-xs text-gray-500">
                     <tr>
-                        <th class="px-6 py-3 text-left">Event</th>
-                        <th class="px-6 py-3 text-left">Performed By</th>
-                        <th class="px-6 py-3 text-left">Description</th>
-                        <th class="px-6 py-3 text-left">Date & Time</th>
+                        <th class="px-2 py-2 md:px-6 md:py-3 text-left">Event</th>
+                        <th class="px-2 py-2 md:px-6 md:py-3 text-left">Performed By</th>
+                        <th class="px-2 py-2 md:px-6 md:py-3 text-left">Description</th>
+                        <th class="px-2 py-2 md:px-6 md:py-3 text-left">Date & Time</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($logs as $log)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-3">
-                                <span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800">
+                            <td class="px-2 py-2 md:px-6 md:py-3">
+                                <span class="rounded-full bg-green-100 px-2 py-0.5 md:px-2.5 md:py-1 text-[10px] md:text-xs font-medium text-green-800 whitespace-nowrap">
                                     {{ ucfirst($log->event ?? 'activity') }}
                                 </span>
                             </td>
-                            <td class="px-6 py-3 font-medium text-gray-800">
+                            <td class="px-2 py-2 md:px-6 md:py-3 font-medium text-gray-800">
                                 {{ optional($log->causer)->name ?? 'System' }}
                             </td>
-                            <td class="px-6 py-3 text-gray-500">
+                            <td class="px-2 py-2 md:px-6 md:py-3 text-gray-500">
                                 {{ $log->description }}
                             </td>
-                            <td class="px-6 py-3 text-gray-400">
+                            <td class="px-2 py-2 md:px-6 md:py-3 text-gray-400">
                                 {{ $log->created_at->format('M d, Y h:i A') }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-8 text-center text-gray-400">
+                            <td colspan="4" class="px-2 py-4 md:px-6 md:py-8 text-center text-gray-400 text-[10px] md:text-xs">
                                 No activity logs match the current filters.
                             </td>
                         </tr>
@@ -148,7 +148,7 @@
         </div>
 
         @if($logs->hasPages())
-            <div class="border-t border-gray-100 px-6 py-4">
+            <div class="border-t border-gray-100 px-4 py-3 md:px-6 md:py-4">
                 {{ $logs->links() }}
             </div>
         @endif

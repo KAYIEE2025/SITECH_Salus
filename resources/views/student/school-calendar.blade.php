@@ -118,7 +118,11 @@
                     {
                         title: '{{ $event->title }}',
                         start: '{{ $event->event_date ? $event->event_date->format('Y-m-d') : '' }}',
-                        end: '{{ $event->event_end_date ? $event->event_end_date->format('Y-m-d') : '' }}',
+                        @if($event->event_end_date && $event->event_end_date->gt($event->event_date))
+                        end: '{{ $event->event_end_date->copy()->addDay()->format('Y-m-d') }}',
+                        @else
+                        end: '',
+                        @endif
                         backgroundColor: '{{ $event->color ?? '#1a5c1a' }}',
                         borderColor: '{{ $event->color ?? '#1a5c1a' }}',
                         extendedProps: {

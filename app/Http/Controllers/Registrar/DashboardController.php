@@ -12,7 +12,13 @@ class DashboardController extends Controller
     public function index()
     {
         $totalStudents = Student::count();
-        $pendingGrades = FinalGrade::where('status', 'submitted')->count();
+        
+        // Count distinct class submissions (same logic as Grade Approval page)
+        $pendingGrades = FinalGrade::where('status', 'submitted')
+            ->whereNotNull('grading_period')
+            ->distinct('class_schedule_id')
+            ->count('class_schedule_id');
+        
         $activeSections = Section::where('is_active', true)->count();
         return view('registrar.dashboard', compact('totalStudents', 'pendingGrades', 'activeSections'));
     }

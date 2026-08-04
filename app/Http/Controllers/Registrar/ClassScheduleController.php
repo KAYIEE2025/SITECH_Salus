@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Registrar;
 
+use App\Helpers\SchoolYearHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ClassSchedule;
 use App\Models\Subject;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 
 class ClassScheduleController extends Controller
 {
+
     public function index()
     {
         $schedules = ClassSchedule::with(['subject', 'teacher', 'section'])
@@ -18,8 +20,9 @@ class ClassScheduleController extends Controller
         $subjects  = Subject::where('is_active', true)->get();
         $sections  = Section::with(['course', 'yearLevel'])->get();
         $teachers  = User::role('Teacher')->get();
+        $activeSchoolYear = SchoolYearHelper::getActiveSchoolYear();
 
-        return view('registrar.schedules.index', compact('schedules', 'subjects', 'sections', 'teachers'));
+        return view('registrar.schedules.index', compact('schedules', 'subjects', 'sections', 'teachers', 'activeSchoolYear'));
     }
 
     public function store(Request $request)

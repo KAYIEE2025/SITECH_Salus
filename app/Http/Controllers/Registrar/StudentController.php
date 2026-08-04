@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Registrar;
 
+use App\Helpers\SchoolYearHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\YearLevel;
@@ -23,6 +24,7 @@ use chillerlan\QRCode\QROptions;
 
 class StudentController extends Controller
 {
+
     public function index()
     {
         $students = Student::with(['yearLevel', 'section'])
@@ -37,7 +39,8 @@ class StudentController extends Controller
         $users      = User::role('Student')
             ->whereDoesntHave('student')
             ->get();
-        return view('registrar.students.create', compact('yearLevels', 'sections', 'users'));
+        $activeSchoolYear = SchoolYearHelper::getActiveSchoolYear();
+        return view('registrar.students.create', compact('yearLevels', 'sections', 'users', 'activeSchoolYear'));
     }
 
     public function store(Request $request)

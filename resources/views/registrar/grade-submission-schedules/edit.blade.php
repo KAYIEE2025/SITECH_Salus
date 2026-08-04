@@ -4,7 +4,7 @@
 
     <div class="max-w-2xl">
         <div class="mb-4">
-            <a href="{{ route('registrar.grade-submission-schedules.index') }}"
+            <a href="{{ route('registrar.grade-submission-schedules.index', ['school_year' => $activeSchoolYear]) }}"
                 class="text-sm text-gray-500 hover:text-gray-700">
                 ← Back to Schedules
             </a>
@@ -28,7 +28,7 @@
                     </label>
                     <input type="text" name="school_year" value="{{ old('school_year', $schedule->school_year) }}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                        placeholder="e.g., 2025-2026">
+                        placeholder="e.g., {{ $activeSchoolYear }}">
                     @error('school_year') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
@@ -42,28 +42,51 @@
                         <option value="1" {{ old('grading_period', $schedule->grading_period) == 1 ? 'selected' : '' }}>Term 1</option>
                         <option value="2" {{ old('grading_period', $schedule->grading_period) == 2 ? 'selected' : '' }}>Term 2</option>
                         <option value="3" {{ old('grading_period', $schedule->grading_period) == 3 ? 'selected' : '' }}>Term 3</option>
+                        <option value="4" {{ old('grading_period', $schedule->grading_period) == 4 ? 'selected' : '' }}>Term 4</option>
                     </select>
                     @error('grading_period') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Start Date & Time <span class="text-red-500">*</span>
-                    </label>
-                    <input type="datetime-local" name="start_at" 
-                        value="{{ old('start_at', $schedule->start_at->format('Y-m-d\TH:i')) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                    @error('start_at') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Start Date <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="start_date" 
+                            value="{{ old('start_date', $schedule->start_at->format('Y-m-d')) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        @error('start_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Start Time <span class="text-red-500">*</span>
+                        </label>
+                        <input type="time" name="start_time" 
+                            value="{{ old('start_time', $schedule->start_at->format('H:i')) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        @error('start_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        End Date & Time <span class="text-red-500">*</span>
-                    </label>
-                    <input type="datetime-local" name="end_at" 
-                        value="{{ old('end_at', $schedule->end_at->format('Y-m-d\TH:i')) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                    @error('end_at') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Deadline Date <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="deadline_date" 
+                            value="{{ old('deadline_date', $schedule->end_at->format('Y-m-d')) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        @error('deadline_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Deadline Time <span class="text-red-500">*</span>
+                        </label>
+                        <input type="time" name="deadline_time" 
+                            value="{{ old('deadline_time', $schedule->end_at->format('H:i')) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        @error('deadline_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
                 </div>
 
                 <div class="flex gap-3">
