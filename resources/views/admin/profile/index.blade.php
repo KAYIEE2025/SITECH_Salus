@@ -25,7 +25,7 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 
         {{-- Personal Information --}}
         <div class="bg-white rounded-xl border border-gray-200 p-6">

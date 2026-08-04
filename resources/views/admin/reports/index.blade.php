@@ -24,7 +24,7 @@
         <h1 class="text-2xl font-bold text-gray-800">Reports</h1>
     </div>
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
         <!-- Student List Report -->
         <div class="bg-white rounded-xl border border-gray-200 p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">Student List</h2>

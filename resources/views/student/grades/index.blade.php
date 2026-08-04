@@ -13,7 +13,7 @@
         @if($gradeSummary['total_subjects'] > 0)
             <div class="mb-6 rounded-2xl border border-green-100 bg-green-50/60 p-4">
                 <h3 class="text-sm font-medium text-gray-800 mb-3">Grade Summary</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 md:grid-cols-4">
                     <div>
                         <p class="text-gray-500">Total Subjects</p>
                         <p class="font-medium text-gray-800">{{ $gradeSummary['total_subjects'] }}</p>

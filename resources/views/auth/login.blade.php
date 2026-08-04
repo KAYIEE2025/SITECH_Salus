@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('images/salus-logo.png') }}">
     <title>SITech - Salus Institute of Technology</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -11,28 +12,28 @@
     <div class="absolute inset-0 -z-10 bg-gradient-to-br from-green-950/85 via-green-900/50 to-emerald-950/70"></div>
     <div class="absolute inset-0 -z-10 bg-gradient-to-t from-green-950/80 via-transparent to-green-900/20"></div>
 
-    <div class="grid w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-2xl shadow-green-950/40 lg:grid-cols-[0.95fr_1.05fr]">
-        <section class="relative flex min-h-[255px] flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#14532d] via-[#1a5c1a] to-[#0f766e] px-8 py-10 text-center text-white sm:min-h-[300px] lg:min-h-[620px] lg:items-start lg:justify-between lg:px-12 lg:py-12 lg:text-left">
+    <div class="grid w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl shadow-green-950/40 sm:rounded-3xl lg:grid-cols-[0.95fr_1.05fr]">
+        <section class="relative flex min-h-0 flex-col justify-center overflow-hidden bg-gradient-to-br from-[#14532d] via-[#1a5c1a] to-[#0f766e] px-5 py-6 text-white sm:px-8 sm:py-8 lg:min-h-[620px] lg:items-start lg:justify-between lg:px-12 lg:py-12">
             <div class="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-emerald-300/15 blur-2xl"></div>
             <div class="absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-amber-300/10 blur-2xl"></div>
 
-            <div class="relative z-10 mt-0">
-                <div class="mx-auto h-40 w-40 overflow-hidden rounded-full shadow-2xl shadow-green-950/30 sm:h-48 sm:w-48 lg:mx-0 lg:h-56 lg:w-56">
+            <div class="relative z-10 flex w-full items-center gap-4 text-left lg:block">
+                <div class="h-20 w-20 shrink-0 overflow-hidden rounded-full shadow-2xl shadow-green-950/30 sm:h-24 sm:w-24 lg:h-56 lg:w-56">
                     <img src="{{ asset('images/salus-logo.png') }}" alt="Salus Institute of Technology seal" class="h-full w-full rounded-full object-cover">
                 </div>
-                <h1 class="mt-6 text-2xl font-bold tracking-tight sm:text-3xl">Salus Institute of Technology</h1>
-                <p class="mt-2 max-w-sm text-sm leading-6 text-green-100">One connected space for students, teachers, registrars, and school administrators.</p>
+                <div class="min-w-0 lg:mt-6">
+                    <h1 class="text-xl font-bold leading-tight tracking-tight sm:text-2xl lg:text-3xl">Salus Institute of Technology</h1>
+                    <p class="mt-1.5 hidden max-w-sm text-xs leading-5 text-green-100 sm:block sm:text-sm sm:leading-6 lg:mt-2">One connected space for students, teachers, registrars, and school administrators.</p>
+                </div>
             </div>
 
-            <p class="relative z-10 mt-8 hidden text-xs text-green-100/80 lg:block">AY 2025–2026 · SITech</p>
         </section>
 
-        <section class="bg-white px-6 py-8 sm:px-12 sm:py-12 lg:px-14 lg:py-16">
+        <section class="bg-white px-5 py-7 sm:px-10 sm:py-10 lg:px-14 lg:py-16">
             <div class="mx-auto max-w-md">
-                <div class="mb-8">
-                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-green-700">Welcome back</p>
-                    <h2 class="mt-2 text-3xl font-bold tracking-tight text-green-950">Sign in to your portal</h2>
-                    <p class="mt-2 text-sm text-gray-500">Use your school account to continue.</p>
+                <div class="mb-6 sm:mb-8">
+                    <h2 class="mt-2 text-2xl font-bold tracking-tight text-green-950 sm:text-3xl">Welcome back!</h2>
+                    <p class="mt-2 text-sm text-gray-500">Use your school account to login.</p>
                 </div>
 
                 @if ($errors->any())
@@ -45,7 +46,7 @@
                     @csrf
 
                     <div>
-                        <label for="email" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-green-900/70">Email address or username</label>
+                        <label for="email" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-green-900/70">SCHOOL ID</label>
                         <div class="relative">
                             <span class="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-green-700">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -57,11 +58,8 @@
                     </div>
 
                     <div>
-                        <div class="mb-1.5 flex items-center justify-between gap-3">
+                        <div class="mb-1.5">
                             <label for="password" class="block text-xs font-semibold uppercase tracking-wide text-green-900/70">Password</label>
-                            @if (Route::has('password.request'))
-                                <a href="{{ route('password.request') }}" class="text-xs font-semibold text-green-700 hover:text-green-900">Forgot password?</a>
-                            @endif
                         </div>
                         <div class="relative">
                             <span class="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-green-700">
@@ -77,15 +75,12 @@
                         </div>
                     </div>
 
-                    <label class="flex items-center gap-2 text-sm text-gray-600">
-                        <input type="checkbox" name="remember" class="rounded border-gray-300 text-green-700 focus:ring-green-600">
-                        Remember me
-                    </label>
+
 
                     <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-[#1a5c1a] to-[#0f766e] py-3 text-sm font-bold text-white shadow-lg shadow-green-900/20 transition hover:-translate-y-0.5 hover:shadow-xl">Log in</button>
                 </form>
 
-                <p class="mt-8 border-t border-gray-100 pt-5 text-center text-xs text-gray-400">Secure SITech portal · AY 2025–2026</p>
+                <p class="mt-8 border-t border-gray-100 pt-5 text-center text-xs text-green-700"><h3>If you do not know your account credentials, or if you have forgotten your password, please contact the Systems Development & Administration Office.<h3></p>
             </div>
         </section>
     </div>

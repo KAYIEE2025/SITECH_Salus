@@ -45,7 +45,7 @@
         </a>
     </div>
 
-    <div class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="sa-card p-5"><p class="text-sm text-gray-500">Admins</p><p class="mt-2 text-2xl font-bold text-gray-800">{{ $totalAdmins }}</p></div>
         <div class="sa-card p-5"><p class="text-sm text-gray-500">Registrars</p><p class="mt-2 text-2xl font-bold text-gray-800">{{ $totalRegistrars }}</p></div>
         <div class="sa-card p-5"><p class="text-sm text-gray-500">Teachers</p><p class="mt-2 text-2xl font-bold text-gray-800">{{ $totalTeachers }}</p></div>

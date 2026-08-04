@@ -168,7 +168,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Time Start</label>
                         <input type="time" name="time_start"
@@ -181,7 +181,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Date Start</label>
                         <input type="date" name="date_start"

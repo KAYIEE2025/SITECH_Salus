@@ -2,7 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
 @layer components {
+    .app-content,
+    .app-content * {
+        min-width: 0;
+    }
+
+    .app-table-scroll,
+    .app-content .overflow-x-auto {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .app-table-scroll table,
+    .app-content .overflow-x-auto table {
+        min-width: 640px;
+    }
+
     .superadmin-panel .sa-card {
         @apply rounded-2xl border border-green-100 bg-white shadow-sm shadow-green-900/5;
     }

@@ -20,7 +20,7 @@
         <form method="POST" action="{{ route('registrar.students.update', $student) }}">
             @csrf @method('PUT')
 
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {{-- Student Number (Read-only) --}}
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Student Number</label>
@@ -105,7 +105,7 @@
             {{-- Guardian Information --}}
             <div class="border-t border-gray-100 pt-4 mt-2 mb-4">
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Guardian Information</h3>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Guardian Name</label>
                         <input type="text" name="guardian_name" value="{{ $student->guardian_name }}"
@@ -128,7 +128,7 @@
             {{-- Academic Information --}}
             <div class="border-t border-gray-100 pt-4 mt-2 mb-6">
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Academic Information</h3>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level <span class="text-red-500">*</span></label>
                         <select name="year_level_id"

@@ -9,7 +9,7 @@
     <x-nav-link href="{{ route('admin.profile.index') }}" :active="false">My Profile</x-nav-link>
 @endsection
 @section('content')
-    <div class="grid grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 sm:gap-6">
         <div class="bg-white rounded-xl border border-gray-200 p-5">
             <p class="text-sm text-gray-500 mb-1">Total Announcements</p>
             <p class="text-3xl font-bold text-green-800">{{ $totalAnnouncements }}</p>

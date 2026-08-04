@@ -37,7 +37,7 @@
         </div>
 
         <!-- Summary Statistics -->
-        <div class="mb-6 grid grid-cols-4 gap-4">
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-lg bg-blue-50 border border-blue-200 p-4">
                 <p class="text-xs text-blue-600 uppercase tracking-wide">Total Parsed</p>
                 <p class="mt-2 text-2xl font-bold text-blue-700">{{ $totalParsed }}</p>

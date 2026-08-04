@@ -152,7 +152,7 @@
                         <p class="text-sm text-gray-500">Description</p>
                         <p id="modalDescription" class="text-sm text-gray-800"></p>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <p class="text-sm text-gray-500">Event Date</p>
                             <p id="modalEventDate" class="text-sm text-gray-800"></p>
@@ -162,7 +162,7 @@
                             <p id="modalVenue" class="text-sm text-gray-800"></p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <p class="text-sm text-gray-500">Attendance Status</p>
                             <p id="modalAttendance" class="text-sm font-medium"></p>
@@ -172,7 +172,7 @@
                             <p id="modalScannedAt" class="text-sm text-gray-800"></p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <p class="text-sm text-gray-500">Fine Amount</p>
                             <p id="modalFineAmount" class="text-sm text-gray-800"></p>

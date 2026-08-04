@@ -41,7 +41,7 @@
                 @error('description') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                         Event Date <span class="text-red-500">*</span>
