@@ -90,10 +90,10 @@
                     <h1 class="truncate <?php echo e($isSuperAdminPanel || $isRegistrarPanel || $isStudentPanel || $isSsgPanel || $isTeacherPanel ? 'text-lg font-bold text-green-950 sm:text-xl' : 'text-base font-semibold text-gray-800 sm:text-lg'); ?>"><?php echo $__env->yieldContent('title', $title ?? 'Dashboard'); ?></h1>
                 </div>
                 <?php if($isSuperAdminPanel || $isRegistrarPanel || $isStudentPanel || $isSsgPanel || $isTeacherPanel): ?>
-                    <div class="hidden items-center gap-2 text-xs text-green-700 sm:flex">
+                    <!-- <div class="hidden items-center gap-2 text-xs text-green-700 sm:flex">
                         <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
                         Control center online
-                    </div>
+                    </div> -->
                 <?php endif; ?>
             </div>
         </div>
