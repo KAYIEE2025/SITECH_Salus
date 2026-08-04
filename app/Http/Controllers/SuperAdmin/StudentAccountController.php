@@ -103,7 +103,8 @@ class StudentAccountController extends Controller
 
     private function uniqueUsername(string $studentNumber): string
     {
-        $base = $studentNumber;
+        // Extract the last 6 digits of the student number
+        $base = substr($studentNumber, -6);
         $username = $base;
         $counter = 1;
 
@@ -146,7 +147,10 @@ class StudentAccountController extends Controller
         // Convert to uppercase
         $firstThreeLetters = strtoupper($firstThreeLetters);
         
-        // Combine with underscore and student number
-        return $firstThreeLetters . '_' . $studentNumber;
+        // Extract the last 6 digits of the student number
+        $lastSixDigits = substr($studentNumber, -6);
+        
+        // Combine with underscore and last 6 digits of student number
+        return $firstThreeLetters . '_' . $lastSixDigits;
     }
 }

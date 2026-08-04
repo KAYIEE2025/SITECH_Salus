@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogControll
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Registrar\DashboardController as RegistrarDashboardController;
 use App\Http\Controllers\Registrar\GradeApprovalController;
+use App\Http\Controllers\Registrar\GradeReopeningRequestController as RegistrarGradeReopeningRequestController;
 use App\Http\Controllers\Registrar\GradeSubmissionScheduleController;
 use App\Http\Controllers\Registrar\SectionController;
 use App\Http\Controllers\Registrar\StudentController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\Teacher\AnnouncementController as TeacherAnnouncementCo
 use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use App\Http\Controllers\Teacher\GradeManagementController as TeacherGradeManagementController;
+use App\Http\Controllers\Teacher\GradeReopeningRequestController as TeacherGradeReopeningRequestController;
 use App\Http\Controllers\Teacher\GradeSubmissionController as TeacherGradeSubmissionController;
 use App\Http\Controllers\Teacher\ProfileController as TeacherProfileController;
 use App\Http\Controllers\Teacher\ScheduleController as TeacherScheduleController;
@@ -125,6 +127,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
         Route::get('/students/{student}/print-class-schedule', [StudentController::class, 'printClassSchedule'])->name('students.print-class-schedule');
         Route::post('/students/{student}/assign-qr', [StudentController::class, 'assignQR'])->name('students.assign-qr');
+        Route::post('/students/{student}/replace-qr', [StudentController::class, 'replaceQR'])->name('students.replace-qr');
+        Route::post('/students/decode-qr', [StudentController::class, 'decodeQR'])->name('students.decode-qr');
         Route::get('/study-load', [StudyLoadController::class, 'index'])->name('study-load');
         Route::post('/study-load', [StudyLoadController::class, 'store'])->name('study-load.store');
         Route::delete('/study-load/{schedule}', [StudyLoadController::class, 'destroy'])->name('study-load.destroy');
@@ -144,6 +148,12 @@ Route::middleware('auth')->group(function () {
             Route::get('/{schedule}/edit', [GradeSubmissionScheduleController::class, 'edit'])->name('edit');
             Route::put('/{schedule}', [GradeSubmissionScheduleController::class, 'update'])->name('update');
             Route::delete('/{schedule}', [GradeSubmissionScheduleController::class, 'destroy'])->name('destroy');
+        });
+        Route::prefix('grade-reopening-requests')->name('grade-reopening-requests.')->group(function () {
+            Route::get('/', [RegistrarGradeReopeningRequestController::class, 'index'])->name('index');
+            Route::get('/{reopeningRequest}', [RegistrarGradeReopeningRequestController::class, 'show'])->name('show');
+            Route::post('/{reopeningRequest}/approve', [RegistrarGradeReopeningRequestController::class, 'approve'])->name('approve');
+            Route::post('/{reopeningRequest}/reject', [RegistrarGradeReopeningRequestController::class, 'reject'])->name('reject');
         });
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -184,6 +194,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/{classSchedule}/submit', [TeacherGradeSubmissionController::class, 'submit'])->name('submit');
             Route::post('/{classSchedule}/resubmit', [TeacherGradeSubmissionController::class, 'resubmit'])->name('resubmit');
         });
+        Route::prefix('grade-reopening-requests')->name('grade-reopening-requests.')->group(function () {
+            Route::post('/{classSchedule}', [TeacherGradeReopeningRequestController::class, 'create'])->name('create');
+            Route::get('/{classSchedule}/check-status', [TeacherGradeReopeningRequestController::class, 'checkStatus'])->name('check-status');
+        });
         Route::prefix('announcements')->name('announcements.')->group(function () {
             Route::get('/', [TeacherAnnouncementController::class, 'index'])->name('index');
         });
@@ -198,6 +212,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [SsgDashboardController::class, 'index'])->name('dashboard');
         Route::get('/attendance/{event}', [SsgAttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance/scan', [SsgAttendanceController::class, 'scan'])->name('attendance.scan');
+        Route::post('/attendance/manual-entry', [SsgAttendanceController::class, 'manualEntry'])->name('attendance.manual-entry');
+        Route::post('/attendance/manual-entry-full', [SsgAttendanceController::class, 'manualEntryWithFullId'])->name('attendance.manual-entry-full');
         Route::get('/attendance/{event}/list', [SsgAttendanceController::class, 'list'])->name('attendance.list');
         Route::post('/attendance/{event}/extend-time', [SsgAttendanceController::class, 'extendTime'])->name('attendance.extend-time');
         Route::get('/fines', [SsgFineController::class, 'index'])->name('fines.index');

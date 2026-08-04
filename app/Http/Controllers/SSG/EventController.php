@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SSG;
 use App\Http\Controllers\Controller;
 use App\Models\SsgEvent;
 use App\Models\Student;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,8 +14,7 @@ class EventController extends Controller
     public function index()
     {
         $events = SsgEvent::withCount('attendances')
-            ->latest('event_date')
-            ->latest()
+            ->latest('created_at')
             ->paginate(10);
 
         return view('ssg.events.index', compact('events'));

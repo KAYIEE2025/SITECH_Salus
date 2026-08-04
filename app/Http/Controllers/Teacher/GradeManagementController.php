@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Helpers\SchoolYearHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ClassSchedule;
 use App\Models\FinalGrade;
 use App\Models\GradeImport;
+use App\Models\GradeSubmissionSchedule;
+use App\Models\GradeSubmissionReopeningRequest;
 use App\Models\GradingComponent;
 use App\Models\ScoreItem;
 use App\Models\Student;
@@ -16,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class GradeManagementController extends Controller
 {
@@ -24,6 +28,63 @@ class GradeManagementController extends Controller
     public function __construct(GradeImportService $gradeImportService)
     {
         $this->gradeImportService = $gradeImportService;
+    }
+
+    /**
+     * Get the grade submission schedule status for a given school year and grading period
+     */
+    private function getSubmissionStatus($schoolYear, $gradingPeriod)
+    {
+        // DEBUG: Log the values being used for the schedule lookup
+        \Log::info('GRADE MANAGEMENT - getSubmissionStatus DEBUG', [
+            'school_year' => $schoolYear,
+            'grading_period' => $gradingPeriod,
+        ]);
+
+        $schedule = GradeSubmissionSchedule::where('school_year', $schoolYear)
+            ->where('grading_period', $gradingPeriod)
+            ->first();
+
+        \Log::info('GRADE MANAGEMENT - Schedule Query Result', [
+            'query_school_year' => $schoolYear,
+            'query_grading_period' => $gradingPeriod,
+            'schedule_found' => !is_null($schedule),
+            'schedule_id' => $schedule ? $schedule->id : null,
+        ]);
+
+        if (!$schedule) {
+            return [
+                'status' => 'no_schedule',
+                'message' => 'No grade submission schedule configured for this period.',
+                'start_at' => null,
+                'deadline_at' => null,
+            ];
+        }
+
+        $now = Carbon::now();
+
+        if ($now < $schedule->start_at) {
+            return [
+                'status' => 'scheduled',
+                'message' => 'Grade submission has not started yet.',
+                'start_at' => $schedule->start_at,
+                'deadline_at' => $schedule->end_at,
+            ];
+        } elseif ($now >= $schedule->start_at && $now <= $schedule->end_at) {
+            return [
+                'status' => 'open',
+                'message' => 'Grade submission is OPEN.',
+                'start_at' => $schedule->start_at,
+                'deadline_at' => $schedule->end_at,
+            ];
+        } else {
+            return [
+                'status' => 'closed',
+                'message' => 'Grade submission has already closed.',
+                'start_at' => $schedule->start_at,
+                'deadline_at' => $schedule->end_at,
+            ];
+        }
     }
 
     public function index()
@@ -96,10 +157,31 @@ class GradeManagementController extends Controller
         return response()->json($subjects);
     }
 
-    public function upload(ClassSchedule $classSchedule)
+    public function upload(Request $request, ClassSchedule $classSchedule)
     {
         if ($classSchedule->teacher_id !== auth()->id()) {
             abort(403);
+        }
+
+        // Get grading period from request or default to Term 1
+        $gradingPeriod = $request->query('grading_period', 1);
+
+        // Get submission status
+        $submissionStatus = $this->getSubmissionStatus($classSchedule->school_year, $gradingPeriod);
+
+        // Check for reopening requests if status is closed
+        $reopeningRequest = null;
+        if ($submissionStatus['status'] === 'closed') {
+            $reopeningRequest = GradeSubmissionReopeningRequest::forTeacher(auth()->id())
+                ->forPeriod($classSchedule->school_year, $gradingPeriod)
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            // If there's an approved request with valid temporary deadline, override status
+            if ($reopeningRequest && $reopeningRequest->isApproved() && $reopeningRequest->hasTemporaryAccess()) {
+                $submissionStatus['status'] = 'open';
+                $submissionStatus['message'] = 'Grade submission is OPEN (Temporary Access)';
+            }
         }
 
         // Get imported data from session if available
@@ -108,7 +190,14 @@ class GradeManagementController extends Controller
         // Check if grades have already been submitted
         $existingGrades = FinalGrade::where('class_schedule_id', $classSchedule->id)->get();
 
-        return view('teacher.grades.index', compact('classSchedule', 'importedData', 'existingGrades'));
+        return view('teacher.grades.index', compact(
+            'classSchedule',
+            'importedData',
+            'existingGrades',
+            'submissionStatus',
+            'gradingPeriod',
+            'reopeningRequest'
+        ));
     }
 
     public function importPreview(ClassSchedule $classSchedule)
@@ -233,6 +322,7 @@ class GradeManagementController extends Controller
             'excel_file' => 'required|mimes:xlsx,xls|max:5120',
             'class_schedule_id' => 'required',
             'school_year' => 'required',
+            'grading_period' => 'required|integer|in:1,2,3,4',
         ]);
 
         $classSchedule = ClassSchedule::findOrFail($request->class_schedule_id);
@@ -662,7 +752,7 @@ class GradeManagementController extends Controller
         return response()->json(['success' => true, 'score' => $studentScore->score]);
     }
 
-    public function computeGrades(ClassSchedule $classSchedule)
+    public function computeGrades(Request $request, ClassSchedule $classSchedule)
     {
         if ($classSchedule->teacher_id !== auth()->id()) {
             abort(403);

@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/png" href="{{ asset('images/salus-logo.png') }}">
     <title>SITech - @yield('title', $title ?? 'Dashboard')</title>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 @php($isSuperAdminPanel = request()->routeIs('superadmin.*'))

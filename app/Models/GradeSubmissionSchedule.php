@@ -3,62 +3,32 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
+use Carbon\Carbon;
 
 class GradeSubmissionSchedule extends Model
 {
-    use LogsActivity;
-
-    protected $fillable = [
-        'school_year',
-        'grading_period',
-        'start_at',
-        'end_at',
-        'created_by',
-    ];
+    protected $fillable = ['school_year', 'grading_period', 'start_at', 'end_at', 'created_by'];
 
     protected $casts = [
         'start_at' => 'datetime',
         'end_at' => 'datetime',
     ];
 
-    public function creator(): BelongsTo
+    public function getDeadlineAtAttribute()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->end_at;
     }
 
-    public function getStatusAttribute(): string
+    public function getStatusAttribute()
     {
-        $now = now();
+        $now = Carbon::now();
 
-        if ($now->lt($this->start_at)) {
-            return 'Upcoming';
-        }
-
-        if ($now->between($this->start_at, $this->end_at)) {
+        if ($now < $this->start_at) {
+            return 'Scheduled';
+        } elseif ($now >= $this->start_at && $now <= $this->end_at) {
             return 'Open';
+        } else {
+            return 'Closed';
         }
-
-        return 'Closed';
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['school_year', 'grading_period', 'start_at', 'end_at', 'created_by'])
-            ->logOnlyDirty()
-            ->dontSubmitEmptyLogs();
-    }
-
-    public function scopeForSchoolYear($query, $schoolYear)
-    {
-        return $query->where('school_year', $schoolYear);
-    }
-
-    public function scopeForGradingPeriod($query, $period)
-    {
-        return $query->where('grading_period', $period);
     }
 }

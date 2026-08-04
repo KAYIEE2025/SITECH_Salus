@@ -38,20 +38,20 @@
 
         <!-- Summary Statistics -->
         <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                <p class="text-xs text-blue-600 uppercase tracking-wide">Total Parsed</p>
+            <div class="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-center min-w-0">
+                <p class="text-xs md:text-sm text-blue-600 uppercase tracking-wide break-words">Total Parsed</p>
                 <p class="mt-2 text-2xl font-bold text-blue-700">{{ $totalParsed }}</p>
             </div>
-            <div class="rounded-lg bg-green-50 border border-green-200 p-4">
-                <p class="text-xs text-green-600 uppercase tracking-wide">Matched</p>
+            <div class="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-center min-w-0">
+                <p class="text-xs md:text-sm text-green-600 uppercase tracking-wide break-words">Matched</p>
                 <p class="mt-2 text-2xl font-bold text-green-700">{{ $matchedCount }}</p>
             </div>
-            <div class="rounded-lg bg-red-50 border border-red-200 p-4">
-                <p class="text-xs text-red-600 uppercase tracking-wide">Unmatched</p>
+            <div class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-center min-w-0">
+                <p class="text-xs md:text-sm text-red-600 uppercase tracking-wide break-words">Unmatched</p>
                 <p class="mt-2 text-2xl font-bold text-red-700">{{ $unmatchedCount }}</p>
             </div>
-            <div class="rounded-lg bg-yellow-50 border border-yellow-200 p-4">
-                <p class="text-xs text-yellow-600 uppercase tracking-wide">Ambiguous</p>
+            <div class="rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-3 text-center min-w-0">
+                <p class="text-xs md:text-sm text-yellow-600 uppercase tracking-wide break-words">Ambiguous</p>
                 <p class="mt-2 text-2xl font-bold text-yellow-700">{{ $ambiguousCount ?? 0 }}</p>
             </div>
         </div>

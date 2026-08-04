@@ -2,18 +2,65 @@
 
 namespace App\Http\Controllers\Teacher;
 
+use App\Helpers\SchoolYearHelper;
 use App\Http\Controllers\Controller;
 use App\Models\ClassSchedule;
 use App\Models\GradeSubmissionSchedule;
+use App\Models\GradeSubmissionReopeningRequest;
 use App\Models\StudyLoad;
 use App\Models\Student;
 use App\Models\FinalGrade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use Carbon\Carbon;
 
 class ClassController extends Controller
 {
+    /**
+     * Get the grade submission schedule status for a given school year and grading period
+     */
+    private function getSubmissionStatus($schoolYear, $gradingPeriod)
+    {
+        $schedule = GradeSubmissionSchedule::where('school_year', $schoolYear)
+            ->where('grading_period', $gradingPeriod)
+            ->first();
+
+        if (!$schedule) {
+            return [
+                'status' => 'no_schedule',
+                'message' => 'No grade submission schedule configured for this period.',
+                'start_at' => null,
+                'deadline_at' => null,
+            ];
+        }
+
+        $now = Carbon::now();
+
+        if ($now < $schedule->start_at) {
+            return [
+                'status' => 'scheduled',
+                'message' => 'Grade submission has not started yet.',
+                'start_at' => $schedule->start_at,
+                'deadline_at' => $schedule->end_at,
+            ];
+        } elseif ($now >= $schedule->start_at && $now <= $schedule->end_at) {
+            return [
+                'status' => 'open',
+                'message' => 'Grade submission is OPEN.',
+                'start_at' => $schedule->start_at,
+                'deadline_at' => $schedule->end_at,
+            ];
+        } else {
+            return [
+                'status' => 'closed',
+                'message' => 'Grade submission has already closed.',
+                'start_at' => $schedule->start_at,
+                'deadline_at' => $schedule->end_at,
+            ];
+        }
+    }
+
     public function index()
     {
         $classes = ClassSchedule::where('teacher_id', auth()->id())
@@ -161,60 +208,59 @@ class ClassController extends Controller
             ]);
         }
 
-        // PHASE 2: Get submission schedules for ALL grading periods
-        $submissionSchedules = GradeSubmissionSchedule::where('school_year', $classSchedule->school_year)
-            ->get()
-            ->keyBy('grading_period');
+        // PHASE 2: Get submission schedule status for current grading period
+        $submissionSchedule = null;
+        $submissionStatus = null;
+        $submissionStatusMessage = null;
+        $canSubmit = false;
 
-        // Calculate status for each grading period
-        $submissionStatuses = [];
-        $currentTime = now();
+        if ($currentGradingPeriod) {
+            $submissionSchedule = GradeSubmissionSchedule::where('school_year', $classSchedule->school_year)
+                ->where('grading_period', $currentGradingPeriod)
+                ->first();
 
-        for ($period = 1; $period <= 3; $period++) {
-            $schedule = $submissionSchedules->get($period);
+            if ($submissionSchedule) {
+                $currentTime = now();
 
-            if ($schedule) {
-                if ($currentTime->lt($schedule->start_at)) {
-                    $submissionStatuses[$period] = [
-                        'status' => 'not_yet_open',
-                        'message' => 'Submission Period: NOT YET OPEN',
-                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
-                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
-                        'can_submit' => false,
-                    ];
-                } elseif ($currentTime->gt($schedule->end_at)) {
-                    $submissionStatuses[$period] = [
-                        'status' => 'closed',
-                        'message' => 'Submission Period: CLOSED',
-                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
-                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
-                        'can_submit' => false,
-                    ];
+                if ($currentTime->lt($submissionSchedule->start_at)) {
+                    $submissionStatus = 'not_yet_open';
+                    $submissionStatusMessage = 'Submission Period: NOT YET OPEN';
+                    $canSubmit = false;
+                } elseif ($currentTime->gt($submissionSchedule->end_at)) {
+                    $submissionStatus = 'closed';
+                    $submissionStatusMessage = 'Submission Period: CLOSED';
+                    $canSubmit = false;
                 } else {
-                    $submissionStatuses[$period] = [
-                        'status' => 'open',
-                        'message' => 'Submission Period: OPEN',
-                        'start_at' => $schedule->start_at->format('M d, Y g:i A'),
-                        'end_at' => $schedule->end_at->format('M d, Y g:i A'),
-                        'can_submit' => true,
-                    ];
+                    $submissionStatus = 'open';
+                    $submissionStatusMessage = 'Submission Period: OPEN';
+                    $canSubmit = true;
                 }
             } else {
-                $submissionStatuses[$period] = [
-                    'status' => 'no_schedule',
-                    'message' => 'Submission Schedule Not Configured',
-                    'start_at' => null,
-                    'end_at' => null,
-                    'can_submit' => false,
-                ];
+                $submissionStatus = 'no_schedule';
+                $submissionStatusMessage = 'Submission Period: NOT CONFIGURED';
+                $canSubmit = false;
             }
         }
 
-        // Get current grading period status for backward compatibility
-        $submissionSchedule = $submissionSchedules->get($currentGradingPeriod);
-        $submissionStatus = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['status'] ?? null) : null;
-        $submissionStatusMessage = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['message'] ?? null) : null;
-        $canSubmit = $currentGradingPeriod ? ($submissionStatuses[$currentGradingPeriod]['can_submit'] ?? false) : false;
+        // PHASE 3: Check for reopening requests
+        $reopeningRequest = null;
+        if ($currentGradingPeriod && $submissionStatus === 'closed') {
+            $reopeningRequest = GradeSubmissionReopeningRequest::forTeacher(auth()->id())
+                ->forPeriod($classSchedule->school_year, $currentGradingPeriod)
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            // If there's an approved request with valid temporary deadline, override canSubmit
+            if ($reopeningRequest && $reopeningRequest->isApproved() && $reopeningRequest->hasTemporaryAccess()) {
+                $canSubmit = true;
+                $submissionStatus = 'open';
+                $submissionStatusMessage = 'Submission Period: OPEN (Temporary Access)';
+            }
+        } else {
+            \Log::info('GRADE SUBMISSION SCHEDULE LOOKUP SKIPPED - No current grading period', [
+                'reason' => 'currentGradingPeriod is null',
+            ]);
+        }
 
         return view('teacher.classes.grades', compact(
             'classSchedule',
@@ -231,7 +277,7 @@ class ClassController extends Controller
             'submissionStatus',
             'submissionStatusMessage',
             'canSubmit',
-            'submissionStatuses'
+            'reopeningRequest'
         ));
     }
 
@@ -1490,12 +1536,70 @@ class ClassController extends Controller
             'current_time' => $currentTime->toDateTimeString(),
         ]);
 
+        // PHASE 3: Check for reopening requests
+        $reopeningRequest = GradeSubmissionReopeningRequest::forTeacher(auth()->id())
+            ->forPeriod($schoolYear, $gradingPeriod)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        // Security: Cannot submit while request is Pending
+        if ($reopeningRequest && $reopeningRequest->isPending()) {
+            \Log::warning('GRADE SUBMISSION BLOCKED - PENDING REQUEST', [
+                'teacher_id' => auth()->id(),
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'result' => 'BLOCKED',
+                'reason' => 'PENDING REQUEST',
+            ]);
+
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'You cannot submit grades while your reopening request is pending approval.');
+        }
+
+        // Security: Cannot submit while request is Rejected
+        if ($reopeningRequest && $reopeningRequest->isRejected()) {
+            \Log::warning('GRADE SUBMISSION BLOCKED - REJECTED REQUEST', [
+                'teacher_id' => auth()->id(),
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'result' => 'BLOCKED',
+                'reason' => 'REJECTED REQUEST',
+            ]);
+
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'You cannot submit grades because your reopening request was rejected.');
+        }
+
+        // Check for approved reopening request with temporary access
+        $hasTemporaryAccess = $reopeningRequest && $reopeningRequest->isApproved() && $reopeningRequest->hasTemporaryAccess();
+
+        // Security: Cannot submit after temporary deadline expires
+        if ($reopeningRequest && $reopeningRequest->isApproved() && !$reopeningRequest->hasTemporaryAccess()) {
+            \Log::warning('GRADE SUBMISSION BLOCKED - TEMPORARY ACCESS EXPIRED', [
+                'teacher_id' => auth()->id(),
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'temporary_deadline' => $reopeningRequest->temporary_deadline->toDateTimeString(),
+                'result' => 'BLOCKED',
+                'reason' => 'TEMPORARY ACCESS EXPIRED',
+            ]);
+
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'Your temporary submission access has expired.');
+        }
+
         // Find the matching GradeSubmissionSchedule
         $schedule = GradeSubmissionSchedule::where('school_year', $schoolYear)
             ->where('grading_period', $gradingPeriod)
             ->first();
 
-        if (!$schedule) {
+        if (!$schedule && !$hasTemporaryAccess) {
             \Log::warning('GRADE SUBMISSION BLOCKED - NO SCHEDULE', [
                 'teacher_id' => auth()->id(),
                 'class_schedule_id' => $classSchedule->id,
@@ -1524,13 +1628,49 @@ class ClassController extends Controller
         }
 
         \Log::info('STEP 2.6 - Schedule found', [
-            'schedule_id' => $schedule->id,
-            'start_at' => $schedule->start_at->toDateTimeString(),
-            'end_at' => $schedule->end_at->toDateTimeString(),
+            'schedule_id' => $schedule ? $schedule->id : null,
+            'has_temporary_access' => $hasTemporaryAccess,
         ]);
 
-        // Check if current time is before start_at
-        if ($currentTime->lt($schedule->start_at)) {
+        // Allow submission if within normal window OR has temporary access
+        $withinNormalWindow = $schedule && $currentTime >= $schedule->start_at && $currentTime <= $schedule->end_at;
+
+        if (!$withinNormalWindow && !$hasTemporaryAccess) {
+            \Log::warning('GRADE SUBMISSION BLOCKED - CLOSED', [
+                'teacher_id' => auth()->id(),
+                'class_schedule_id' => $classSchedule->id,
+                'school_year' => $schoolYear,
+                'grading_period' => $gradingPeriod,
+                'current_timestamp' => $currentTime->toDateTimeString(),
+                'schedule_id' => $schedule ? $schedule->id : null,
+                'start_at' => $schedule ? $schedule->start_at->toDateTimeString() : null,
+                'end_at' => $schedule ? $schedule->end_at->toDateTimeString() : null,
+                'result' => 'BLOCKED',
+                'reason' => 'CLOSED',
+            ]);
+
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'class_schedule_id' => $classSchedule->id,
+                    'school_year' => $schoolYear,
+                    'grading_period' => $gradingPeriod,
+                    'current_timestamp' => $currentTime->toDateTimeString(),
+                    'schedule_id' => $schedule ? $schedule->id : null,
+                    'start_at' => $schedule ? $schedule->start_at->toDateTimeString() : null,
+                    'end_at' => $schedule ? $schedule->end_at->toDateTimeString() : null,
+                    'result' => 'BLOCKED',
+                    'reason' => 'CLOSED',
+                ])
+                ->log('grade_submission_blocked_closed');
+
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'Grade submission is closed. Please contact the Registrar to request reopening.');
+        }
+
+        // Check if current time is before start_at (only if no temporary access)
+        if ($schedule && $currentTime->lt($schedule->start_at) && !$hasTemporaryAccess) {
             \Log::warning('GRADE SUBMISSION BLOCKED - NOT YET OPEN', [
                 'teacher_id' => auth()->id(),
                 'class_schedule_id' => $classSchedule->id,
@@ -1564,41 +1704,6 @@ class ClassController extends Controller
                 ->with('error', 'Grade submission is not yet open. Submission opens on ' . $schedule->start_at->format('M d, Y g:i A') . '.');
         }
 
-        // Check if current time is after end_at
-        if ($currentTime->gt($schedule->end_at)) {
-            \Log::warning('GRADE SUBMISSION BLOCKED - DEADLINE PASSED', [
-                'teacher_id' => auth()->id(),
-                'class_schedule_id' => $classSchedule->id,
-                'school_year' => $schoolYear,
-                'grading_period' => $gradingPeriod,
-                'current_timestamp' => $currentTime->toDateTimeString(),
-                'schedule_id' => $schedule->id,
-                'start_at' => $schedule->start_at->toDateTimeString(),
-                'end_at' => $schedule->end_at->toDateTimeString(),
-                'result' => 'BLOCKED',
-                'reason' => 'DEADLINE PASSED',
-            ]);
-
-            activity()
-                ->causedBy(auth()->user())
-                ->withProperties([
-                    'class_schedule_id' => $classSchedule->id,
-                    'school_year' => $schoolYear,
-                    'grading_period' => $gradingPeriod,
-                    'current_timestamp' => $currentTime->toDateTimeString(),
-                    'schedule_id' => $schedule->id,
-                    'start_at' => $schedule->start_at->toDateTimeString(),
-                    'end_at' => $schedule->end_at->toDateTimeString(),
-                    'result' => 'BLOCKED',
-                    'reason' => 'DEADLINE PASSED',
-                ])
-                ->log('grade_submission_blocked_deadline_passed');
-
-            return redirect()
-                ->route('teacher.classes.grades', $classSchedule)
-                ->with('error', 'Grade submission is closed. The submission deadline was ' . $schedule->end_at->format('M d, Y g:i A') . '.');
-        }
-
         // Timeframe is valid - log and continue
         \Log::info('GRADE SUBMISSION ALLOWED', [
             'teacher_id' => auth()->id(),
@@ -1606,9 +1711,8 @@ class ClassController extends Controller
             'school_year' => $schoolYear,
             'grading_period' => $gradingPeriod,
             'current_timestamp' => $currentTime->toDateTimeString(),
-            'schedule_id' => $schedule->id,
-            'start_at' => $schedule->start_at->toDateTimeString(),
-            'end_at' => $schedule->end_at->toDateTimeString(),
+            'schedule_id' => $schedule ? $schedule->id : null,
+            'has_temporary_access' => $hasTemporaryAccess,
             'result' => 'ALLOWED',
         ]);
 
@@ -1619,9 +1723,8 @@ class ClassController extends Controller
                 'school_year' => $schoolYear,
                 'grading_period' => $gradingPeriod,
                 'current_timestamp' => $currentTime->toDateTimeString(),
-                'schedule_id' => $schedule->id,
-                'start_at' => $schedule->start_at->toDateTimeString(),
-                'end_at' => $schedule->end_at->toDateTimeString(),
+                'schedule_id' => $schedule ? $schedule->id : null,
+                'has_temporary_access' => $hasTemporaryAccess,
                 'result' => 'ALLOWED',
             ])
             ->log('grade_submission_allowed');

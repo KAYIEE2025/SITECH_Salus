@@ -123,6 +123,105 @@
         </div>
     @endif
 
+    {{-- Grade Submission Status Card --}}
+    @if($submissionSchedule && $submissionStatus)
+        <div class="tc-card mb-6 p-6">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0">
+                    @if($submissionStatus === 'open')
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    @elseif($submissionStatus === 'closed')
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </div>
+                    @else
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
+                            <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    @endif
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-1">Grade Submission Status</h3>
+                    <div class="flex items-center gap-2 mb-3">
+                        @if($submissionStatus === 'open')
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                🟢 OPEN
+                            </span>
+                        @elseif($submissionStatus === 'closed')
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                🔴 CLOSED
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                🟡 SCHEDULED
+                            </span>
+                        @endif
+                        <span class="text-sm text-gray-600">{{ $submissionStatusMessage }}</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-500 w-32">School Year:</span>
+                            <span class="font-medium text-gray-800">{{ $classSchedule->school_year }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-500 w-32">Grading Period:</span>
+                            <span class="font-medium text-gray-800">Term {{ $currentGradingPeriod }}</span>
+                        </div>
+                        @if($submissionSchedule->start_at)
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-500 w-32">Submission Opens:</span>
+                            <span class="font-medium text-gray-800">{{ $submissionSchedule->start_at->format('F j, g:i A') }}</span>
+                        </div>
+                        @endif
+                        @if($submissionSchedule->end_at)
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-500 w-32">Deadline:</span>
+                            <span class="font-medium text-gray-800">{{ $submissionSchedule->end_at->format('F j, g:i A') }}</span>
+                        </div>
+                        @endif
+                    </div>
+                    @if($submissionStatus === 'closed')
+                        <div class="mt-4" id="reopening-request-section">
+                            @if(isset($reopeningRequest) && $reopeningRequest && $reopeningRequest->isPending())
+                                <div class="rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+                                    <p class="text-sm font-medium text-yellow-800">Status: Pending Approval</p>
+                                    <p class="text-xs text-yellow-600 mt-1">Your reopening request is being reviewed by the Registrar.</p>
+                                </div>
+                            @elseif(isset($reopeningRequest) && $reopeningRequest && $reopeningRequest->isRejected())
+                                <div class="rounded-lg bg-red-50 border border-red-200 p-3">
+                                    <p class="text-sm font-medium text-red-800">Request Rejected</p>
+                                    <p class="text-xs text-red-600 mt-1">Your reopening request was rejected. You may submit a new request.</p>
+                                </div>
+                                <button type="button" id="request-reopening-btn" 
+                                    class="mt-3 text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                    Request Reopening Again
+                                </button>
+                            @elseif(isset($reopeningRequest) && $reopeningRequest && $reopeningRequest->isApproved() && $reopeningRequest->hasTemporaryAccess())
+                                <div class="rounded-lg bg-green-50 border border-green-200 p-3">
+                                    <p class="text-sm font-medium text-green-800">Request Approved</p>
+                                    <p class="text-xs text-green-600 mt-1">Temporary access granted until {{ $reopeningRequest->temporary_deadline->format('F j, g:i A') }}</p>
+                                </div>
+                            @else
+                                <button type="button" id="request-reopening-btn" 
+                                    class="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                    Request Reopening
+                                </button>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Import Official SALUS Grading Sheet Card --}}
     @if($allTermsApproved)
         <div class="tc-card mb-6 p-6">
@@ -250,11 +349,11 @@
                     </div>
                 @endif
 
-                @if(session('success'))
+                @session('success')
                     <div class="mb-4 rounded-lg bg-green-50 border border-green-200 p-3">
-                        <p class="text-sm text-green-700">{{ session('success') }}</p>
+                        <p class="text-sm text-green-700">{{ $value }}</p>
                     </div>
-                @endif
+                @endsession
 
                 <!-- Upload Area -->
                 <div id="upload-area" class="mb-4">
@@ -326,53 +425,63 @@
         </div>
     @endif
 
-    {{-- PHASE 2: Submission Timeframe Card --}}
-    <div id="submission-timeframe-card" class="tc-card mb-6 p-6">
-        <div class="flex justify-between items-start">
-            <div class="flex-1">
-                <div class="flex items-center gap-2 mb-2">
-                    <span id="status-indicator" class="text-2xl"></span>
-                    <h3 id="status-message" class="text-sm font-medium text-gray-800"></h3>
+    {{-- Disable upload button when submission is not open --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadForm = document.getElementById('upload-form');
+            const continueBtn = document.getElementById('continue-btn');
+
+            if (uploadForm && continueBtn) {
+                // Continue button is disabled by default until file is selected
+                // No submission window restriction on upload
+            }
+        });
+    </script>
+
+    <!-- Submit Grades Button -->
+    @if($hasDraftGradesForCurrentPeriod && $currentGradingPeriod)
+        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-800">Ready to Submit</h3>
+                    <p class="text-xs text-gray-500 mt-1">Submit your Term {{ $currentGradingPeriod }} draft grades to the Registrar for approval.</p>
                 </div>
-                <div id="status-details" class="text-xs text-gray-500 mt-1"></div>
-            </div>
-            <div id="submit-button-container">
-                {{-- Submit Grades button will be dynamically shown/hidden --}}
-            </div>
-        </div>
-    </div>
-
-    {{-- Submit Grades Confirmation Dialog --}}
-    <div id="submit-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Submit Grades?</h3>
-            <p class="text-sm text-gray-600 mb-6">
-                Once submitted, you can no longer edit these grades unless the Registrar rejects them.
-            </p>
-            <div class="flex justify-end gap-3">
-                <button type="button" id="cancel-submit-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                    Cancel
-                </button>
-                <form id="submit-grades-form" action="{{ route('teacher.classes.submit-grades', $classSchedule) }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="grading_period" id="submit-grading-period" value="">
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 transition">
-                        Submit
+                @if($submissionStatus === 'open')
+                    <button type="button" id="submit-grades-btn" class="px-6 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition">
+                        Submit Grades
                     </button>
-                </form>
+                @else
+                    <button type="button" disabled class="px-6 py-2 bg-gray-300 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed">
+                        Submit Grades ({{ $submissionStatusMessage }})
+                    </button>
+                @endif
             </div>
         </div>
-    </div>
 
-    @php
-        // Pass submission statuses data to JavaScript
-        $submissionStatusesJson = json_encode($submissionStatuses ?? []);
-        $hasDraftGradesJson = json_encode([
-            1 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 1)->where('status', 'draft')->exists(),
-            2 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 2)->where('status', 'draft')->exists(),
-            3 => FinalGrade::where('class_schedule_id', $classSchedule->id)->where('grading_period', 3)->where('status', 'draft')->exists(),
-        ]);
-    @endphp
+        <!-- Confirmation Dialog -->
+        @if($submissionStatus === 'open')
+        <div id="submit-confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Submit Grades?</h3>
+                <p class="text-sm text-gray-600 mb-6">
+                    Once submitted, you can no longer edit these grades unless the Registrar rejects them.
+                </p>
+                <div class="flex justify-end gap-3">
+                    <button type="button" id="cancel-submit-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <form id="submit-grades-form" action="{{ route('teacher.classes.submit-grades', $classSchedule) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="grading_period" value="{{ $currentGradingPeriod }}">
+                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-700 rounded-lg hover:bg-green-800 transition">
+                            Submit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endif
+    @endif
 
     <!-- Class Roster (Hidden for now, will be shown in Phase 2) -->
     <div class="tc-card hidden">
@@ -534,94 +643,24 @@
             // Continue button - Submit form
             continueBtn.addEventListener('click', () => {
                 if (selectedFile) {
+                    // Set the selected grading period before submitting
+                    const selectedGradingPeriod = document.querySelector('input[name="grading_period"]:checked');
+                    if (selectedGradingPeriod) {
+                        document.getElementById('selected-grading-period').value = selectedGradingPeriod.value;
+                    }
                     document.getElementById('upload-form').submit();
                 }
             });
 
             // Submit Grades confirmation dialog
+            const submitGradesBtn = document.getElementById('submit-grades-btn');
             const submitConfirmationModal = document.getElementById('submit-confirmation-modal');
             const cancelSubmitBtn = document.getElementById('cancel-submit-btn');
-            const submitGradingPeriodInput = document.getElementById('submit-grading-period');
 
-            // PHASE 2: Dynamic submission timeframe card
-            const submissionStatuses = {{ $submissionStatusesJson }};
-            const hasDraftGrades = {{ $hasDraftGradesJson }};
-            const statusIndicator = document.getElementById('status-indicator');
-            const statusMessage = document.getElementById('status-message');
-            const statusDetails = document.getElementById('status-details');
-            const submitButtonContainer = document.getElementById('submit-button-container');
-
-            const updateSubmissionTimeframe = (gradingPeriod) => {
-                const status = submissionStatuses[gradingPeriod];
-                if (!status) {
-                    statusIndicator.textContent = '';
-                    statusMessage.textContent = 'No schedule configured';
-                    statusDetails.textContent = '';
-                    submitButtonContainer.innerHTML = '';
-                    return;
-                }
-
-                // Set status indicator and message
-                switch (status.status) {
-                    case 'open':
-                        statusIndicator.textContent = '🟢';
-                        statusMessage.textContent = status.message;
-                        statusDetails.innerHTML = `Start: ${status.start_at}<br>Deadline: ${status.end_at}`;
-                        break;
-                    case 'not_yet_open':
-                        statusIndicator.textContent = '🟡';
-                        statusMessage.textContent = status.message;
-                        statusDetails.innerHTML = `Opens: ${status.start_at}`;
-                        break;
-                    case 'closed':
-                        statusIndicator.textContent = '🔴';
-                        statusMessage.textContent = status.message;
-                        statusDetails.innerHTML = `Deadline was: ${status.end_at}`;
-                        break;
-                    case 'no_schedule':
-                        statusIndicator.textContent = '⚠️';
-                        statusMessage.textContent = status.message;
-                        statusDetails.innerHTML = 'Please wait for the Registrar to configure the grade submission period.';
-                        break;
-                }
-
-                // Show/hide Submit Grades button
-                if (status.status === 'open' && status.can_submit && hasDraftGrades[gradingPeriod]) {
-                    submitButtonContainer.innerHTML = `
-                        <button type="button" id="submit-grades-btn" class="px-6 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition">
-                            Submit Grades
-                        </button>
-                    `;
-                    // Attach event listener to new button
-                    const newSubmitBtn = document.getElementById('submit-grades-btn');
-                    if (newSubmitBtn) {
-                        newSubmitBtn.addEventListener('click', () => {
-                            submitGradingPeriodInput.value = gradingPeriod;
-                            submitConfirmationModal.classList.remove('hidden');
-                        });
-                    }
-                } else {
-                    submitButtonContainer.innerHTML = '';
-                }
-            };
-
-            // Listen for grading period radio button changes
-            const gradingPeriodRadios = document.querySelectorAll('input[name="grading_period"]');
-            gradingPeriodRadios.forEach(radio => {
-                radio.addEventListener('change', () => {
-                    if (radio.checked) {
-                        updateSubmissionTimeframe(parseInt(radio.value));
-                    }
+            if (submitGradesBtn) {
+                submitGradesBtn.addEventListener('click', () => {
+                    submitConfirmationModal.classList.remove('hidden');
                 });
-            });
-
-            // Initialize with the currently selected grading period
-            const selectedRadio = document.querySelector('input[name="grading_period"]:checked');
-            if (selectedRadio) {
-                updateSubmissionTimeframe(parseInt(selectedRadio.value));
-            } else {
-                // Default to Term 1 if nothing selected
-                updateSubmissionTimeframe(1);
             }
 
             if (cancelSubmitBtn) {
@@ -638,6 +677,100 @@
                     }
                 });
             }
+
+            // Reopening Request Modal
+            const requestReopeningBtn = document.getElementById('request-reopening-btn');
+            const reopeningRequestModal = document.getElementById('reopening-request-modal');
+            const cancelReopeningBtn = document.getElementById('cancel-reopening-btn');
+            const submitReopeningBtn = document.getElementById('submit-reopening-btn');
+
+            if (requestReopeningBtn) {
+                requestReopeningBtn.addEventListener('click', () => {
+                    if (reopeningRequestModal) {
+                        reopeningRequestModal.classList.remove('hidden');
+                    }
+                });
+            }
+
+            if (cancelReopeningBtn) {
+                cancelReopeningBtn.addEventListener('click', () => {
+                    if (reopeningRequestModal) {
+                        reopeningRequestModal.classList.add('hidden');
+                    }
+                });
+            }
+
+            if (submitReopeningBtn) {
+                submitReopeningBtn.addEventListener('click', () => {
+                    const reason = document.getElementById('reopening-reason').value;
+                    if (!reason || reason.trim() === '') {
+                        alert('Please provide a reason for your reopening request.');
+                        return;
+                    }
+
+                    submitReopeningBtn.disabled = true;
+                    submitReopeningBtn.textContent = 'Submitting...';
+
+                    const formData = new FormData();
+                    formData.append('grading_period', '{{ $currentGradingPeriod ?? 1 }}');
+                    formData.append('reason', reason);
+
+                    fetch('{{ route('teacher.grade-reopening-requests.create', $classSchedule) }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert(data.message);
+                            submitReopeningBtn.disabled = false;
+                            submitReopeningBtn.textContent = 'Submit Request';
+                        }
+                    })
+                    .catch(error => {
+                        alert('Error submitting request: ' + error.message);
+                        submitReopeningBtn.disabled = false;
+                        submitReopeningBtn.textContent = 'Submit Request';
+                    });
+                });
+            }
+
+            // Close reopening modal when clicking outside
+            if (reopeningRequestModal) {
+                reopeningRequestModal.addEventListener('click', (e) => {
+                    if (e.target === reopeningRequestModal) {
+                        reopeningRequestModal.classList.add('hidden');
+                    }
+                });
+            }
         });
     </script>
+
+    {{-- Reopening Request Modal --}}
+    <div id="reopening-request-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Request Grade Submission Reopening</h3>
+            <p class="text-sm text-gray-600 mb-4">
+                Please provide a reason for requesting to reopen the grade submission period.
+            </p>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                <textarea id="reopening-reason" rows="4" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Explain why you need to submit grades after the deadline..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="cancel-reopening-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                <button type="button" id="submit-reopening-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+                    Submit Request
+                </button>
+            </div>
+        </div>
+    </div>
 @endsection
