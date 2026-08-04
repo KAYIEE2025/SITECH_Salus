@@ -33,7 +33,7 @@
         @if($saveSummary)
             <div class="rounded-lg bg-gray-50 border border-gray-200 p-4 mb-6">
                 <h3 class="text-sm font-medium text-gray-800 mb-3">Import Summary</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                         <p class="text-gray-500">Imported Students:</p>
                         <p class="font-medium text-gray-800">{{ $saveSummary['total_students'] }}</p>

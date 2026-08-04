@@ -72,5 +72,98 @@
                 </div>
             @endif
         </div>
+<<<<<<< HEAD
+=======
+
+        <!-- Event Details Modal -->
+        <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modalTitle" class="text-lg font-semibold text-gray-800"></h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm text-gray-500">Description</p>
+                        <p id="modalDescription" class="text-sm text-gray-800"></p>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <p class="text-sm text-gray-500">Event Date</p>
+                            <p id="modalEventDate" class="text-sm text-gray-800"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Venue</p>
+                            <p id="modalVenue" class="text-sm text-gray-800"></p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <p class="text-sm text-gray-500">Attendance Status</p>
+                            <p id="modalAttendance" class="text-sm font-medium"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Date Scanned</p>
+                            <p id="modalScannedAt" class="text-sm text-gray-800"></p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <p class="text-sm text-gray-500">Fine Amount</p>
+                            <p id="modalFineAmount" class="text-sm text-gray-800"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Payment Status</p>
+                            <p id="modalPaymentStatus" class="text-sm font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const attendancesData = @json($attendances);
+
+            function viewEvent(attendanceId) {
+                const attendance = attendancesData.find(a => a.id === attendanceId);
+                if (!attendance) return;
+
+                document.getElementById('modalTitle').textContent = attendance.ssg_event.title || 'N/A';
+                document.getElementById('modalDescription').textContent = attendance.ssg_event.description || 'No description available.';
+                document.getElementById('modalEventDate').textContent = attendance.ssg_event.event_date ? new Date(attendance.ssg_event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+                document.getElementById('modalVenue').textContent = attendance.ssg_event.venue || 'N/A';
+                
+                const attendanceStatus = attendance.is_present ? 'Present' : 'Absent';
+                document.getElementById('modalAttendance').textContent = attendanceStatus;
+                document.getElementById('modalAttendance').className = attendance.is_present ? 'text-sm font-medium text-green-700' : 'text-sm font-medium text-red-600';
+                
+                document.getElementById('modalScannedAt').textContent = attendance.scanned_at ? new Date(attendance.scanned_at).toLocaleString() : 'N/A';
+                document.getElementById('modalFineAmount').textContent = '₱' + (attendance.actual_fine || 0).toFixed(2);
+                
+                const paymentStatus = attendance.payment_status === 'paid' ? 'Paid' : 'Unpaid';
+                document.getElementById('modalPaymentStatus').textContent = paymentStatus;
+                document.getElementById('modalPaymentStatus').className = attendance.payment_status === 'paid' ? 'text-sm font-medium text-green-700' : 'text-sm font-medium text-orange-600';
+
+                document.getElementById('eventModal').classList.remove('hidden');
+                document.getElementById('eventModal').classList.add('flex');
+            }
+
+            function closeModal() {
+                document.getElementById('eventModal').classList.add('hidden');
+                document.getElementById('eventModal').classList.remove('flex');
+            }
+
+            // Close modal on outside click
+            document.getElementById('eventModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        </script>
+>>>>>>> 9bc528e6c9c1cfa3a59d6389d27bf0903c2ae401
     @endif
 @endsection

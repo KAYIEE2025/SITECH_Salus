@@ -48,7 +48,7 @@
 
         <!-- Report Info -->
         <div class="mb-6 bg-gray-50 p-4 rounded-lg">
-            <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                 <div>
                     <span class="text-gray-500">Generated Date:</span>
                     <span class="font-medium text-gray-800 ml-2">{{ \Carbon\Carbon::now()->format('F d, Y g:i A') }}</span>
