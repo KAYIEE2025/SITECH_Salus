@@ -19,7 +19,7 @@
                 ← Back to Reports
             </a>
             <button onclick="window.print()" class="bg-green-800 hover:bg-green-900 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
-                Print PDF
+                Print
             </button>
         </div>
     </div>
@@ -42,24 +42,20 @@
                     <span class="font-medium text-gray-800 ml-2">{{ $subject->code }} - {{ $subject->name }}</span>
                 </div>
                 <div>
+                    <span class="text-gray-500">Grade Level:</span>
+                    <span class="font-medium text-gray-800 ml-2">{{ $yearLevel ? $yearLevel->name : 'All' }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Section:</span>
+                    <span class="font-medium text-gray-800 ml-2">{{ $section ? $section->name : 'All' }}</span>
+                </div>
+                <div>
                     <span class="text-gray-500">Generated Date:</span>
                     <span class="font-medium text-gray-800 ml-2">{{ \Carbon\Carbon::now()->format('F d, Y g:i A') }}</span>
                 </div>
                 <div>
                     <span class="text-gray-500">Total Students:</span>
-                    <span class="font-medium text-gray-800 ml-2">{{ $grades->count() }}</span>
-                </div>
-                <div>
-                    <span class="text-gray-500">Average Grade:</span>
-                    <span class="font-medium text-gray-800 ml-2">{{ number_format($averageGrade, 2) }}</span>
-                </div>
-                <div>
-                    <span class="text-gray-500">Passed:</span>
-                    <span class="font-medium text-green-600 ml-2">{{ $passedCount }}</span>
-                </div>
-                <div>
-                    <span class="text-gray-500">Failed:</span>
-                    <span class="font-medium text-red-600 ml-2">{{ $failedCount }}</span>
+                    <span class="font-medium text-gray-800 ml-2">{{ count($studentGrades) }}</span>
                 </div>
             </div>
         </div>
@@ -71,32 +67,26 @@
                     <tr class="bg-gray-800 text-white">
                         <th class="border border-gray-600 px-4 py-3 text-left">Student Number</th>
                         <th class="border border-gray-600 px-4 py-3 text-left">Student Name</th>
-                        <th class="border border-gray-600 px-4 py-3 text-left">Grade Level</th>
-                        <th class="border border-gray-600 px-4 py-3 text-left">Section</th>
-                        <th class="border border-gray-600 px-4 py-3 text-left">Final Grade</th>
-                        <th class="border border-gray-600 px-4 py-3 text-left">Remarks</th>
+                        <th class="border border-gray-600 px-4 py-3 text-center">Term 1</th>
+                        <th class="border border-gray-600 px-4 py-3 text-center">Term 2</th>
+                        <th class="border border-gray-600 px-4 py-3 text-center">Term 3</th>
+                        <th class="border border-gray-600 px-4 py-3 text-center">Final Grade</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($grades as $grade)
+                    @forelse($studentGrades as $index => $studentGrade)
                     <tr class="hover:bg-gray-50">
-                        <td class="border border-gray-300 px-4 py-2">{{ $grade->student->student_number ?? '—' }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $grade->student->last_name }}, {{ $grade->student->first_name }} {{ $grade->student->middle_name ?? '' }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $grade->student->yearLevel->name ?? '—' }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $grade->student->section->name ?? '—' }}</td>
-                        <td class="border border-gray-300 px-4 py-2 font-medium">{{ number_format($grade->final_grade, 2) }}</td>
-                        <td class="border border-gray-300 px-4 py-2">
-                            @if($grade->final_grade >= 75)
-                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Passed</span>
-                            @else
-                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Failed</span>
-                            @endif
-                        </td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $studentGrade['student']->student_number ?? '—' }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ $studentGrade['student']->last_name }}, {{ $studentGrade['student']->first_name }} {{ $studentGrade['student']->middle_name ?? '' }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ $studentGrade['term1'] }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ $studentGrade['term2'] }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">{{ $studentGrade['term3'] }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center font-medium">{{ $studentGrade['final_grade'] }}</td>
                     </tr>
                     @empty
                     <tr>
                         <td colspan="6" class="border border-gray-300 px-4 py-8 text-center text-gray-400">
-                            No approved grades found for this subject.
+                            No students found for this subject.
                         </td>
                     </tr>
                     @endforelse

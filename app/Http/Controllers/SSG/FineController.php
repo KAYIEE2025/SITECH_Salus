@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SSG;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\SchoolYearHelper;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\YearLevel;
@@ -53,13 +54,15 @@ class FineController extends Controller
 
         $yearLevels = YearLevel::orderBy('level')->get();
         $sections = Section::with('yearLevel')->orderBy('name')->get();
+        $activeSchoolYear = SchoolYearHelper::getActive();
 
         return view('ssg.fines.index', compact(
             'students',
             'schoolYears',
             'yearLevels',
             'sections',
-            'filters'
+            'filters',
+            'activeSchoolYear'
         ));
     }
 

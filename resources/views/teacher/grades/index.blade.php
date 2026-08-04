@@ -2,7 +2,7 @@
 @section('title', 'Grade Management')
 @section('content')
     @php
-        $selectedSchoolYear = old('school_year', $classSchedule->school_year ?? '');
+        $selectedSchoolYear = old('school_year', $classSchedule->school_year ?? $activeSchoolYear ?? '');
         $selectedSectionId = old('section_id', $classSchedule->section_id ?? '');
         $selectedClassScheduleId = old('class_schedule_id', $classSchedule->id ?? '');
     @endphp
@@ -17,13 +17,24 @@
                 @csrf
                 <div>
                     <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">School Year</label>
-                    <select id="school_year" name="school_year" class="w-full border border-gray-300 rounded px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:ring-green-500 focus:border-green-500" required>
-                        <option value="">Select...</option>
-                        <option value="2024-2025" @selected($selectedSchoolYear === '2024-2025')>2024-2025</option>
-                        <option value="2025-2026" @selected($selectedSchoolYear === '2025-2026')>2025-2026</option>
-                        <option value="2026-2027" @selected($selectedSchoolYear === '2026-2027')>2026-2027</option>
-                        <option value="2027-2028" @selected($selectedSchoolYear === '2027-2028')>2027-2028</option>
-                    </select>
+                    @if($activeSchoolYear)
+                        <select id="school_year" name="school_year" class="w-full border border-gray-300 rounded px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:ring-green-500 focus:border-green-500" required>
+                            <option value="">Select...</option>
+                            <option value="2024-2025" @selected($selectedSchoolYear === '2024-2025')>2024-2025</option>
+                            <option value="2025-2026" @selected($selectedSchoolYear === '2025-2026')>2025-2026</option>
+                            <option value="2026-2027" @selected($selectedSchoolYear === '2026-2027')>2026-2027</option>
+                            <option value="2027-2028" @selected($selectedSchoolYear === '2027-2028')>2027-2028</option>
+                        </select>
+                    @else
+                        <select id="school_year" name="school_year" class="w-full border border-red-300 rounded px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:ring-red-500 focus:border-red-500" required>
+                            <option value="">Select...</option>
+                            <option value="2024-2025" @selected($selectedSchoolYear === '2024-2025')>2024-2025</option>
+                            <option value="2025-2026" @selected($selectedSchoolYear === '2025-2026')>2025-2026</option>
+                            <option value="2026-2027" @selected($selectedSchoolYear === '2026-2027')>2026-2027</option>
+                            <option value="2027-2028" @selected($selectedSchoolYear === '2027-2028')>2027-2028</option>
+                        </select>
+                        <p class="text-red-500 text-xs mt-1">No active school year set. Please contact Super Admin to set an active school year.</p>
+                    @endif
                 </div>
                 <div>
                     <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Section</label>

@@ -14,7 +14,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $roles = Role::orderBy('name')->get();
-        $assignableRoles = $roles;
+        $assignableRoles = $roles->whereNotIn('name', ['SSG', 'Student']);
 
         $users = User::with('roles')
             ->when($request->filled('role'), function ($query) use ($request) {
@@ -59,7 +59,7 @@ class UserController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users',
             'password' => 'required|min:8|confirmed',
-            'role'     => 'required|exists:roles,name',
+            'role'     => 'required|exists:roles,name|not_in:SSG,Student',
             'contact_number' => 'nullable|string|max:20',
         ]);
 
@@ -86,8 +86,8 @@ class UserController extends Controller
     {
         $isProtectedUser = $user->id === 1;
         $roles = $isProtectedUser
-            ? Role::whereNotIn('name', ['Super Admin', 'SSG'])->orderBy('name')->get()
-            : Role::orderBy('name')->get();
+            ? Role::whereNotIn('name', ['Super Admin', 'SSG', 'Student'])->orderBy('name')->get()
+            : Role::whereNotIn('name', ['Student'])->orderBy('name')->get();
         return view('superadmin.accounts-edit', compact('user', 'roles'));
     }
 
@@ -101,6 +101,7 @@ class UserController extends Controller
             'role'  => [
                 $isProtectedUser ? 'nullable' : 'required',
                 'exists:roles,name',
+                'not_in:Student',
             ],
             'contact_number' => 'nullable|string|max:20',
         ]);

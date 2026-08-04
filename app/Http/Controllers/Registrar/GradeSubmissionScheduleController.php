@@ -22,11 +22,11 @@ class GradeSubmissionScheduleController extends Controller
 
         // If no school years exist yet, use active school year as default
         if (empty($availableSchoolYears)) {
-            $availableSchoolYears[] = SchoolYearHelper::getActiveSchoolYear();
+            $availableSchoolYears[] = SchoolYearHelper::getActive();
         }
 
         // Get selected school year from query parameter or use active school year
-        $selectedSchoolYear = $request->query('school_year', SchoolYearHelper::getActiveSchoolYear());
+        $selectedSchoolYear = $request->query('school_year', SchoolYearHelper::getActive());
 
         // Ensure selected school year is in available school years
         if (!in_array($selectedSchoolYear, $availableSchoolYears)) {
@@ -48,7 +48,7 @@ class GradeSubmissionScheduleController extends Controller
     public function create(Request $request)
     {
         // Use selected school year from query parameter or default to active school year
-        $activeSchoolYear = $request->query('school_year', SchoolYearHelper::getActiveSchoolYear());
+        $activeSchoolYear = $request->query('school_year', SchoolYearHelper::getActive());
         return view('registrar.grade-submission-schedules.create', compact('activeSchoolYear'));
     }
 
@@ -97,7 +97,7 @@ class GradeSubmissionScheduleController extends Controller
 
     public function edit(Request $request, GradeSubmissionSchedule $schedule)
     {
-        $activeSchoolYear = $request->query('school_year', SchoolYearHelper::getActiveSchoolYear());
+        $activeSchoolYear = $request->query('school_year', SchoolYearHelper::getActive());
         return view('registrar.grade-submission-schedules.edit', compact('schedule', 'activeSchoolYear'));
     }
 

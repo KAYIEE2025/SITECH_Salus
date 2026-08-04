@@ -116,7 +116,8 @@
                 </button>
             </div>
 
-            <form method="GET" action="{{ route('superadmin.fine-records.report') }}" class="space-y-3 md:space-y-4">
+            <form method="POST" action="{{ route('superadmin.fine-records.report') }}" class="space-y-3 md:space-y-4">
+                @csrf
                 <div class="grid gap-3 md:gap-4 grid-cols-1 lg:grid-cols-2">
                     <div>
                         <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Date From</label>

@@ -12,12 +12,22 @@
         <form method="GET" action="{{ route('ssg.fines.index') }}" class="grid gap-4 lg:grid-cols-5 lg:items-end">
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">School Year</label>
-                <select name="school_year" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                    <option value="">All school years</option>
-                    @foreach($schoolYears as $schoolYear)
-                        <option value="{{ $schoolYear }}" @selected(($filters['school_year'] ?? '') === $schoolYear)>{{ $schoolYear }}</option>
-                    @endforeach
-                </select>
+                @if($activeSchoolYear)
+                    <select name="school_year" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        <option value="">All school years</option>
+                        @foreach($schoolYears as $schoolYear)
+                            <option value="{{ $schoolYear }}" @selected(($filters['school_year'] ?? $activeSchoolYear) === $schoolYear)>{{ $schoolYear }}</option>
+                        @endforeach
+                    </select>
+                @else
+                    <select name="school_year" class="w-full rounded-lg border border-red-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-600">
+                        <option value="">All school years</option>
+                        @foreach($schoolYears as $schoolYear)
+                            <option value="{{ $schoolYear }}" @selected(($filters['school_year'] ?? '') === $schoolYear)>{{ $schoolYear }}</option>
+                        @endforeach
+                    </select>
+                    <p class="text-red-500 text-xs mt-1">No active school year set. Please contact Super Admin to set an active school year.</p>
+                @endif
             </div>
 
             <div>

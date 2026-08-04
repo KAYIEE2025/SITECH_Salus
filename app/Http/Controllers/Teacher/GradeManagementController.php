@@ -90,7 +90,8 @@ class GradeManagementController extends Controller
     public function index()
     {
         // Show selection form (School Year, Section, Subject)
-        return view('teacher.grades.index');
+        $activeSchoolYear = SchoolYearHelper::getActive();
+        return view('teacher.grades.index', compact('activeSchoolYear'));
     }
 
     public function select(Request $request)
@@ -190,13 +191,16 @@ class GradeManagementController extends Controller
         // Check if grades have already been submitted
         $existingGrades = FinalGrade::where('class_schedule_id', $classSchedule->id)->get();
 
+        $activeSchoolYear = SchoolYearHelper::getActive();
+
         return view('teacher.grades.index', compact(
             'classSchedule',
             'importedData',
             'existingGrades',
             'submissionStatus',
             'gradingPeriod',
-            'reopeningRequest'
+            'reopeningRequest',
+            'activeSchoolYear'
         ));
     }
 

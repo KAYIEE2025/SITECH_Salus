@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Registrar;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\SchoolYearHelper;
 use App\Models\FinalGrade;
 use App\Models\ClassSchedule;
 use Illuminate\Http\Request;
@@ -40,7 +41,9 @@ class GradeApprovalController extends Controller
             ->take(50)
             ->get();
 
-        return view('registrar.grade-approval.index', compact('pendingGrades', 'history'));
+        $activeSchoolYear = SchoolYearHelper::getActive();
+
+        return view('registrar.grade-approval.index', compact('pendingGrades', 'history', 'activeSchoolYear'));
     }
 
     public function view(ClassSchedule $classSchedule)

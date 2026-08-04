@@ -56,6 +56,10 @@
                         <td class="px-6 py-4 text-gray-600">{{ $event->creator ? $event->creator->name : 'System' }}</td>
                         <td class="px-6 py-4">
                             <div class="flex justify-end gap-2">
+                                <a href="{{ route('admin.calendar.edit', $event) }}"
+                                    class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg transition">
+                                    Edit
+                                </a>
                                 <form method="POST" action="{{ route('admin.calendar.destroy', $event) }}" class="inline">
                                     @csrf
                                     @method('DELETE')

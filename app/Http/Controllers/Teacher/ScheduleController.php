@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\SchoolYearHelper;
 use App\Models\ClassSchedule;
 use Illuminate\Http\Request;
 
@@ -54,7 +55,8 @@ class ScheduleController extends Controller
             ->orderByDesc('school_year')
             ->first();
 
-        $schoolYear = $request->query('school_year', $latestSchedule?->school_year);
+        $activeSchoolYear = SchoolYearHelper::getActive();
+        $schoolYear = $request->query('school_year', $activeSchoolYear ?? $latestSchedule?->school_year);
 
         $schedules = (clone $baseQuery)
             ->with(['subject:id,code,name', 'section.yearLevel:id,level,name'])

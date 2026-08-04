@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Registrar;
 
 use App\Http\Controllers\Controller;
+use App\Helpers\SchoolYearHelper;
 use App\Models\ClassSchedule;
 use App\Models\StudyLoad;
 use App\Models\Section;
@@ -19,18 +20,19 @@ class StudyLoadController extends Controller
     $teachers   = User::role('Teacher')->get();
     $selected   = null;
     $schedules  = collect();
+    $activeSchoolYear = SchoolYearHelper::getActive();
 
     if (request('section_id')) {
         $selected  = Section::with('yearLevel')->find(request('section_id'));
         $schedules = ClassSchedule::with(['subject', 'teacher'])
             ->where('section_id', request('section_id'))
-            ->where('school_year', request('school_year', '2025-2026'))
+            ->where('school_year', request('school_year', $activeSchoolYear ?? '2025-2026'))
             ->orderBy('time_start')
             ->get();
     }
 
     return view('registrar.study-load.index', compact(
-        'sections', 'teachers', 'selected', 'schedules'
+        'sections', 'teachers', 'selected', 'schedules', 'activeSchoolYear'
     ));
 }
 

@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Index for faster lookups
-            $table->index(['teacher_id', 'grading_period', 'school_year', 'status']);
+            $table->index(['teacher_id', 'grading_period', 'school_year', 'status'], 'gsrr_teacher_grading_status');
         });
     }
 

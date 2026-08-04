@@ -30,6 +30,7 @@ use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardCo
 use App\Http\Controllers\SuperAdmin\FineRecordsController;
 use App\Http\Controllers\SuperAdmin\RoleManagementController;
 use App\Http\Controllers\SuperAdmin\RolesController;
+use App\Http\Controllers\SuperAdmin\SchoolYearController;
 use App\Http\Controllers\SuperAdmin\StudentAccountController;
 use App\Http\Controllers\SuperAdmin\UserController;
 use App\Http\Controllers\Teacher\AnnouncementController as TeacherAnnouncementController;
@@ -61,6 +62,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('superadmin')->name('superadmin.')->middleware('role:Super Admin')->group(function () {
         Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/ssg-reset', [SuperAdminDashboardController::class, 'resetSSGRecords'])->name('ssg-reset');
         Route::get('/accounts', [UserController::class, 'index'])->name('accounts');
         Route::post('/accounts', [UserController::class, 'store'])->name('accounts.store');
         Route::get('/accounts/{user}/edit', [UserController::class, 'edit'])->name('accounts.edit');
@@ -77,7 +79,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs');
         Route::get('/activity-logs/pdf', [ActivityLogController::class, 'generatePdf'])->name('activity-logs.pdf');
         Route::get('/fine-records', [FineRecordsController::class, 'index'])->name('fine-records.index');
-        Route::post('/fine-records/report', [FineRecordsController::class, 'generateReport'])->name('fine-records.report');
+        Route::match(['get', 'post'], '/fine-records/report', [FineRecordsController::class, 'generateReport'])->name('fine-records.report');
+        Route::prefix('school-years')->name('school-years.')->group(function () {
+            Route::get('/', [SchoolYearController::class, 'index'])->name('index');
+            Route::get('/create', [SchoolYearController::class, 'create'])->name('create');
+            Route::post('/', [SchoolYearController::class, 'store'])->name('store');
+            Route::get('/{schoolYear}/edit', [SchoolYearController::class, 'edit'])->name('edit');
+            Route::put('/{schoolYear}', [SchoolYearController::class, 'update'])->name('update');
+            Route::post('/{schoolYear}/set-active', [SchoolYearController::class, 'setActive'])->name('set-active');
+            Route::delete('/{schoolYear}', [SchoolYearController::class, 'destroy'])->name('destroy');
+        });
         Route::get('/roles', [RolesController::class, 'index'])->name('roles');
         Route::get('/role-management', [RoleManagementController::class, 'index'])->name('role-management');
         Route::get('/api/user-roles/{user}', [RoleManagementController::class, 'getUserRoles'])->name('api.user-roles');
@@ -101,12 +112,16 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [CalendarController::class, 'index'])->name('index');
             Route::get('/create', [CalendarController::class, 'create'])->name('create');
             Route::post('/', [CalendarController::class, 'store'])->name('store');
+            Route::get('/{event}/edit', [CalendarController::class, 'edit'])->name('edit');
+            Route::put('/{event}', [CalendarController::class, 'update'])->name('update');
             Route::delete('/{event}', [CalendarController::class, 'destroy'])->name('destroy');
         });
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
             Route::post('/student-list', [ReportController::class, 'generateStudentList'])->name('student-list');
+            Route::post('/student-list-pdf', [ReportController::class, 'generateStudentListPdf'])->name('student-list-pdf');
             Route::post('/grade-summary', [ReportController::class, 'generateGradeSummary'])->name('grade-summary');
+            Route::post('/grade-summary-pdf', [ReportController::class, 'generateGradeSummaryPdf'])->name('grade-summary-pdf');
         });
         Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
             Route::get('/', [AdminActivityLogController::class, 'index'])->name('index');

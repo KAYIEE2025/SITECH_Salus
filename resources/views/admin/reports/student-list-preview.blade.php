@@ -21,6 +21,18 @@
             <button onclick="window.print()" class="bg-green-800 hover:bg-green-900 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
                 Print PDF
             </button>
+            <form method="POST" action="{{ route('admin.reports.student-list-pdf') }}" class="inline">
+                @csrf
+                @if(request()->has('year_level_id') && request('year_level_id'))
+                    <input type="hidden" name="year_level_id" value="{{ request('year_level_id') }}">
+                @endif
+                @if(request()->has('section_id') && request('section_id'))
+                    <input type="hidden" name="section_id" value="{{ request('section_id') }}">
+                @endif
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
+                    Download PDF
+                </button>
+            </form>
         </div>
     </div>
 
@@ -63,9 +75,6 @@
                     <tr class="bg-gray-800 text-white">
                         <th class="border border-gray-600 px-4 py-3 text-left">Student Number</th>
                         <th class="border border-gray-600 px-4 py-3 text-left">Student Name</th>
-                        <th class="border border-gray-600 px-4 py-3 text-left">Grade Level</th>
-                        <th class="border border-gray-600 px-4 py-3 text-left">Section</th>
-                        <th class="border border-gray-600 px-4 py-3 text-left">Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,15 +82,10 @@
                     <tr class="hover:bg-gray-50">
                         <td class="border border-gray-300 px-4 py-2">{{ $student->student_number ?? '—' }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name ?? '' }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $student->yearLevel->name ?? '—' }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $student->section->name ?? '—' }}</td>
-                        <td class="border border-gray-300 px-4 py-2">
-                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span>
-                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="border border-gray-300 px-4 py-8 text-center text-gray-400">
+                        <td colspan="2" class="border border-gray-300 px-4 py-8 text-center text-gray-400">
                             No students found for the selected criteria.
                         </td>
                     </tr>

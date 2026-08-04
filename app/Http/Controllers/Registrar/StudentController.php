@@ -36,17 +36,13 @@ class StudentController extends Controller
     {
         $yearLevels = YearLevel::orderBy('level')->get();
         $sections   = Section::with('yearLevel')->get();
-        $users      = User::role('Student')
-            ->whereDoesntHave('student')
-            ->get();
-        $activeSchoolYear = SchoolYearHelper::getActiveSchoolYear();
-        return view('registrar.students.create', compact('yearLevels', 'sections', 'users', 'activeSchoolYear'));
+        $activeSchoolYear = SchoolYearHelper::getActive();
+        return view('registrar.students.create', compact('yearLevels', 'sections', 'activeSchoolYear'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id'        => 'nullable|exists:users,id',
             'student_type'   => 'required|in:new,old',
             'student_number' => 'required_if:student_type,new|nullable|string|max:20|unique:students,student_number',
             'first_name'     => 'required|string|max:100',
@@ -72,12 +68,6 @@ class StudentController extends Controller
             'student_number.unique' => '❌ School ID already exists. This QR already belongs to another student.',
             'student_number.required_if' => '❌ School ID is required for new students.',
         ]);
-
-        if (! empty($validated['user_id']) && ! User::role('Student')->whereKey($validated['user_id'])->whereDoesntHave('student')->exists()) {
-            throw ValidationException::withMessages([
-                'user_id' => 'Select an available Student account that is not yet linked to another profile.',
-            ]);
-        }
 
         // Validate that old students must have a QR code file
         if ($validated['student_type'] === 'old' && !$request->hasFile('qr_code_file')) {
@@ -229,7 +219,8 @@ class StudentController extends Controller
     {
         $yearLevels = YearLevel::orderBy('level')->get();
         $sections   = Section::with('yearLevel')->get();
-        return view('registrar.students.edit', compact('student', 'yearLevels', 'sections'));
+        $activeSchoolYear = SchoolYearHelper::getActive();
+        return view('registrar.students.edit', compact('student', 'yearLevels', 'sections', 'activeSchoolYear'));
     }
 
     public function update(Request $request, Student $student)

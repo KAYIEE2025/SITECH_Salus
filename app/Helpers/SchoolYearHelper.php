@@ -2,30 +2,32 @@
 
 namespace App\Helpers;
 
-use Carbon\Carbon;
+use App\Models\SchoolYear;
 
 class SchoolYearHelper
 {
     /**
-     * Get the active school year based on current date.
-     * School year typically starts in June.
-     * If current month is June or later, school year is current year to next year.
-     * Otherwise, it's previous year to current year.
-     *
-     * @return string
+     * Get the active school year name
      */
-    public static function getActiveSchoolYear()
+    public static function getActive()
     {
-        $currentYear = now()->year;
-        $currentMonth = now()->month;
-        
-        // School year typically starts in June
-        // If current month is June or later, school year is current year to next year
-        // Otherwise, it's previous year to current year
-        if ($currentMonth >= 6) {
-            return $currentYear . '-' . ($currentYear + 1);
-        } else {
-            return ($currentYear - 1) . '-' . $currentYear;
-        }
+        $active = SchoolYear::active()->first();
+        return $active ? $active->name : null;
+    }
+
+    /**
+     * Get the active school year model
+     */
+    public static function getActiveModel()
+    {
+        return SchoolYear::active()->first();
+    }
+
+    /**
+     * Check if there is an active school year
+     */
+    public static function hasActive()
+    {
+        return SchoolYear::active()->exists();
     }
 }

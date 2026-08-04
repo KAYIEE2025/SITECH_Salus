@@ -227,7 +227,7 @@ class FineRecordsController extends Controller
         }
 
         // Determine action (download or print)
-        $action = $request->query('action', 'download');
+        $action = $request->input('action', 'download');
 
         return view('superadmin.pdf.fine-records', compact(
             'students',

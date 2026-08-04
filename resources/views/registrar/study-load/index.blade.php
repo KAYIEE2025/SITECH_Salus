@@ -42,9 +42,16 @@
                     </option>
                 @endforeach
             </select>
-                <input type="text" name="school_year" value="{{ request('school_year','2026-2027') }}"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                    placeholder="School Year">
+                @if($activeSchoolYear)
+                    <input type="text" name="school_year" value="{{ old('school_year', $activeSchoolYear) }}"
+                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        placeholder="School Year">
+                @else
+                    <input type="text" name="school_year" value="{{ old('school_year') }}"
+                        class="border border-red-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
+                        placeholder="School Year">
+                    <p class="text-red-500 text-xs mt-1">No active school year set. Please contact Super Admin to set an active school year.</p>
+                @endif
                 <button type="submit"
                     class="bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-5 py-2 rounded-lg transition">
                     View Schedule
@@ -68,9 +75,16 @@
                     </option>
                 @endforeach
             </select>
-                <input type="text" name="school_year" value="{{ request('school_year','2026-2027') }}"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                    placeholder="School Year">
+                @if($activeSchoolYear)
+                    <input type="text" name="school_year" value="{{ old('school_year', $activeSchoolYear) }}"
+                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        placeholder="School Year">
+                @else
+                    <input type="text" name="school_year" value="{{ old('school_year') }}"
+                        class="border border-red-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
+                        placeholder="School Year">
+                    <p class="text-red-500 text-xs mt-1">No active school year set. Please contact Super Admin to set an active school year.</p>
+                @endif
                 <input type="hidden" name="view" value="students">
                 <button type="submit"
                     class="bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-5 py-2 rounded-lg transition">
@@ -117,7 +131,7 @@
             <form method="POST" action="{{ route('registrar.study-load.store') }}">
                 @csrf
                 <input type="hidden" name="section_id" value="{{ $selected->id }}">
-                <input type="hidden" name="school_year" value="{{ request('school_year', '2026-2027') }}">
+                <input type="hidden" name="school_year" value="{{ old('school_year', $activeSchoolYear ?? '') }}">
 
                <div class="mb-4">
     <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -209,7 +223,7 @@
                 <h2 class="text-base font-semibold text-gray-800">
                     Class Schedule — {{ $selected->yearLevel->name ?? '' }} Section {{ $selected->name }}
                 </h2>
-                <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year','2026-2027') }} · Sorted by time</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year', $activeSchoolYear ?? '2026-2027') }} · Sorted by time</p>
             </div>
 
             <div class="overflow-x-auto"><table class="w-full text-sm">
@@ -280,12 +294,12 @@
             <h2 class="text-base font-semibold text-gray-800">
                 Students in {{ $selected->yearLevel->name ?? '' }} Section {{ $selected->name }}
             </h2>
-            <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year','2026-2027') }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year', $activeSchoolYear ?? '2026-2027') }}</p>
         </div>
 
         @php
             $students = \App\Models\Student::where('section_id', $selected->id)
-                ->where('school_year', request('school_year', '2026-2027'))
+                ->where('school_year', request('school_year', $activeSchoolYear ?? '2026-2027'))
                 ->get();
         @endphp
 
@@ -317,7 +331,7 @@
                     @php
                         $studentSchedules = \App\Models\ClassSchedule::with(['subject', 'teacher'])
                             ->where('section_id', $selected->id)
-                            ->where('school_year', request('school_year', '2026-2027'))
+                            ->where('school_year', request('school_year', $activeSchoolYear ?? '2026-2027'))
                             ->orderBy('time_start')
                             ->get();
                     @endphp
@@ -563,7 +577,7 @@
 
         function openPrintPreview(studentId) {
             const sectionId = '{{ request('section_id') }}';
-            const schoolYear = '{{ request('school_year', '2026-2027') }}';
+            const schoolYear = '{{ request('school_year', $activeSchoolYear ?? '2026-2027') }}';
             
             fetch(`/registrar/students/${studentId}/print-class-schedule?section_id=${sectionId}&school_year=${schoolYear}`)
                 .then(response => response.text())

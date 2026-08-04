@@ -3,6 +3,17 @@
 @section('title', 'Super Admin Dashboard')
 
 @section('content')
+    @session('success')
+        <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+            {{ $value }}
+        </div>
+    @endsession
+    @session('error')
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {{ $value }}
+        </div>
+    @endsession
+
     <div class="mb-6 md:mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-[#14532d] via-[#1a5c1a] to-[#0f766e] p-4 md:p-6 text-white shadow-lg shadow-green-900/10 sm:p-8">
         <div class="flex flex-col justify-between gap-4 md:gap-6 sm:flex-row sm:items-end">
             <div class="min-w-0">
@@ -58,8 +69,10 @@
             <div class="mt-3 md:mt-4 space-y-2 md:space-y-3">
                 <a href="{{ route('superadmin.accounts') }}" class="block rounded-xl bg-gradient-to-r from-[#1a5c1a] to-[#0f766e] px-4 py-3 md:py-3 text-xs md:text-sm font-semibold text-white transition hover:shadow-md min-h-[48px] flex items-center justify-center">Create or Manage Accounts</a>
                 <a href="{{ route('superadmin.student-accounts.index') }}" class="block rounded-xl bg-yellow-50 px-4 py-3 md:py-3 text-xs md:text-sm font-semibold text-yellow-800 transition hover:bg-yellow-100 min-h-[48px] flex items-center justify-center">Generate Student Accounts</a>
+                <a href="{{ route('superadmin.school-years.index') }}" class="block rounded-xl bg-blue-50 px-4 py-3 md:py-3 text-xs md:text-sm font-semibold text-blue-800 transition hover:bg-blue-100 min-h-[48px] flex items-center justify-center">School Year Management</a>
                 <a href="{{ route('superadmin.activity-logs') }}" class="block rounded-xl bg-green-50 px-4 py-3 md:py-3 text-xs md:text-sm font-semibold text-green-900 transition hover:bg-green-100 min-h-[48px] flex items-center justify-center">View System Activity</a>
                 <a href="{{ route('superadmin.roles') }}" class="block rounded-xl bg-green-50 px-4 py-3 md:py-3 text-xs md:text-sm font-semibold text-green-900 transition hover:bg-green-100 min-h-[48px] flex items-center justify-center">Review Roles &amp; Access</a>
+                <button onclick="openResetModal()" class="block w-full rounded-xl bg-red-50 px-4 py-3 md:py-3 text-xs md:text-sm font-semibold text-red-700 transition hover:bg-red-100 min-h-[48px] flex items-center justify-center">Archive &amp; Reset SSG Records</button>
             </div>
         </div>
 
@@ -84,4 +97,52 @@
             </div>
         </div>
     </div>
+
+    <!-- SSG Reset Confirmation Modal -->
+    <div id="resetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+        <div class="w-full max-w-md mx-4 rounded-xl bg-white p-6">
+            <div class="mb-4 flex items-center justify-between">
+                <h2 class="text-lg font-bold text-gray-800">Archive & Reset SSG Records</h2>
+                <button onclick="closeResetModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="mb-6">
+                <p class="text-sm text-gray-600">Have you already generated and printed the official SSG Fine Report? This action will reset the current SSG attendance and fine records.</p>
+                <p class="mt-2 text-xs text-red-600 font-medium">This action cannot be undone.</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeResetModal()" class="flex-1 rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200">
+                    Cancel
+                </button>
+                <form method="POST" action="{{ route('superadmin.ssg-reset') }}" class="flex-1">
+                    @csrf
+                    <button type="submit" class="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700">
+                        Confirm Reset
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openResetModal() {
+            document.getElementById('resetModal').classList.remove('hidden');
+            document.getElementById('resetModal').classList.add('flex');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+            document.getElementById('resetModal').classList.remove('flex');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('resetModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeResetModal();
+            }
+        });
+    </script>
 @endsection

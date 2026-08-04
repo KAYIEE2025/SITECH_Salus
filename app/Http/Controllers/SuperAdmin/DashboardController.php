@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\SsgEvent;
+use App\Models\SsgEventAttendance;
 use App\Models\Student;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 
 class DashboardController extends Controller
@@ -29,5 +32,38 @@ class DashboardController extends Controller
             'totalTeachers', 'totalSSG', 'totalStudents',
             'activeUsers', 'inactiveUsers', 'pendingStudentAccounts', 'recentLogs'
         ));
+    }
+
+    public function resetSSGRecords()
+    {
+        try {
+            DB::beginTransaction();
+
+            // Reset SSG event attendance records
+            $attendanceCount = SsgEventAttendance::count();
+            SsgEventAttendance::query()->delete();
+
+            // Reset SSG event records
+            $eventCount = SsgEvent::count();
+            SsgEvent::query()->delete();
+
+            DB::commit();
+
+            // Log the action
+            activity()
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'attendance_records_reset' => $attendanceCount,
+                    'events_reset' => $eventCount,
+                ])
+                ->log('Archived and Reset SSG Records');
+
+            return redirect()->route('superadmin.dashboard')
+                ->with('success', 'SSG records have been successfully archived and reset for the new school year.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('superadmin.dashboard')
+                ->with('error', 'Failed to reset SSG records. Please try again.');
+        }
     }
 }
