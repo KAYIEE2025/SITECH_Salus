@@ -17,6 +17,9 @@ use Carbon\Carbon;
 
 class ClassController extends Controller
 {
+    private const IMPORT_MAX_ROWS = 500;
+    private const IMPORT_MAX_COLUMNS = 100;
+
     /**
      * Get the grade submission schedule status for a given school year and grading period
      */
@@ -309,9 +312,31 @@ class ClassController extends Controller
         try {
             $file = $request->file('excel_file');
             
-            // Use optimized reader with readDataOnly to reduce memory usage
+            // Use an optimized reader and only load the area where a grading
+            // sheet can contain its headers and learner data. Some official
+            // workbooks carry formatting out to thousands of empty columns,
+            // which can otherwise exhaust PHP memory during load().
             $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getPathname());
             $reader->setReadDataOnly(true);
+            // Keep all worksheets available because Summary of Grades cells may
+            // contain formulas that reference supporting worksheets. The read
+            // filter below still limits the amount of data loaded from each tab.
+            $reader->setReadFilter(new class(self::IMPORT_MAX_ROWS, self::IMPORT_MAX_COLUMNS) implements \PhpOffice\PhpSpreadsheet\Reader\IReadFilter {
+                private int $maxRows;
+                private int $maxColumns;
+
+                public function __construct(int $maxRows, int $maxColumns)
+                {
+                    $this->maxRows = $maxRows;
+                    $this->maxColumns = $maxColumns;
+                }
+
+                public function readCell($column, $row, $worksheetName = ''): bool
+                {
+                    return $row <= $this->maxRows
+                        && Coordinate::columnIndexFromString($column) <= $this->maxColumns;
+                }
+            });
             
             // Load the spreadsheet
             $spreadsheet = $reader->load($file->getPathname());
@@ -327,23 +352,36 @@ class ClassController extends Controller
             }
             
             // Get dimensions
-            $highestRow = $worksheet->getHighestDataRow();
-            $highestColumn = $worksheet->getHighestColumn();
+            $highestRow = min($worksheet->getHighestDataRow(), self::IMPORT_MAX_ROWS);
+            $highestColumn = $worksheet->getHighestDataColumn();
             
             // Log worksheet information
             \Log::info('Excel Worksheet Selected', [
                 'worksheet_name' => $worksheetName,
                 'highest_row' => $highestRow,
                 'highest_column' => $highestColumn,
+                'read_limit' => self::IMPORT_MAX_COLUMNS . ' columns x ' . self::IMPORT_MAX_ROWS . ' rows',
             ]);
             
             // PHASE 2: Detect header row and column mapping
-            $headerDetection = $this->detectHeaderRowAndColumns($worksheet, $highestRow, $highestColumn);
+            $headerDetection = $this->detectHeaderRowAndColumns(
+                $worksheet,
+                $highestRow,
+                $highestColumn,
+                (int) $gradingPeriod
+            );
             
             if ($headerDetection['header_row'] === -1) {
                 return redirect()
                     ->route('teacher.classes.grades', $classSchedule)
                     ->with('error', 'Header row not found in the worksheet.');
+            }
+
+            $selectedTermColumn = 'term_' . $gradingPeriod;
+            if ($headerDetection['column_mapping'][$selectedTermColumn] === null) {
+                return redirect()
+                    ->route('teacher.classes.grades', $classSchedule)
+                    ->with('error', "The selected Term {$gradingPeriod} column was not found in the SUMMARY OF GRADES worksheet.");
             }
             
             // Log header detection results
@@ -406,7 +444,7 @@ class ClassController extends Controller
         }
     }
 
-    private function detectHeaderRowAndColumns($worksheet, $highestRow, $highestColumn)
+    private function detectHeaderRowAndColumns($worksheet, $highestRow, $highestColumn, ?int $selectedGradingPeriod = null)
     {
         $headerRowIndex = -1;
         $columnMapping = [
@@ -422,15 +460,15 @@ class ClassController extends Controller
         // Convert highest column to numeric index
         $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
         
-        // Search for header row in first 30 rows
+        // Search the complete header area. Some official templates place the
+        // learner heading and term headings on different rows.
         $searchLimit = min(30, $highestRow);
         for ($row = 1; $row <= $searchLimit; $row++) {
-            $hasRequiredColumns = false;
             $foundColumns = 0;
             
             for ($col = 1; $col <= $highestColumnIndex; $col++) {
                 $cell = $worksheet->getCellByColumnAndRow($col, $row);
-                $value = $cell->getCalculatedValue();
+                $value = $this->readSpreadsheetCellValue($cell);
                 
                 if (is_string($value)) {
                     $valueUpper = strtoupper(trim($value));
@@ -441,19 +479,13 @@ class ClassController extends Controller
                         $foundColumns++;
                     }
                     
-                    if (strpos($valueUpper, 'TERM') !== false && strpos($valueUpper, '1') !== false) {
-                        $columnMapping['term_1'] = $col;
-                        $foundColumns++;
-                    }
-                    
-                    if (strpos($valueUpper, 'TERM') !== false && strpos($valueUpper, '2') !== false) {
-                        $columnMapping['term_2'] = $col;
-                        $foundColumns++;
-                    }
-                    
-                    if (strpos($valueUpper, 'TERM') !== false && strpos($valueUpper, '3') !== false) {
-                        $columnMapping['term_3'] = $col;
-                        $foundColumns++;
+                    $detectedTerm = $this->detectTermNumber($valueUpper);
+                    if ($detectedTerm !== null) {
+                        $termKey = 'term_' . $detectedTerm;
+                        if ($columnMapping[$termKey] === null) {
+                            $columnMapping[$termKey] = $col;
+                            $foundColumns++;
+                        }
                     }
                     
                     if (strpos($valueUpper, 'FINAL') !== false && strpos($valueUpper, 'GRADE') !== false) {
@@ -473,17 +505,67 @@ class ClassController extends Controller
                 }
             }
             
-            // If we found at least 3 required columns, consider this the header row
-            if ($foundColumns >= 3) {
+            // Keep the first row containing the learner-name heading. Term
+            // columns may be found on this row or on a neighboring header row.
+            if ($headerRowIndex === -1 && $columnMapping['learners_name'] !== null) {
                 $headerRowIndex = $row;
-                break;
             }
+        }
+
+        if ($selectedGradingPeriod !== null && $columnMapping['term_' . $selectedGradingPeriod] === null) {
+            $headerRowIndex = -1;
         }
         
         return [
             'header_row' => $headerRowIndex,
             'column_mapping' => $columnMapping,
         ];
+    }
+
+    private function detectTermNumber(string $header): ?int
+    {
+        $header = preg_replace('/\s+/', ' ', strtoupper(trim($header)));
+
+        if (preg_match('/\b(?:TERM|QUARTER|GRADING(?: PERIOD)?|PERIOD|Q)\s*([123])\b/', $header, $matches)) {
+            return (int) $matches[1];
+        }
+
+        if (preg_match('/\b([123])(?:ST|ND|RD)\s+(?:TERM|QUARTER|GRADING)\b/', $header, $matches)) {
+            return (int) $matches[1];
+        }
+
+        foreach (['FIRST' => 1, 'SECOND' => 2, 'THIRD' => 3] as $word => $term) {
+            if (preg_match('/\b' . $word . '\s+(?:TERM|QUARTER|GRADING)\b/', $header)) {
+                return $term;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Read a spreadsheet value without allowing unresolved formula errors to
+     * become learner names or grades in the import preview.
+     */
+    private function readSpreadsheetCellValue($cell)
+    {
+        $calculatedValue = $cell->getCalculatedValue();
+
+        if (!is_string($calculatedValue) || !preg_match('/^#(?:REF!|VALUE!|N\/A|NAME\?|DIV\/0!|NUM!|NULL!)$/i', trim($calculatedValue))) {
+            return $calculatedValue;
+        }
+
+        // Excel files can contain a cached value even when PhpSpreadsheet
+        // cannot recalculate the formula locally.
+        if (method_exists($cell, 'getOldCalculatedValue')) {
+            $cachedValue = $cell->getOldCalculatedValue();
+
+            if ($cachedValue !== null && (!is_string($cachedValue) || !preg_match('/^#/i', trim($cachedValue)))) {
+                return $cachedValue;
+            }
+        }
+
+        return null;
     }
 
     private function readAllLearners($worksheet, $headerRow, $columnMapping, $highestRow)
@@ -496,7 +578,7 @@ class ClassController extends Controller
         for ($row = $startRow; $row <= $highestRow; $row++) {
             // Extract learners name to check if it's a valid learner row
             $learnersName = $columnMapping['learners_name'] !== null
-                ? trim($worksheet->getCellByColumnAndRow($columnMapping['learners_name'], $row)->getCalculatedValue())
+                ? trim((string) ($this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($columnMapping['learners_name'], $row)) ?? ''))
                 : '';
 
             // Skip empty rows or non-learner rows
@@ -516,7 +598,7 @@ class ClassController extends Controller
 
             if ($columnMapping['term_1'] !== null) {
                 $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_1'], $row);
-                $term1Value = $cell->getCalculatedValue();
+                $term1Value = $this->readSpreadsheetCellValue($cell);
                 \Log::info('Term 1 Cell Read', [
                     'learner_name' => $learnersName,
                     'row' => $row,
@@ -532,7 +614,7 @@ class ClassController extends Controller
 
             if ($columnMapping['term_2'] !== null) {
                 $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_2'], $row);
-                $term2Value = $cell->getCalculatedValue();
+                $term2Value = $this->readSpreadsheetCellValue($cell);
                 \Log::info('Term 2 Cell Read', [
                     'learner_name' => $learnersName,
                     'row' => $row,
@@ -547,7 +629,7 @@ class ClassController extends Controller
 
             if ($columnMapping['term_3'] !== null) {
                 $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_3'], $row);
-                $term3Value = $cell->getCalculatedValue();
+                $term3Value = $this->readSpreadsheetCellValue($cell);
                 \Log::info('Term 3 Cell Read', [
                     'learner_name' => $learnersName,
                     'row' => $row,
@@ -567,13 +649,13 @@ class ClassController extends Controller
                 'term_2' => $term2Value,
                 'term_3' => $term3Value,
                 'final_grade' => $columnMapping['final_grade'] !== null
-                    ? $worksheet->getCellByColumnAndRow($columnMapping['final_grade'], $row)->getCalculatedValue()
+                    ? $this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($columnMapping['final_grade'], $row))
                     : null,
                 'descriptor' => $columnMapping['descriptor'] !== null
-                    ? trim($worksheet->getCellByColumnAndRow($columnMapping['descriptor'], $row)->getCalculatedValue())
+                    ? trim((string) ($this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($columnMapping['descriptor'], $row)) ?? ''))
                     : '',
                 'remarks' => $columnMapping['remarks'] !== null
-                    ? trim($worksheet->getCellByColumnAndRow($columnMapping['remarks'], $row)->getCalculatedValue())
+                    ? trim((string) ($this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($columnMapping['remarks'], $row)) ?? ''))
                     : '',
             ];
 
@@ -601,6 +683,7 @@ class ClassController extends Controller
                     'excel_name' => $excelName,
                     'matched_student' => null,
                     'student_id' => null,
+                    'student_number' => null,
                     'match_status' => 'ambiguous',
                     'ambiguous_matches' => $matchedStudent['matches'],
                 ];
@@ -609,6 +692,7 @@ class ClassController extends Controller
                     'excel_name' => $excelName,
                     'matched_student' => $matchedStudent['student_name'],
                     'student_id' => $matchedStudent['student_id'],
+                    'student_number' => $matchedStudent['student_number'],
                     'match_status' => 'matched',
                 ];
             } else {
@@ -616,6 +700,7 @@ class ClassController extends Controller
                     'excel_name' => $excelName,
                     'matched_student' => null,
                     'student_id' => null,
+                    'student_number' => null,
                     'match_status' => 'unmatched',
                 ];
                 $firstUnmatchedLogged = true;
@@ -1369,6 +1454,7 @@ class ClassController extends Controller
             $displayData[] = [
                 'student_name' => $learner['learners_name'],
                 'matched_student' => $matched['matched_student'],
+                'student_number' => $matched['student_number'] ?? null,
                 'quarter_grade' => $learner[$termColumn] ?? null,
                 'remarks' => $learner['remarks'] ?? $learner['descriptor'] ?? '',
                 'match_status' => $matched['match_status'],

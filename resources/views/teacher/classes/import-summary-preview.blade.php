@@ -63,6 +63,7 @@
                     <tr>
                         <th class="px-4 py-3 text-left">Student Name (Excel)</th>
                         <th class="px-4 py-3 text-left">Matched Student</th>
+                        <th class="px-4 py-3 text-left">Student ID</th>
                         <th class="px-4 py-3 text-left">Quarter {{ $gradingPeriod }} Grade</th>
                         <th class="px-4 py-3 text-left">Remarks</th>
                         <th class="px-4 py-3 text-left">Match Status</th>
@@ -85,6 +86,9 @@
                                 @else
                                     {{ $row['matched_student'] ?? 'Not matched' }}
                                 @endif
+                            </td>
+                            <td class="px-4 py-3 text-gray-600">
+                                {{ $row['student_number'] ?? 'N/A' }}
                             </td>
                             <td class="px-4 py-3 text-gray-700">
                                 {{ $row['quarter_grade'] ?? 'N/A' }}

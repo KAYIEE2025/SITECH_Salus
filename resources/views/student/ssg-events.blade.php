@@ -72,9 +72,6 @@
                 </div>
             @endif
         </div>
-<<<<<<< HEAD
-=======
-
         <!-- Event Details Modal -->
         <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
             <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
@@ -164,6 +161,5 @@
                 }
             });
         </script>
->>>>>>> 9bc528e6c9c1cfa3a59d6389d27bf0903c2ae401
     @endif
 @endsection
