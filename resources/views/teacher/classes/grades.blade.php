@@ -365,9 +365,11 @@
                         </div>
                         <p class="text-sm text-gray-600">📄 Drag & Drop Excel File Here</p>
                         <p class="text-xs text-gray-500 mt-1">OR</p>
-                        <p class="text-sm text-green-700 font-medium mt-1">Browse File</p>
+                        <label for="file-input" class="relative z-20 inline-block cursor-pointer text-sm font-medium text-green-700 mt-1 hover:text-green-800">
+                            Browse File
+                        </label>
                         <p class="text-xs text-gray-400 mt-3">Accepted: .xlsx, .xls (Max 10 MB)</p>
-                        <input type="file" id="file-input" name="excel_file" accept=".xlsx,.xls" class="hidden">
+                        <input type="file" id="file-input" name="excel_file" accept=".xlsx,.xls" class="sr-only">
                     </div>
                 </div>
 
@@ -399,7 +401,7 @@
                         Remove File
                     </button>
                     <div class="ml-auto">
-                        <button type="submit" id="continue-btn" class="px-6 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
+                        <button type="button" id="continue-btn" class="px-6 py-2 bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-800 transition disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
                             Continue
                         </button>
                     </div>
@@ -532,6 +534,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const uploadForm = document.getElementById('upload-form');
             const dropZone = document.getElementById('drop-zone');
             const fileInput = document.getElementById('file-input');
             const fileDisplay = document.getElementById('file-display');
@@ -583,6 +586,10 @@
             };
 
             const handleFileSelect = (file) => {
+                if (!file) {
+                    return;
+                }
+
                 if (validateFile(file)) {
                     selectedFile = file;
                     fileName.textContent = file.name;
@@ -603,15 +610,19 @@
             };
 
             // Click to browse
-            dropZone.addEventListener('click', () => {
+            dropZone.addEventListener('click', (event) => {
+                // The label already opens the file picker. Avoid opening it
+                // a second time when the label click bubbles to the drop zone.
+                if (event.target === fileInput || event.target.closest('label[for="file-input"]')) {
+                    return;
+                }
+
                 fileInput.click();
             });
 
             // File input change
             fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handleFileSelect(e.target.files[0]);
-                }
+                handleFileSelect(e.target.files && e.target.files[0]);
             });
 
             // Drag and drop events
@@ -640,16 +651,26 @@
                 resetFileSelection();
             });
 
-            // Continue button - Submit form
+            // Continue button - submit the existing form fields without
+            // changing the selected grading period. The radio input is
+            // already part of the form and must be submitted as-is.
             continueBtn.addEventListener('click', () => {
-                if (selectedFile) {
-                    // Set the selected grading period before submitting
-                    const selectedGradingPeriod = document.querySelector('input[name="grading_period"]:checked');
-                    if (selectedGradingPeriod) {
-                        document.getElementById('selected-grading-period').value = selectedGradingPeriod.value;
-                    }
-                    document.getElementById('upload-form').submit();
+                const selectedGradingPeriod = uploadForm.querySelector('input[name="grading_period"]:checked');
+                const file = (fileInput.files && fileInput.files[0]) || selectedFile;
+
+                if (!selectedFile || !file) {
+                    showError('Please select an Excel grading sheet first.');
+                    return;
                 }
+
+                if (!selectedGradingPeriod) {
+                    showError('Please select the grading period you are resubmitting.');
+                    return;
+                }
+
+                // requestSubmit() keeps the browser's normal form validation
+                // and includes the selected radio and uploaded file.
+                uploadForm.requestSubmit();
             });
 
             // Submit Grades confirmation dialog

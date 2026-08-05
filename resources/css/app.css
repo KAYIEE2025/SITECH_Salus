@@ -51,6 +51,115 @@
         @apply transition-colors hover:bg-green-50/40;
     }
 
+    .admin-panel .admin-card {
+        @apply rounded-2xl border-green-100 shadow-sm shadow-green-900/5;
+    }
+
+    .admin-panel [class*="bg-white"][class*="rounded-xl"][class*="border-gray-200"] {
+        border-color: rgb(220 252 231);
+        border-radius: 1rem;
+        box-shadow: 0 1px 3px rgb(20 83 45 / 0.05);
+    }
+
+    .admin-panel input:not([type='checkbox']),
+    .admin-panel input:not([type='radio']),
+    .admin-panel select,
+    .admin-panel textarea {
+        @apply rounded-xl border-green-100 bg-white text-sm shadow-sm transition placeholder:text-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20;
+    }
+
+    .app-content input[type='radio'] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 1rem;
+        height: 1rem;
+        border: 1.5px solid #bbf7d0;
+        border-radius: 9999px;
+        background: #ffffff;
+        display: inline-grid;
+        place-content: center;
+        vertical-align: middle;
+        transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .app-content input[type='radio']:checked {
+        border-color: #15803d;
+        background-color: #15803d;
+        box-shadow: inset 0 0 0 3px #15803d;
+    }
+
+    .app-content input[type='radio']:focus-visible {
+        outline: 2px solid rgb(34 197 94 / 0.35);
+        outline-offset: 2px;
+    }
+
+    .app-content input[type='radio']:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .app-content input[type='checkbox'] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 1rem;
+        height: 1rem;
+        border: 1.5px solid #bbf7d0;
+        border-radius: 0.35rem;
+        background: #ffffff;
+        display: inline-grid;
+        place-content: center;
+        vertical-align: middle;
+        transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .app-content input[type='checkbox']:checked {
+        border-color: #15803d;
+        background-color: #15803d;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8l3 3 7-7' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 80%;
+    }
+
+    .app-content input[type='checkbox']:focus-visible {
+        outline: 2px solid rgb(34 197 94 / 0.35);
+        outline-offset: 2px;
+    }
+
+    .app-content input[type='checkbox']:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .admin-panel table thead {
+        @apply bg-green-50/70 text-[11px] uppercase tracking-wider text-green-900/70;
+    }
+
+    .admin-panel table tbody tr {
+        @apply transition-colors hover:bg-green-50/40;
+    }
+
+    .admin-panel .admin-page-title {
+        @apply text-xl font-bold tracking-tight text-green-950 sm:text-2xl;
+    }
+
+    .admin-panel .admin-page-subtitle {
+        @apply mt-1 text-sm leading-6 text-gray-500;
+    }
+
+    .admin-panel .admin-stat-card {
+        @apply relative overflow-hidden rounded-2xl border border-green-100 bg-white p-5 shadow-sm shadow-green-900/5 transition hover:-translate-y-0.5 hover:shadow-md;
+    }
+
+    .admin-panel .admin-stat-card::after {
+        content: '';
+        @apply absolute -right-8 -top-8 h-24 w-24 rounded-full bg-green-50;
+    }
+
+    .admin-panel .admin-stat-icon {
+        @apply relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-700;
+    }
+
     .registrar-panel .ra-card {
         @apply rounded-2xl border border-green-100 bg-white shadow-sm shadow-green-900/5;
     }

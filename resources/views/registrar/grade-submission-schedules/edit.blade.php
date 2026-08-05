@@ -42,7 +42,6 @@
                         <option value="1" {{ old('grading_period', $schedule->grading_period) == 1 ? 'selected' : '' }}>Term 1</option>
                         <option value="2" {{ old('grading_period', $schedule->grading_period) == 2 ? 'selected' : '' }}>Term 2</option>
                         <option value="3" {{ old('grading_period', $schedule->grading_period) == 3 ? 'selected' : '' }}>Term 3</option>
-                        <option value="4" {{ old('grading_period', $schedule->grading_period) == 4 ? 'selected' : '' }}>Term 4</option>
                     </select>
                     @error('grading_period') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>

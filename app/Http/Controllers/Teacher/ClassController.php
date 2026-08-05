@@ -429,6 +429,11 @@ class ClassController extends Controller
                     'term_column' => $termColumn,
                 ],
             ]);
+
+            // Persist the preview before redirecting. This is important when
+            // the database session driver is used because the next request
+            // must read the parsed workbook data from the same session.
+            session()->save();
             
             // Redirect to preview page
             return redirect()->route('teacher.classes.import-summary-preview', $classSchedule);
