@@ -41,6 +41,10 @@
                         </td>
                         <td class="px-2 py-2 md:px-6 md:py-3">
                             <div class="flex gap-2">
+                                <a href="{{ route('registrar.students.show', $student) }}"
+                                    class="text-[10px] md:text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 md:px-3 md:py-1.5 rounded-lg transition whitespace-nowrap">
+                                    View
+                                </a>
                                 <a href="{{ route('registrar.students.edit', $student) }}"
                                     class="text-[10px] md:text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 md:px-3 md:py-1.5 rounded-lg transition whitespace-nowrap">
                                     Edit

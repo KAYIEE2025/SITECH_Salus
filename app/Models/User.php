@@ -13,7 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'username', 'email', 'password',
-        'profile_photo_path', 'contact_number', 'is_active',
+        'profile_photo_path', 'contact_number', 'is_active', 'must_change_password',
     ];
 
     protected $hidden = [
@@ -23,6 +23,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_active'         => 'boolean',
+        'must_change_password' => 'boolean',
     ];
 
     // ── Relationships ──────────────────────────────────────

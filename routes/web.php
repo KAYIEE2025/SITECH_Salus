@@ -19,6 +19,7 @@ use App\Http\Controllers\SSG\EventController as SsgEventController;
 use App\Http\Controllers\SSG\FineController as SsgFineController;
 use App\Http\Controllers\SSG\ProfileController as SsgProfileController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\ForcedPasswordChangeController;
 use App\Http\Controllers\Student\GradeViewController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\StudyLoadController as StudentStudyLoadController;
@@ -138,12 +139,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/students', [StudentController::class, 'index'])->name('students');
         Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
         Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+        Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
         Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
         Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
         Route::get('/students/{student}/print-class-schedule', [StudentController::class, 'printClassSchedule'])->name('students.print-class-schedule');
         Route::post('/students/{student}/assign-qr', [StudentController::class, 'assignQR'])->name('students.assign-qr');
         Route::post('/students/{student}/replace-qr', [StudentController::class, 'replaceQR'])->name('students.replace-qr');
         Route::post('/students/decode-qr', [StudentController::class, 'decodeQR'])->name('students.decode-qr');
+        Route::post('/students/lookup-student-qr', [StudentController::class, 'lookupStudentQR'])->name('students.lookup-student-qr');
+        Route::post('/students/lookup-legacy-qr', [StudentController::class, 'lookupLegacyQR'])->name('students.lookup-legacy-qr');
         Route::get('/study-load', [StudyLoadController::class, 'index'])->name('study-load');
         Route::post('/study-load', [StudyLoadController::class, 'store'])->name('study-load.store');
         Route::delete('/study-load/{schedule}', [StudyLoadController::class, 'destroy'])->name('study-load.destroy');
@@ -215,6 +219,7 @@ Route::middleware('auth')->group(function () {
         });
         Route::prefix('announcements')->name('announcements.')->group(function () {
             Route::get('/', [TeacherAnnouncementController::class, 'index'])->name('index');
+            Route::post('/{announcement}/mark-seen', [TeacherAnnouncementController::class, 'markSeen'])->name('mark-seen');
         });
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/', [TeacherProfileController::class, 'index'])->name('index');
@@ -243,16 +248,24 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('student')->name('student.')->middleware('role:Student')->group(function () {
-        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
-        Route::post('/profile/update-contact', [StudentProfileController::class, 'updateContact'])->name('profile.update-contact');
-        Route::post('/profile/update-password', [StudentProfileController::class, 'updatePassword'])->name('profile.update-password');
-        Route::get('/study-load', [StudentStudyLoadController::class, 'index'])->name('study-load.index');
-        Route::get('/study-load/print', [StudentStudyLoadController::class, 'print'])->name('study-load.print');
-        Route::get('/grades', [GradeViewController::class, 'index'])->name('grades.index');
-        Route::get('/announcements', [StudentAnnouncementController::class, 'index'])->name('announcements.index');
-        Route::get('/school-calendar', [StudentSchoolCalendarController::class, 'index'])->name('school-calendar.index');
-        Route::get('/ssg-events', [StudentSSGEventController::class, 'index'])->name('ssg-events.index');
+        // Forced password change routes (accessible even when must_change_password is true)
+        Route::get('/forced-password-change', [ForcedPasswordChangeController::class, 'index'])->name('forced-password-change');
+        Route::post('/forced-password-change', [ForcedPasswordChangeController::class, 'store'])->name('forced-password-change.store');
+        
+        // All other student routes (protected by must_change_password middleware)
+        Route::middleware('must_change_password')->group(function () {
+            Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/profile', [StudentProfileController::class, 'index'])->name('profile.index');
+            Route::post('/profile/update-contact', [StudentProfileController::class, 'updateContact'])->name('profile.update-contact');
+            Route::post('/profile/update-password', [StudentProfileController::class, 'updatePassword'])->name('profile.update-password');
+            Route::get('/study-load', [StudentStudyLoadController::class, 'index'])->name('study-load.index');
+            Route::get('/study-load/print', [StudentStudyLoadController::class, 'print'])->name('study-load.print');
+            Route::get('/grades', [GradeViewController::class, 'index'])->name('grades.index');
+            Route::get('/announcements', [StudentAnnouncementController::class, 'index'])->name('announcements.index');
+            Route::post('/announcements/{announcement}/mark-seen', [StudentAnnouncementController::class, 'markSeen'])->name('announcements.mark-seen');
+            Route::get('/school-calendar', [StudentSchoolCalendarController::class, 'index'])->name('school-calendar.index');
+            Route::get('/ssg-events', [StudentSSGEventController::class, 'index'])->name('ssg-events.index');
+        });
     });
 });
 

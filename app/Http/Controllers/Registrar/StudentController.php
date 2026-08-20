@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Registrar;
 use App\Helpers\SchoolYearHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Models\StudentEnrollment;
+use App\Models\LegacyStudent;
 use App\Models\YearLevel;
 use App\Models\Section;
 use App\Models\User;
@@ -42,9 +44,33 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
+        $studentNumber = $request->student_number;
+        
+        // Check if student already exists
+        $existingStudent = Student::where('student_number', $studentNumber)->first();
+
+        if ($request->student_type === 'old') {
+            // For old students, check if they exist in legacy records
+            $legacyStudent = LegacyStudent::findByStudentNumber($studentNumber);
+            
+            // If old student but not found in either table, return error
+            if (!$existingStudent && !$legacyStudent) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Student not found in the system. Please scan a valid QR code or check the student number.');
+            }
+        }
+
         $validated = $request->validate([
             'student_type'   => 'required|in:new,old',
-            'student_number' => 'required_if:student_type,new|nullable|string|max:20|unique:students,student_number',
+            'student_number' => [
+                'required',
+                'string',
+                'max:20',
+                // For existing students, ignore their own ID
+                // For new students, must be unique
+                Rule::unique('students', 'student_number')->ignore($existingStudent?->id),
+            ],
             'first_name'     => 'required|string|max:100',
             'middle_name'    => 'nullable|string|max:100',
             'last_name'      => 'required|string|max:100',
@@ -63,19 +89,20 @@ class StudentController extends Controller
                 Rule::exists('sections', 'id')->where(fn ($query) => $query->where('year_level_id', $request->year_level_id)),
             ],
             'school_year'    => 'required|string|max:20',
+            'term'           => 'required|in:Term 1,Term 2,Term 3',
             'qr_code_file'   => 'nullable|file|mimes:png,jpg,jpeg,svg|max:2048',
         ], [
             'student_number.unique' => '❌ School ID already exists. This QR already belongs to another student.',
-            'student_number.required_if' => '❌ School ID is required for new students.',
+            'term.in' => '❌ Invalid term selected. Please select Term 1, Term 2, or Term 3.',
         ]);
 
-        // Validate that old students must have a QR code file
-        if ($validated['student_type'] === 'old' && !$request->hasFile('qr_code_file')) {
-            throw ValidationException::withMessages([
-                'qr_code_file' => 'Old students must have an existing QR code uploaded.',
-            ]);
+        if ($existingStudent) {
+            // CASE 1: Existing SIS Student - Re-enrollment
+            return $this->handleReenrollment($existingStudent, $validated, $request);
         }
 
+        // CASE 2: New Student or Legacy Student (from old student type)
+        // Both paths are handled the same way - create a new student record
         $student = DB::transaction(function () use ($validated, $request) {
             $studentData = array_merge($validated, [
                 'status' => 'Pending Student Account',
@@ -83,102 +110,32 @@ class StudentController extends Controller
                 'encoded_at' => now(),
             ]);
 
-            // Only generate QR code for new students
-            if ($validated['student_type'] === 'new') {
-                $qrValue = 'SITech-STUDENT|' . $validated['student_number'] . '|' . (string) Str::uuid();
-                $qrPath = 'qrcodes/' . $validated['student_number'] . '-' . Str::random(10) . '.svg';
+            // Generate QR code
+            $qrValue = 'SITech-STUDENT|' . $validated['student_number'] . '|' . (string) Str::uuid();
+            $qrPath = 'qrcodes/' . $validated['student_number'] . '-' . Str::random(10) . '.svg';
 
-                $qrWritten = Storage::disk('public')->put(
-                    $qrPath,
-                    QrCode::format('svg')->size(200)->generate($qrValue)
-                );
+            $qrWritten = Storage::disk('public')->put(
+                $qrPath,
+                QrCode::format('svg')->size(300)->generate($qrValue)
+            );
 
-                if (! $qrWritten) {
-                    throw new \RuntimeException('Unable to generate the student QR code.');
-                }
-
-                $studentData['qr_code_value'] = $qrValue;
-                $studentData['qr_code_path'] = $qrPath;
+            if (! $qrWritten) {
+                throw new \RuntimeException('Unable to generate the student QR code.');
             }
-            // Handle uploaded QR code for old students
-            elseif ($validated['student_type'] === 'old' && $request->hasFile('qr_code_file')) {
-                $file = $request->file('qr_code_file');
 
-                // Decode the actual QR value from the uploaded image FIRST
-                $qrValue = $this->decodeQRCode($file);
-
-                if (! $qrValue) {
-                    throw ValidationException::withMessages([
-                        'qr_code_file' => 'Unable to read the uploaded QR Code. Please upload a valid QR image.',
-                    ]);
-                }
-
-                if (empty($qrValue)) {
-                    throw ValidationException::withMessages([
-                        'qr_code_file' => 'Unable to read the uploaded QR Code. Please upload a valid QR image.',
-                    ]);
-                }
-
-                // Check if the decoded QR value already exists as a student_number
-                if (Student::where('student_number', $qrValue)->exists()) {
-                    throw ValidationException::withMessages([
-                        'qr_code_file' => '❌ This QR Code already belongs to another student.',
-                    ]);
-                }
-
-                // Override student_number with the decoded QR value
-                $studentData['student_number'] = $qrValue;
-                $studentData['qr_code_value'] = $qrValue;
-
-                // REGENERATE QR code with high quality (same as new students)
-                // instead of just uploading the original file
-                $qrPath = 'qrcodes/' . $qrValue . '-regenerated.svg';
-                $qrWritten = Storage::disk('public')->put(
-                    $qrPath,
-                    QrCode::format('svg')->size(300)->generate($qrValue)
-                );
-
-                if (! $qrWritten) {
-                    throw new \RuntimeException('Unable to generate the student QR code.');
-                }
-
-                $studentData['qr_code_path'] = $qrPath;
-            }
+            $studentData['qr_code_value'] = $qrValue;
+            $studentData['qr_code_path'] = $qrPath;
 
             $student = Student::create($studentData);
 
-            $sectionSchedules = ClassSchedule::where('section_id', $validated['section_id'])
-                ->where('school_year', $validated['school_year'])
-                ->get();
+            // Create enrollment history record
+            $this->createEnrollmentRecord($student, $validated);
 
-            foreach ($sectionSchedules as $schedule) {
-                StudyLoad::firstOrCreate([
-                    'student_id' => $student->id,
-                    'class_schedule_id' => $schedule->id,
-                    'school_year' => $validated['school_year'],
-                ]);
-            }
+            // Create study load records
+            $this->createStudyLoadRecords($student, $validated);
 
-            // Create SSG attendance records for all existing events
-            $ssgEvents = SsgEvent::all();
-            $attendanceCount = 0;
-
-            foreach ($ssgEvents as $event) {
-                $attendance = SsgEventAttendance::firstOrCreate([
-                    'ssg_event_id' => $event->id,
-                    'student_id' => $student->id,
-                ], [
-                    'is_present' => false,
-                    'scanned_at' => null,
-                    'applicable_fine' => $event->fine_amount,
-                    'actual_fine' => $event->fine_amount,
-                    'payment_status' => 'Unpaid',
-                ]);
-
-                if ($attendance->wasRecentlyCreated) {
-                    $attendanceCount++;
-                }
-            }
+            // Create SSG attendance records
+            $attendanceCount = $this->createSSGAttendanceRecords($student);
 
             $student->ssg_attendance_count = $attendanceCount;
 
@@ -190,29 +147,118 @@ class StudentController extends Controller
             ->performedOn($student)
             ->log('Encoded student profile: ' . $student->last_name . ', ' . $student->first_name);
 
-        // Log QR code generation or upload
-        if ($validated['student_type'] === 'new' && $student->qr_code_path) {
+        if ($student->qr_code_path) {
             activity()
                 ->causedBy(auth()->user())
                 ->performedOn($student)
                 ->log('Generated QR Code for Student: ' . $student->last_name . ', ' . $student->first_name);
-        } elseif ($validated['student_type'] === 'old' && $student->qr_code_path) {
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($student)
-                ->log('Uploaded existing QR Code for Student: ' . $student->last_name . ', ' . $student->first_name);
         }
 
         $message = 'Student profile encoded successfully. ';
-        if ($validated['student_type'] === 'new') {
-            $message .= 'QR code generated, ';
-        } elseif ($validated['student_type'] === 'old') {
-            $message .= 'QR code uploaded, ';
-        }
+        $message .= 'QR code generated, ';
         $message .= $student->study_loads_count . ' study load record(s) created. ' . $student->ssg_attendance_count . ' SSG attendance record(s) prepared.';
 
         return redirect()->route('registrar.students')
             ->with('success', $message);
+    }
+
+    private function handleReenrollment(Student $student, array $validated, Request $request)
+    {
+        // Check if enrollment already exists for this school year/term
+        $existingEnrollment = StudentEnrollment::where('student_id', $student->id)
+            ->where('school_year', $validated['school_year'])
+            ->where('term', $validated['term'])
+            ->first();
+
+        if ($existingEnrollment) {
+            return redirect()->route('registrar.students.edit', $student)
+                ->with('info', 'Student already has an enrollment for ' . $validated['school_year'] . ' ' . $validated['term'] . '. Please edit the existing enrollment.');
+        }
+
+        // Create new enrollment record
+        DB::transaction(function () use ($student, $validated) {
+            // Create enrollment history record
+            $this->createEnrollmentRecord($student, $validated);
+
+            // Update current student record fields for compatibility
+            $student->update([
+                'year_level_id' => $validated['year_level_id'],
+                'section_id' => $validated['section_id'],
+                'school_year' => $validated['school_year'],
+                'status' => $student->user_id ? 'Account Created' : 'Pending Student Account',
+            ]);
+
+            // Create study load records for new enrollment
+            $this->createStudyLoadRecords($student, $validated);
+        });
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($student)
+            ->log('Re-enrolled student: ' . $student->last_name . ', ' . $student->first_name . ' for ' . $validated['school_year'] . ' ' . $validated['term']);
+
+        return redirect()->route('registrar.students')
+            ->with('success', 'Student re-enrolled successfully for ' . $validated['school_year'] . ' ' . $validated['term'] . '. Existing account preserved.');
+    }
+
+    private function createEnrollmentRecord(Student $student, array $validated)
+    {
+        return StudentEnrollment::create([
+            'student_id' => $student->id,
+            'year_level_id' => $validated['year_level_id'],
+            'section_id' => $validated['section_id'],
+            'school_year' => $validated['school_year'],
+            'term' => $validated['term'],
+            'status' => $student->user_id ? 'Account Created' : 'Pending Student Account',
+            'encoded_by' => auth()->id(),
+            'encoded_at' => now(),
+        ]);
+    }
+
+    private function createStudyLoadRecords(Student $student, array $validated)
+    {
+        $sectionSchedules = ClassSchedule::where('section_id', $validated['section_id'])
+            ->where('school_year', $validated['school_year'])
+            ->get();
+
+        foreach ($sectionSchedules as $schedule) {
+            StudyLoad::firstOrCreate([
+                'student_id' => $student->id,
+                'class_schedule_id' => $schedule->id,
+                'school_year' => $validated['school_year'],
+            ]);
+        }
+    }
+
+    private function createSSGAttendanceRecords(Student $student)
+    {
+        $ssgEvents = SsgEvent::all();
+        $attendanceCount = 0;
+
+        foreach ($ssgEvents as $event) {
+            $attendance = SsgEventAttendance::firstOrCreate([
+                'ssg_event_id' => $event->id,
+                'student_id' => $student->id,
+            ], [
+                'is_present' => false,
+                'scanned_at' => null,
+                'applicable_fine' => $event->fine_amount,
+                'actual_fine' => $event->fine_amount,
+                'payment_status' => 'Unpaid',
+            ]);
+
+            if ($attendance->wasRecentlyCreated) {
+                $attendanceCount++;
+            }
+        }
+
+        return $attendanceCount;
+    }
+
+    public function show(Student $student)
+    {
+        $student->load('enrollments.yearLevel', 'enrollments.section', 'enrollments.encoder');
+        return view('registrar.students.show', compact('student'));
     }
 
     public function edit(Student $student)
@@ -231,6 +277,7 @@ class StudentController extends Controller
             'year_level_id'  => 'required|exists:year_levels,id',
             'section_id'     => 'required|exists:sections,id',
             'school_year'    => 'required|string',
+            'term'           => 'required|in:Term 1,Term 2,Term 3',
         ]);
 
         // Fill the student with the request data but don't save yet
@@ -244,6 +291,22 @@ class StudentController extends Controller
 
         // Save the changes
         $student->save();
+
+        // Update or create enrollment record for the current school year/term
+        $enrollment = StudentEnrollment::updateOrCreate(
+            [
+                'student_id' => $student->id,
+                'school_year' => $request->school_year,
+                'term' => $request->term,
+            ],
+            [
+                'year_level_id' => $request->year_level_id,
+                'section_id' => $request->section_id,
+                'status' => $student->user_id ? 'Account Created' : 'Pending Student Account',
+                'encoded_by' => auth()->id(),
+                'encoded_at' => now(),
+            ]
+        );
 
         activity()
             ->causedBy(auth()->user())
@@ -445,5 +508,94 @@ class StudentController extends Controller
             ]);
             return null;
         }
+    }
+
+    public function lookupStudentQR(Request $request)
+    {
+        $request->validate([
+            'student_number' => 'required|string|max:20',
+        ]);
+
+        $studentNumber = trim($request->student_number);
+
+        // First check if student exists in current students table
+        $existingStudent = Student::where('student_number', $studentNumber)->first();
+
+        if ($existingStudent) {
+            return response()->json([
+                'success' => true,
+                'student_type' => 'existing',
+                'message' => 'Student already exists in the system.',
+                'student' => [
+                    'id' => $existingStudent->id,
+                    'student_number' => $existingStudent->student_number,
+                    'full_name' => $existingStudent->full_name,
+                    'first_name' => $existingStudent->first_name,
+                    'middle_name' => $existingStudent->middle_name,
+                    'last_name' => $existingStudent->last_name,
+                    'suffix' => $existingStudent->suffix,
+                    'year_level_id' => $existingStudent->year_level_id,
+                    'section_id' => $existingStudent->section_id,
+                    'school_year' => $existingStudent->school_year,
+                    'has_account' => !is_null($existingStudent->user_id),
+                    'current_enrollment' => $existingStudent->load('enrollments')->enrollments->last(),
+                ],
+            ]);
+        }
+
+        // If not found in current table, check legacy students
+        $legacyStudent = LegacyStudent::findByStudentNumber($studentNumber);
+
+        if ($legacyStudent) {
+            return response()->json([
+                'success' => true,
+                'student_type' => 'legacy',
+                'message' => 'Student found in old-student master records.',
+                'student' => [
+                    'student_number' => $legacyStudent->student_number,
+                    'full_name' => $legacyStudent->full_name,
+                    'first_name' => $legacyStudent->first_name,
+                    'middle_name' => $legacyStudent->middle_name,
+                    'last_name' => $legacyStudent->last_name,
+                    'middle_initial' => $legacyStudent->middle_initial,
+                ],
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Student not found in current or legacy records.',
+        ], 404);
+    }
+
+    public function lookupLegacyQR(Request $request)
+    {
+        $request->validate([
+            'student_number' => 'required|string|max:20',
+        ]);
+
+        $studentNumber = trim($request->student_number);
+
+        // Lookup in legacy_students table
+        $legacyStudent = LegacyStudent::findByStudentNumber($studentNumber);
+
+        if (!$legacyStudent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Student not found in the old-student master records.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'student' => [
+                'student_number' => $legacyStudent->student_number,
+                'full_name' => $legacyStudent->full_name,
+                'first_name' => $legacyStudent->first_name,
+                'middle_name' => $legacyStudent->middle_name,
+                'last_name' => $legacyStudent->last_name,
+                'middle_initial' => $legacyStudent->middle_initial,
+            ],
+        ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\AnnouncementView;
 use App\Models\ClassSchedule;
 use App\Models\FinalGrade;
 use App\Models\StudyLoad;
@@ -29,14 +30,21 @@ class DashboardController extends Controller
             ->distinct('class_schedule_id')
             ->count('class_schedule_id');
 
-        // Latest announcements
-        $announcements = Announcement::latest()->take(5)->get();
+        // Get the newest announcement for popup modal (only unseen announcements)
+        $seenAnnouncementIds = AnnouncementView::where('user_id', auth()->id())
+            ->pluck('announcement_id')
+            ->toArray();
+
+        $latestAnnouncement = Announcement::where('is_active', true)
+            ->whereNotIn('id', $seenAnnouncementIds)
+            ->latest()
+            ->first();
 
         return view('teacher.dashboard', compact(
             'totalClasses',
             'totalStudents',
             'pendingSubmissions',
-            'announcements'
+            'latestAnnouncement'
         ));
     }
 }

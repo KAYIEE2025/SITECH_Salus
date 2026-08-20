@@ -99,16 +99,28 @@ class AttendanceController extends Controller
             }
         }
 
-        $student = Student::where('qr_code_value', $validated['qr_value'])->first();
+        // Primary lookup: Try to find student by student_number (new QR format)
+        $student = Student::where('student_number', $validated['qr_value'])->first();
 
         \Log::info('SSG Scanner - Primary Lookup', [
             'qr_value' => $validated['qr_value'],
-            'found_by_qr_code_value' => $student ? true : false,
+            'found_by_student_number' => $student ? true : false,
             'student_id' => $student ? $student->id : null,
         ]);
 
-        // Fallback: Try to find student by student number extracted from QR value
-        // This handles old students with uploaded QR codes that may have different formats
+        // Fallback: Try to find student by qr_code_value (old QR format with SITech-STUDENT| prefix)
+        // This handles old students with QR codes that have the old format
+        if (! $student) {
+            $student = Student::where('qr_code_value', $validated['qr_value'])->first();
+
+            \Log::info('SSG Scanner - Fallback Lookup (old format)', [
+                'qr_value' => $validated['qr_value'],
+                'found_by_qr_code_value' => $student ? true : false,
+                'student_id' => $student ? $student->id : null,
+            ]);
+        }
+
+        // Additional fallback: Try to extract student number from old QR formats
         if (! $student) {
             $studentNumber = $this->extractStudentNumberFromQR($validated['qr_value']);
 
@@ -120,7 +132,7 @@ class AttendanceController extends Controller
             if ($studentNumber) {
                 $student = Student::where('student_number', $studentNumber)->first();
 
-                \Log::info('SSG Scanner - Fallback Lookup', [
+                \Log::info('SSG Scanner - Fallback Lookup (extracted)', [
                     'extracted_student_number' => $studentNumber,
                     'found_by_student_number' => $student ? true : false,
                     'student_id' => $student ? $student->id : null,

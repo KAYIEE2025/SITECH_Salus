@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\AnnouncementView;
 use App\Models\Student;
 use Illuminate\Http\Request;
 
@@ -57,5 +58,20 @@ class AnnouncementController extends Controller
             'announcements',
             'search'
         ));
+    }
+
+    public function markSeen(Announcement $announcement)
+    {
+        AnnouncementView::updateOrCreate(
+            [
+                'user_id' => auth()->id(),
+                'announcement_id' => $announcement->id,
+            ],
+            [
+                'viewed_at' => now(),
+            ]
+        );
+
+        return response()->json(['success' => true]);
     }
 }

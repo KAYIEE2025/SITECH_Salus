@@ -57,6 +57,8 @@ class ProfileController extends Controller
             return back()->with('error', 'Current password is incorrect.');
         }
 
+        // Update password without changing must_change_password flag
+        // (this is for voluntary password changes, not forced first-login changes)
         auth()->user()->update([
             'password' => Hash::make($request->password),
         ]);

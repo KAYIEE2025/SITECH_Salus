@@ -25,5 +25,6 @@ Thumbs.db
 /storage/framework/views/*
 !/storage/framework/views/.gitignore
 
-# Client student records - DO NOT COMMIT
-11-san-pedro.pdf
+# Private legacy student master data - DO NOT COMMIT
+SALUS STUDENTS.xlsx
+SALUS STUDENTS(2).xlsx

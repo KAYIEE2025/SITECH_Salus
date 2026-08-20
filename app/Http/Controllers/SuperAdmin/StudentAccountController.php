@@ -77,6 +77,7 @@ class StudentAccountController extends Controller
             'password' => Hash::make($temporaryPassword),
             'contact_number' => $student->contact_number,
             'is_active' => true,
+            'must_change_password' => true,
         ]);
 
         $user->assignRole('Student');

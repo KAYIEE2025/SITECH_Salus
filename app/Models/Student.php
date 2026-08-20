@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\StudentEnrollment;
 
 class Student extends Model
 {
@@ -10,7 +11,7 @@ class Student extends Model
         'user_id', 'student_type', 'student_number', 'first_name', 'middle_name', 'last_name',
         'suffix', 'date_of_birth', 'gender', 'address', 'contact_number', 'email',
         'guardian_name', 'guardian_contact', 'guardian_relationship',
-        'year_level_id', 'section_id', 'school_year',
+        'year_level_id', 'section_id', 'school_year', 'semester', 'term', // semester kept for backward compatibility
         'status', 'photo_path', 'qr_code_value', 'qr_code_path',
         'encoded_by', 'encoded_at',
     ];
@@ -33,6 +34,11 @@ class Student extends Model
     public function encoder()
     {
         return $this->belongsTo(User::class, 'encoded_by');
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(StudentEnrollment::class);
     }
 
     public function studyLoads()

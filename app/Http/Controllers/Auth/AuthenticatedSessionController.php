@@ -43,6 +43,10 @@ class AuthenticatedSessionController extends Controller
         } elseif ($user->hasRole('Teacher')) {
             return redirect()->route('teacher.dashboard');
         } elseif ($user->hasRole('Student')) {
+            // Check if student must change password
+            if ($user->must_change_password) {
+                return redirect()->route('student.forced-password-change');
+            }
             return redirect()->route('student.dashboard');
         } elseif ($user->hasRole('SSG')) {
             return redirect()->route('ssg.dashboard');

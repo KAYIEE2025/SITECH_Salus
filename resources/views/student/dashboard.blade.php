@@ -3,6 +3,61 @@
 @section('title', 'Student Dashboard')
 
 @section('content')
+    @if($latestAnnouncement)
+        <div id="announcement-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">{{ $latestAnnouncement->title }}</h3>
+                            <p class="text-sm text-gray-500 mt-1">{{ $latestAnnouncement->created_at->format('M d, Y - g:i A') }}</p>
+                        </div>
+                        <button onclick="closeAnnouncementModal()" class="text-gray-400 hover:text-gray-600 transition">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="prose prose-sm max-w-none text-gray-700">
+                        <p>{{ nl2br(e($latestAnnouncement->body)) }}</p>
+                    </div>
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="markAnnouncementAsSeen({{ $latestAnnouncement->id }})" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function closeAnnouncementModal() {
+                document.getElementById('announcement-modal').style.display = 'none';
+            }
+
+            function markAnnouncementAsSeen(announcementId) {
+                const url = '{{ route('student.announcements.mark-seen', ['announcement' => ':id']) }}'.replace(':id', announcementId);
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        closeAnnouncementModal();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking announcement as seen:', error);
+                    closeAnnouncementModal();
+                });
+            }
+        </script>
+    @endif
     @if(!$student)
         <div class="rounded-2xl border border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 p-6 md:p-8 text-center">
             <h2 class="text-lg md:text-xl font-semibold text-yellow-800">Student Profile Not Found</h2>

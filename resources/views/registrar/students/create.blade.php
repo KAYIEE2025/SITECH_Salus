@@ -11,14 +11,23 @@
             {{-- Student Type --}}
             <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Student Type <span class="text-red-500">*</span></label>
-                <select name="student_type"
+                <select name="student_type" id="student_type"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
                     <option value="">Select student type...</option>
                     <option value="new" {{ old('student_type') == 'new' ? 'selected' : '' }}>New Student</option>
                     <option value="old" {{ old('student_type') == 'old' ? 'selected' : '' }}>Old Student</option>
                 </select>
                 @error('student_type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                <p class="text-xs text-gray-500 mt-1">New students will have a QR code automatically generated. Old students will have QR codes imported later.</p>
+                <p class="text-xs text-gray-500 mt-1">New students will have a QR code automatically generated. Old students will be identified via QR scan for re-enrollment or legacy record import.</p>
+            </div>
+
+            {{-- Existing Student Notice --}}
+            <div id="existing-student-notice" class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200 hidden">
+                <p class="text-sm font-semibold text-green-800">✓ Existing Student Found</p>
+                <p class="text-xs text-gray-700 mt-1">Name: <span id="existing-student-name" class="font-semibold"></span></p>
+                <p class="text-xs text-gray-700 mt-1">Student Number: <span id="existing-student-number" class="font-mono font-semibold"></span></p>
+                <p class="text-xs text-gray-700 mt-1">Existing Account: <span id="existing-student-account" class="font-semibold"></span></p>
+                <p class="text-xs text-gray-600 mt-2">This is a re-enrollment. The student's identity and account will be preserved.</p>
             </div>
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -38,22 +47,31 @@
                     <p class="mt-1 text-xs text-green-700" id="qr-code-hint">A unique QR code will be generated automatically after saving.</p>
                 </div>
 
-                {{-- QR Code Upload for Old Students --}}
-                <div class="mb-4 hidden" id="qr-code-upload-container">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Upload Existing QR Code <span class="text-red-500">*</span></label>
-                    <input type="file" name="qr_code_file" id="qr_code_file"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                        accept="image/png,image/jpeg,image/svg+xml">
-                    @error('qr_code_file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                    <p class="text-xs text-gray-500 mt-1">Upload the student's existing QR code image (PNG, JPG, or SVG).</p>
-                    <div id="qr-decode-result" class="mt-2 hidden">
-                        <p class="text-xs font-semibold text-green-600">✓ QR Successfully Read</p>
-                        <p class="text-xs text-gray-700 mt-1">Decoded Value:</p>
-                        <p id="decoded-value" class="text-sm font-mono text-gray-800 bg-gray-100 p-2 rounded mt-1"></p>
+                {{-- QR Code Scanner for Old Students --}}
+                <div class="mb-4 hidden" id="qr-code-scanner-container">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Scan Existing Student QR <span class="text-red-500">*</span></label>
+                    <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                        <div id="qr-reader" class="w-full"></div>
+                        <div id="qr-scan-result" class="mt-3 hidden">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                <p class="text-sm font-semibold text-green-800">✓ Student Found</p>
+                                <p class="text-xs text-gray-700 mt-1">School Number: <span id="found-student-number" class="font-mono font-semibold"></span></p>
+                                <p class="text-xs text-gray-700 mt-1">Name: <span id="found-student-name" class="font-semibold"></span></p>
+                            </div>
+                        </div>
+                        <div id="qr-scan-error" class="mt-3 hidden">
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                                <p class="text-sm font-semibold text-red-800" id="scan-error-message">Error scanning QR code</p>
+                            </div>
+                        </div>
+                        <button type="button" id="start-scan-btn" class="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+                            Start QR Scanner
+                        </button>
+                        <button type="button" id="stop-scan-btn" class="mt-3 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition hidden">
+                            Stop Scanner
+                        </button>
                     </div>
-                    <div id="qr-decode-error" class="mt-2 hidden">
-                        <p class="text-xs text-red-500">Unable to read QR code. Please upload a valid QR image.</p>
-                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Scan the student's existing QR code to auto-fill their information.</p>
                 </div>
 
                 {{-- Gender --}}
@@ -194,6 +212,17 @@
                 <p class="text-red-500 text-xs mt-1">No active school year set. Please contact Super Admin to set an active school year.</p>
             @endif
         </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Term <span class="text-red-500">*</span></label>
+            <select name="term"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                <option value="">Select term...</option>
+                <option value="Term 1" {{ old('term') == 'Term 1' ? 'selected' : '' }}>Term 1</option>
+                <option value="Term 2" {{ old('term') == 'Term 2' ? 'selected' : '' }}>Term 2</option>
+                <option value="Term 3" {{ old('term') == 'Term 3' ? 'selected' : '' }}>Term 3</option>
+            </select>
+            @error('term') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+        </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 md:col-span-3">
             <p class="font-semibold text-gray-800">Enrollment covers the entire School Year (Term 1, Term 2, Term 3)</p>
             <p class="mt-1">Saving this profile sets the student status to <span class="font-semibold text-gray-800">Pending Student Account</span> and creates study load records from the selected section's class schedules.</p>
@@ -214,94 +243,232 @@
 
         </form>
 
+        <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const studentTypeSelect = document.querySelector('select[name="student_type"]');
-                const qrCodeUploadContainer = document.getElementById('qr-code-upload-container');
+                const qrCodeScannerContainer = document.getElementById('qr-code-scanner-container');
                 const qrCodeHint = document.getElementById('qr-code-hint');
-                const qrCodeFile = document.getElementById('qr_code_file');
-                const qrDecodeResult = document.getElementById('qr-decode-result');
-                const qrDecodeError = document.getElementById('qr-decode-error');
-                const decodedValue = document.getElementById('decoded-value');
                 const studentNumberInput = document.getElementById('student_number');
+                const firstNameInput = document.querySelector('input[name="first_name"]');
+                const middleNameInput = document.querySelector('input[name="middle_name"]');
+                const lastNameInput = document.querySelector('input[name="last_name"]');
                 const studentNumberHint = document.getElementById('student-number-hint');
+                
+                // Existing student notice elements
+                const existingStudentNotice = document.getElementById('existing-student-notice');
+                const existingStudentName = document.getElementById('existing-student-name');
+                const existingStudentNumber = document.getElementById('existing-student-number');
+                const existingStudentAccount = document.getElementById('existing-student-account');
+                
+                // QR Scanner elements
+                const startScanBtn = document.getElementById('start-scan-btn');
+                const stopScanBtn = document.getElementById('stop-scan-btn');
+                const qrScanResult = document.getElementById('qr-scan-result');
+                const qrScanError = document.getElementById('qr-scan-error');
+                const foundStudentNumber = document.getElementById('found-student-number');
+                const foundStudentName = document.getElementById('found-student-name');
+                const scanErrorMessage = document.getElementById('scan-error-message');
+                
+                let html5QrCode = null;
+                let isScanning = false;
+                let scanInProgress = false;
 
-                function toggleQRCodeUpload() {
+                function toggleQRCodeScanner() {
                     if (studentTypeSelect.value === 'old') {
-                        qrCodeUploadContainer.classList.remove('hidden');
-                        qrCodeHint.textContent = 'Upload the student\'s existing QR code. The School ID will be auto-filled from the QR code.';
-                        qrCodeFile.required = true;
+                        qrCodeScannerContainer.classList.remove('hidden');
+                        qrCodeHint.textContent = 'Scan the student\'s existing QR code to auto-fill their information.';
                         studentNumberInput.removeAttribute('required');
-                        studentNumberHint.textContent = 'School ID will be auto-filled from the uploaded QR code.';
+                        studentNumberInput.setAttribute('readonly', 'readonly');
+                        studentNumberHint.textContent = 'School ID will be auto-filled from QR scan.';
                     } else {
-                        qrCodeUploadContainer.classList.add('hidden');
+                        qrCodeScannerContainer.classList.add('hidden');
                         qrCodeHint.textContent = 'A unique QR code will be generated automatically after saving.';
-                        qrCodeFile.required = false;
-                        qrCodeFile.value = '';
-                        qrDecodeResult.classList.add('hidden');
-                        qrDecodeError.classList.add('hidden');
-                        studentNumberInput.readOnly = false;
+                        stopScanner();
+                        qrScanResult.classList.add('hidden');
+                        qrScanError.classList.add('hidden');
+                        existingStudentNotice.classList.add('hidden');
+                        studentNumberInput.removeAttribute('readonly');
                         studentNumberInput.setAttribute('required', 'required');
-                        studentNumberInput.value = '';
+                        // Only clear if not during validation error recovery
+                        if (!studentNumberInput.value) {
+                            studentNumberInput.value = '';
+                        }
+                        if (!firstNameInput.value) {
+                            firstNameInput.value = '';
+                        }
+                        if (!middleNameInput.value) {
+                            middleNameInput.value = '';
+                        }
+                        if (!lastNameInput.value) {
+                            lastNameInput.value = '';
+                        }
+                        firstNameInput.removeAttribute('readonly');
+                        lastNameInput.removeAttribute('readonly');
                         studentNumberHint.textContent = 'Enter the student\'s School ID (Student Number).';
                     }
                 }
 
-                studentTypeSelect.addEventListener('change', toggleQRCodeUpload);
-                toggleQRCodeUpload();
-
-                // QR Code decoding functionality
-                qrCodeFile.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (!file) {
-                        qrDecodeResult.classList.add('hidden');
-                        qrDecodeError.classList.add('hidden');
-                        studentNumberInput.readOnly = false;
-                        studentNumberInput.value = '';
-                        return;
+                function stopScanner() {
+                    if (html5QrCode && isScanning) {
+                        try {
+                            html5QrCode.stop().then(() => {
+                                html5QrCode.clear();
+                                isScanning = false;
+                                startScanBtn.classList.remove('hidden');
+                                stopScanBtn.classList.add('hidden');
+                            }).catch(err => {
+                                console.error('Failed to stop scanner:', err);
+                                // Force clear state even if stop fails
+                                html5QrCode.clear();
+                                isScanning = false;
+                                startScanBtn.classList.remove('hidden');
+                                stopScanBtn.classList.add('hidden');
+                            });
+                        } catch (err) {
+                            console.error('Error stopping scanner:', err);
+                            // Force clear state
+                            if (html5QrCode) {
+                                html5QrCode.clear();
+                            }
+                            isScanning = false;
+                            startScanBtn.classList.remove('hidden');
+                            stopScanBtn.classList.add('hidden');
+                        }
                     }
+                }
 
-                    // Reset previous state
-                    qrDecodeResult.classList.add('hidden');
-                    qrDecodeError.classList.add('hidden');
-                    studentNumberInput.readOnly = false;
-                    studentNumberInput.value = '';
+                function startScanner() {
+                    if (isScanning || scanInProgress) return;
+                    
+                    scanInProgress = true;
+                    qrScanResult.classList.add('hidden');
+                    qrScanError.classList.add('hidden');
+                    
+                    html5QrCode = new Html5Qrcode("qr-reader");
+                    
+                    const config = { 
+                        fps: 10, 
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0
+                    };
+                    
+                    html5QrCode.start(
+                        { facingMode: "environment" }, 
+                        config, 
+                        onScanSuccess,
+                        onScanFailure
+                    ).then(() => {
+                        isScanning = true;
+                        startScanBtn.classList.add('hidden');
+                        stopScanBtn.classList.remove('hidden');
+                        scanInProgress = false;
+                    }).catch(err => {
+                        console.error('Error starting scanner:', err);
+                        scanErrorMessage.textContent = 'Unable to start camera. Please ensure camera permissions are granted.';
+                        qrScanError.classList.remove('hidden');
+                        scanInProgress = false;
+                    });
+                }
 
-                    const formData = new FormData();
-                    formData.append('qr_code_file', file);
-
-                    fetch('{{ route('registrar.students.decode-qr') }}', {
+                function onScanSuccess(decodedText, decodedResult) {
+                    if (scanInProgress) return;
+                    scanInProgress = true;
+                    
+                    // Stop scanner immediately after successful scan
+                    stopScanner();
+                    
+                    // Normalize QR value (remove any extra whitespace)
+                    const studentNumber = decodedText.trim();
+                    
+                    // Show loading state
+                    scanErrorMessage.textContent = 'Looking up student...';
+                    qrScanError.classList.remove('hidden');
+                    
+                    // Call unified student lookup endpoint
+                    fetch('{{ route('registrar.students.lookup-student-qr') }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
                         },
-                        body: formData
+                        body: JSON.stringify({ student_number: studentNumber })
                     })
                     .then(response => response.json())
                     .then(data => {
+                        qrScanError.classList.add('hidden');
+                        
                         if (data.success) {
-                            decodedValue.textContent = data.decoded_value;
-                            qrDecodeResult.classList.remove('hidden');
-                            // Auto-populate School ID textbox with decoded value
-                            studentNumberInput.value = data.decoded_value;
-                            // Make School ID textbox readonly
-                            studentNumberInput.readOnly = true;
+                            if (data.student_type === 'existing') {
+                                // Handle existing student re-enrollment
+                                studentNumberInput.value = data.student.student_number;
+                                firstNameInput.value = data.student.first_name || '';
+                                middleNameInput.value = data.student.middle_name || '';
+                                lastNameInput.value = data.student.last_name || '';
+                                
+                                // Show existing student notice
+                                existingStudentName.textContent = data.student.full_name;
+                                existingStudentNumber.textContent = data.student.student_number;
+                                existingStudentAccount.textContent = data.student.has_account ? 'Yes' : 'No';
+                                existingStudentNotice.classList.remove('hidden');
+                                
+                                // Make identity fields readonly
+                                studentNumberInput.readOnly = true;
+                                firstNameInput.readOnly = true;
+                                lastNameInput.readOnly = true;
+                                
+                                // Keep student type as 'old' for unified workflow
+                                studentTypeSelect.value = 'old';
+                            } else if (data.student_type === 'legacy') {
+                                // Handle legacy student
+                                studentNumberInput.value = data.student.student_number;
+                                firstNameInput.value = data.student.first_name || '';
+                                middleNameInput.value = data.student.middle_name || '';
+                                lastNameInput.value = data.student.last_name || '';
+                                
+                                // Show success message
+                                foundStudentNumber.textContent = data.student.student_number;
+                                foundStudentName.textContent = data.student.full_name;
+                                qrScanResult.classList.remove('hidden');
+                                
+                                // Make identity fields readonly
+                                studentNumberInput.readOnly = true;
+                                firstNameInput.readOnly = true;
+                                lastNameInput.readOnly = true;
+                                
+                                // Keep student type as 'old' for unified workflow
+                                studentTypeSelect.value = 'old';
+                            }
                         } else {
-                            qrDecodeError.classList.remove('hidden');
-                            // Keep textbox empty and editable on error
-                            studentNumberInput.readOnly = false;
-                            studentNumberInput.value = '';
+                            // Show error message
+                            scanErrorMessage.textContent = data.message || 'Student not found.';
+                            qrScanError.classList.remove('hidden');
                         }
                     })
                     .catch(error => {
-                        console.error('Error decoding QR:', error);
-                        qrDecodeError.classList.remove('hidden');
-                        // Keep textbox empty and editable on error
-                        studentNumberInput.readOnly = false;
-                        studentNumberInput.value = '';
+                        console.error('Error looking up student:', error);
+                        scanErrorMessage.textContent = 'Error connecting to server. Please try again.';
+                        qrScanError.classList.remove('hidden');
+                    })
+                    .finally(() => {
+                        scanInProgress = false;
                     });
-                });
+                }
+
+                function onScanFailure(error) {
+                    // Scan failures are normal during scanning, only log if not scanning
+                    if (!isScanning) {
+                        console.warn('QR scan error:', error);
+                    }
+                }
+
+                studentTypeSelect.addEventListener('change', toggleQRCodeScanner);
+                toggleQRCodeScanner();
+                
+                // QR Scanner button handlers
+                startScanBtn.addEventListener('click', startScanner);
+                stopScanBtn.addEventListener('click', stopScanner);
             });
         </script>
     </div>
