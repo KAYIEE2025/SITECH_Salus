@@ -35,7 +35,7 @@
                         @if($attendance->is_present)
                             <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">Waived</span>
                         @else
-                            <span class="rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700">{{ $attendance->payment_status ?? 'Unpaid' }}</span>
+                            <span class="rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700">Outstanding</span>
                         @endif
                     </td>
                 </tr>

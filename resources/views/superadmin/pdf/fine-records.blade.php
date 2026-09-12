@@ -65,10 +65,6 @@
                     <span class="filter-value">{{ $filterDisplay['section'] }}</span>
                 </div>
                 <div class="filter-item">
-                    <span class="filter-label">Payment Status:</span>
-                    <span class="filter-value">{{ $filterDisplay['payment_status'] }}</span>
-                </div>
-                <div class="filter-item">
                     <span class="filter-label">Generated Records:</span>
                     <span class="filter-value">{{ $filterDisplay['generated_records'] }}</span>
                 </div>

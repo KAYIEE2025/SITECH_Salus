@@ -183,9 +183,9 @@
                         <select name="term"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
                             <option value="">Select term...</option>
-                            <option value="Term 1" {{ old('term', $student->term ?? $student->semester) == 'Term 1' ? 'selected' : '' }}>Term 1</option>
-                            <option value="Term 2" {{ old('term', $student->term ?? $student->semester) == 'Term 2' ? 'selected' : '' }}>Term 2</option>
-                            <option value="Term 3" {{ old('term', $student->term ?? $student->semester) == 'Term 3' ? 'selected' : '' }}>Term 3</option>
+                            <option value="Term 1" {{ old('term', $student->term) == 'Term 1' ? 'selected' : '' }}>Term 1</option>
+                            <option value="Term 2" {{ old('term', $student->term) == 'Term 2' ? 'selected' : '' }}>Term 2</option>
+                            <option value="Term 3" {{ old('term', $student->term) == 'Term 3' ? 'selected' : '' }}>Term 3</option>
                         </select>
                         @error('term') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>

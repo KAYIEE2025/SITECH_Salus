@@ -12,7 +12,6 @@ class StudentEnrollment extends Model
         'section_id',
         'school_year',
         'term',
-        'semester', // Keeping for backward compatibility with existing records
         'status',
         'encoded_by',
         'encoded_at',

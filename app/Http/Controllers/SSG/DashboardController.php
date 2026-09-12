@@ -13,7 +13,7 @@ class DashboardController extends Controller
         $totalEvents = SsgEvent::count();
         $upcomingEvents = SsgEvent::where('status', 'Upcoming')->count();
         $ongoingEvents = SsgEvent::where('status', 'Ongoing')->count();
-        $totalFinesCollected = SsgEventAttendance::where('payment_status', 'Paid')->sum('actual_fine');
+        $totalFinesCollected = SsgEventAttendance::sum('actual_fine');
         $recentEvents = SsgEvent::latest()->take(5)->get();
 
         return view('ssg.dashboard', compact(

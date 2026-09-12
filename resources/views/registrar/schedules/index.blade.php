@@ -44,7 +44,7 @@
                         <option value="">Select section...</option>
                         @foreach($sections as $section)
                             <option value="{{ $section->id }}">
-                                {{ $section->course->code ?? '' }} {{ $section->yearLevel->name ?? '' }} — Sec {{ $section->name }}
+                                {{ $section->yearLevel->name ?? '' }} — Sec {{ $section->name }}
                             </option>
                         @endforeach
                     </select>
@@ -124,7 +124,6 @@
                         </td>
                         <td class="px-6 py-3 text-gray-600">{{ $schedule->teacher->name ?? '—' }}</td>
                         <td class="px-6 py-3 text-gray-600">
-                            {{ $schedule->section->course->code ?? '' }}
                             {{ $schedule->section->yearLevel->name ?? '' }} —
                             Sec {{ $schedule->section->name ?? '' }}
                         </td>

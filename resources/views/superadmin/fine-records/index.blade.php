@@ -167,16 +167,6 @@
                         <input type="text" name="search" class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600" placeholder="Name or student number">
                     </div>
                 </div>
-
-                <div class="flex gap-3 md:gap-4">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="include_paid" value="1" checked class="rounded border-gray-300 text-green-600 focus:ring-green-600">
-                        <span class="text-xs md:text-sm text-gray-700">Include Paid</span>
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="include_unpaid" value="1" checked class="rounded border-gray-300 text-green-600 focus:ring-green-600">
-                        <span class="text-xs md:text-sm text-gray-700">Include Unpaid</span>
-                    </label>
                 </div>
 
                 <div class="flex flex-col md:flex-row justify-end gap-2 md:gap-3 pt-3 md:pt-4">

@@ -19,8 +19,6 @@ class FineRecordsController extends Controller
             'year_level_id' => ['nullable', 'exists:year_levels,id'],
             'section_id' => ['nullable', 'exists:sections,id'],
             'search' => ['nullable', 'string', 'max:100'],
-            'include_paid' => ['nullable', 'boolean'],
-            'include_unpaid' => ['nullable', 'boolean'],
         ]);
 
         $query = Student::query()
@@ -59,18 +57,6 @@ class FineRecordsController extends Controller
                 });
             });
 
-        // Apply payment status filters
-        if ($request->filled('include_paid') || $request->filled('include_unpaid')) {
-            $query->whereHas('ssgAttendances', function ($q) use ($request) {
-                if ($request->boolean('include_paid') && !$request->boolean('include_unpaid')) {
-                    $q->where('payment_status', 'Paid');
-                } elseif (!$request->boolean('include_paid') && $request->boolean('include_unpaid')) {
-                    $q->where('payment_status', 'Unpaid');
-                }
-                // If both are checked or neither, no filter applied
-            });
-        }
-
         $students = $query->orderBy('last_name')
             ->orderBy('first_name')
             ->paginate(15)
@@ -104,8 +90,6 @@ class FineRecordsController extends Controller
             'year_level_id' => ['nullable', 'exists:year_levels,id'],
             'section_id' => ['nullable', 'exists:sections,id'],
             'search' => ['nullable', 'string', 'max:100'],
-            'include_paid' => ['nullable', 'boolean'],
-            'include_unpaid' => ['nullable', 'boolean'],
         ]);
 
         $query = Student::query()
@@ -151,17 +135,6 @@ class FineRecordsController extends Controller
                 });
             });
 
-        // Apply payment status filters
-        if ($request->filled('include_paid') || $request->filled('include_unpaid')) {
-            $query->whereHas('ssgAttendances', function ($q) use ($request) {
-                if ($request->boolean('include_paid') && !$request->boolean('include_unpaid')) {
-                    $q->where('payment_status', 'Paid');
-                } elseif (!$request->boolean('include_paid') && $request->boolean('include_unpaid')) {
-                    $q->where('payment_status', 'Unpaid');
-                }
-            });
-        }
-
         $students = $query->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
@@ -194,25 +167,10 @@ class FineRecordsController extends Controller
         $yearLevelDisplay = $filters['year_level_id'] ? (YearLevel::find($filters['year_level_id'])->name ?? 'All Grade Levels') : 'All Grade Levels';
         $sectionDisplay = $filters['section_id'] ? (Section::find($filters['section_id'])->name ?? 'All Sections') : 'All Sections';
         
-        // Determine payment status display
-        $includePaid = $request->filled('include_paid') ? $request->boolean('include_paid') : true;
-        $includeUnpaid = $request->filled('include_unpaid') ? $request->boolean('include_unpaid') : true;
-        
-        if ($includePaid && $includeUnpaid) {
-            $paymentStatusDisplay = 'All Payment Statuses';
-        } elseif ($includePaid && !$includeUnpaid) {
-            $paymentStatusDisplay = 'Paid';
-        } elseif (!$includePaid && $includeUnpaid) {
-            $paymentStatusDisplay = 'Unpaid';
-        } else {
-            $paymentStatusDisplay = 'None';
-        }
-        
         $filterDisplay = [
             'school_year' => $schoolYearDisplay,
             'year_level' => $yearLevelDisplay,
             'section' => $sectionDisplay,
-            'payment_status' => $paymentStatusDisplay,
             'generated_records' => $totalStudents,
         ];
 

@@ -9,7 +9,6 @@ class SsgEventAttendance extends Model
     protected $fillable = [
         'ssg_event_id', 'student_id', 'is_present',
         'scanned_at', 'scanned_by_user_id', 'applicable_fine', 'actual_fine',
-        'payment_status',
     ];
 
     protected $casts = [

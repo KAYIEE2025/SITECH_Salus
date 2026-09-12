@@ -29,7 +29,6 @@ class BackfillSsgAttendanceSeeder extends Seeder
                     'scanned_at' => null,
                     'applicable_fine' => $event->fine_amount,
                     'actual_fine' => $event->fine_amount,
-                    'payment_status' => 'Unpaid',
                 ]);
 
                 if ($attendance->wasRecentlyCreated) {

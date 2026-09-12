@@ -114,8 +114,8 @@
                             <p id="modalFineAmount" class="text-sm text-gray-800"></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Payment Status</p>
-                            <p id="modalPaymentStatus" class="text-sm font-medium"></p>
+                            <p class="text-sm text-gray-500">Fine Status</p>
+                            <p id="modalFineStatus" class="text-sm font-medium"></p>
                         </div>
                     </div>
                 </div>
@@ -141,9 +141,9 @@
                 document.getElementById('modalScannedAt').textContent = attendance.scanned_at ? new Date(attendance.scanned_at).toLocaleString() : 'N/A';
                 document.getElementById('modalFineAmount').textContent = '₱' + (attendance.actual_fine || 0).toFixed(2);
                 
-                const paymentStatus = attendance.payment_status === 'paid' ? 'Paid' : 'Unpaid';
-                document.getElementById('modalPaymentStatus').textContent = paymentStatus;
-                document.getElementById('modalPaymentStatus').className = attendance.payment_status === 'paid' ? 'text-sm font-medium text-green-700' : 'text-sm font-medium text-orange-600';
+                const fineStatus = attendance.is_present ? 'Waived' : 'Outstanding';
+                document.getElementById('modalFineStatus').textContent = fineStatus;
+                document.getElementById('modalFineStatus').className = attendance.is_present ? 'text-sm font-medium text-green-700' : 'text-sm font-medium text-orange-600';
 
                 document.getElementById('eventModal').classList.remove('hidden');
                 document.getElementById('eventModal').classList.add('flex');

@@ -18,7 +18,7 @@ class ClassScheduleController extends Controller
         $schedules = ClassSchedule::with(['subject', 'teacher', 'section'])
             ->latest()->paginate(15);
         $subjects  = Subject::where('is_active', true)->get();
-        $sections  = Section::with(['course', 'yearLevel'])->get();
+        $sections  = Section::with('yearLevel')->get();
         $teachers  = User::role('Teacher')->get();
         $activeSchoolYear = SchoolYearHelper::getActiveSchoolYear();
 

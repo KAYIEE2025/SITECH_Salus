@@ -56,7 +56,7 @@ Artisan::command('enrollment:verify', function () {
     $this->line('Students table still has year_level_id: ' . (in_array('year_level_id', $studentColumnsList) ? 'YES' : 'NO'));
     $this->line('Students table still has section_id: ' . (in_array('section_id', $studentColumnsList) ? 'YES' : 'NO'));
     $this->line('Students table still has school_year: ' . (in_array('school_year', $studentColumnsList) ? 'YES' : 'NO'));
-    $this->line('Students table still has semester: ' . (in_array('semester', $studentColumnsList) ? 'YES' : 'NO'));
+    $this->line('Students table still has term: ' . (in_array('term', $studentColumnsList) ? 'YES' : 'NO'));
     $this->line('Students table still has status: ' . (in_array('status', $studentColumnsList) ? 'YES' : 'NO'));
     $this->line('Students table still has encoded_by: ' . (in_array('encoded_by', $studentColumnsList) ? 'YES' : 'NO'));
     $this->line('Students table still has encoded_at: ' . (in_array('encoded_at', $studentColumnsList) ? 'YES' : 'NO'));
@@ -72,7 +72,7 @@ Artisan::command('enrollment:verify', function () {
         ->whereNotNull('year_level_id')
         ->whereNotNull('section_id')
         ->whereNotNull('school_year')
-        ->whereNotNull('semester')
+        ->whereNotNull('term')
         ->count();
     $this->line('Students with enrollment data: ' . $studentsWithEnrollmentData);
 

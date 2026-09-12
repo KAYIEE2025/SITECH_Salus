@@ -52,7 +52,6 @@ class EventController extends Controller
                                 'scanned_at' => null,
                                 'applicable_fine' => $event->fine_amount,
                                 'actual_fine' => $event->fine_amount,
-                                'payment_status' => 'Unpaid',
                             ]
                         );
 

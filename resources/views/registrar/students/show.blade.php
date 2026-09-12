@@ -92,7 +92,7 @@
                 </div>
                 <div>
                     <span class="text-gray-500 block text-xs">Term</span>
-                    <span class="font-medium text-gray-800">{{ $student->term ?? ($student->semester ?? '—') }}</span>
+                    <span class="font-medium text-gray-800">{{ $student->term ?? '—' }}</span>
                 </div>
                 <div>
                     <span class="text-gray-500 block text-xs">Grade Level</span>
@@ -125,7 +125,7 @@
                             @foreach($student->enrollments->sortByDesc('school_year')->sortByDesc('term') as $enrollment)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-3 py-2 font-medium text-gray-800">{{ $enrollment->school_year }}</td>
-                                <td class="px-3 py-2 text-gray-600">{{ $enrollment->term ?? ($enrollment->semester ?? '—') }}</td>
+                                <td class="px-3 py-2 text-gray-600">{{ $enrollment->term ?? '—' }}</td>
                                 <td class="px-3 py-2 text-gray-600">{{ $enrollment->yearLevel->name ?? '—' }}</td>
                                 <td class="px-3 py-2 text-gray-600">{{ $enrollment->section->name ?? '—' }}</td>
                                 <td class="px-3 py-2">

@@ -34,9 +34,7 @@ class SSGEventController extends Controller
         $totalEvents = $attendances->count();
         $eventsAttended = $attendances->where('is_present', true)->count();
         $eventsMissed = $attendances->where('is_present', false)->count();
-        $outstandingBalance = $attendances->where('payment_status', 'unpaid')
-            ->where('is_present', false)
-            ->sum('actual_fine');
+        $outstandingBalance = $attendances->where('is_present', false)->sum('actual_fine');
 
         return view('student.ssg-events', compact(
             'student',
