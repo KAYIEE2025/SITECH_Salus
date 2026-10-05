@@ -5,6 +5,7 @@
     <x-nav-link href="{{ route('admin.announcements.index') }}" :active="false">Announcements</x-nav-link>
     <x-nav-link href="{{ route('admin.calendar.index') }}" :active="false">School Calendar</x-nav-link>
     <x-nav-link href="{{ route('admin.reports.index') }}" :active="false">Reports</x-nav-link>
+    <x-nav-link href="{{ route('admin.teacher-study-load') }}" :active="false">Teacher Study Load</x-nav-link>
     <x-nav-link href="{{ route('admin.activity-logs.index') }}" :active="false">Activity Logs</x-nav-link>
     <x-nav-link href="{{ route('admin.profile.index') }}" :active="false">My Profile</x-nav-link>
 @endsection

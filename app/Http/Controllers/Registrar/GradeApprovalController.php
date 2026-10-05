@@ -31,6 +31,10 @@ class GradeApprovalController extends Controller
                 'grade_count' => $grades->count(),
                 'grading_periods' => $grades->pluck('grading_period')->unique()->toArray(),
                 'statuses' => $grades->pluck('status')->unique()->toArray(),
+                'student_ids' => $grades->pluck('student_id')->toArray(),
+                'student_names' => $grades->map(function($grade) {
+                    return $grade->student ? $grade->student->last_name . ', ' . $grade->student->first_name : $grade->student_name;
+                })->toArray(),
             ]);
         }
 
@@ -143,6 +147,12 @@ class GradeApprovalController extends Controller
             $grades->each(function ($grade) use ($gradingPeriod) {
                 $grade->recordHistory('approved', 'approved', "Term {$gradingPeriod} grades approved by Registrar");
             });
+
+            activity()
+                ->event('grade_approved')
+                ->causedBy(auth()->user())
+                ->performedOn($classSchedule)
+                ->log('Approved Term ' . $gradingPeriod . ' grades for ' . $classSchedule->subject->name . ' - ' . $classSchedule->section->name . '. ' . $approvedCount . ' student(s) affected.');
 
             DB::commit();
 
@@ -308,6 +318,12 @@ class GradeApprovalController extends Controller
                 $grade->recordHistory('rejected', 'rejected', "Term {$gradingPeriod} grades rejected by Registrar", $request->rejection_reason);
             });
 
+            activity()
+                ->event('grade_rejected')
+                ->causedBy(auth()->user())
+                ->performedOn($classSchedule)
+                ->log('Rejected Term ' . $gradingPeriod . ' grades for ' . $classSchedule->subject->name . ' - ' . $classSchedule->section->name . '. Reason: ' . $request->rejection_reason . '. ' . $rejectedCount . ' student(s) affected.');
+
             \Log::info('REJECT BEFORE COMMIT');
 
             DB::commit();
@@ -386,6 +402,11 @@ class GradeApprovalController extends Controller
 
                 $totalApproved += $affected;
             }
+
+            activity()
+                ->event('grade_approved_bulk')
+                ->causedBy(auth()->user())
+                ->log('Bulk approved grades for ' . count($classScheduleIds) . ' class(es). ' . $totalApproved . ' student(s) affected.');
 
             DB::commit();
 
@@ -479,6 +500,11 @@ class GradeApprovalController extends Controller
 
                 $totalRejected += $affected;
             }
+
+            activity()
+                ->event('grade_rejected_bulk')
+                ->causedBy(auth()->user())
+                ->log('Bulk rejected grades for ' . count($classScheduleIds) . ' class(es). Reason: ' . $rejectionReason . '. ' . $totalRejected . ' student(s) affected.');
 
             DB::commit();
 

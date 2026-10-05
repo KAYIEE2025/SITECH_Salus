@@ -27,10 +27,23 @@ use chillerlan\QRCode\QROptions;
 class StudentController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
         $students = Student::with(['yearLevel', 'section'])
-            ->latest()->paginate(15);
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->string('search')->toString();
+
+                $query->where(function ($query) use ($search) {
+                    $query->where('student_number', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
         return view('registrar.students.index', compact('students'));
     }
 
@@ -52,13 +65,20 @@ class StudentController extends Controller
         if ($request->student_type === 'old') {
             // For old students, check if they exist in legacy records
             $legacyStudent = LegacyStudent::findByStudentNumber($studentNumber);
-            
+
             // If old student but not found in either table, return error
             if (!$existingStudent && !$legacyStudent) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'Student not found in the system. Please scan a valid QR code or check the student number.');
             }
+        }
+
+        // For new students, check if student number already exists
+        if ($request->student_type === 'new' && $existingStudent) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'This Student Number already exists in the system. Please scan a different QR code or enter a different Student Number.');
         }
 
         $validated = $request->validate([
@@ -110,8 +130,9 @@ class StudentController extends Controller
                 'encoded_at' => now(),
             ]);
 
-            // Generate QR code
-            $qrValue = 'SITech-STUDENT|' . $validated['student_number'] . '|' . (string) Str::uuid();
+            // For new students: store the scanned student number as QR value
+            // Generate QR image for display (rendered from the student number)
+            $qrValue = $validated['student_number'];
             $qrPath = 'qrcodes/' . $validated['student_number'] . '-' . Str::random(10) . '.svg';
 
             $qrWritten = Storage::disk('public')->put(
@@ -147,15 +168,13 @@ class StudentController extends Controller
             ->performedOn($student)
             ->log('Encoded student profile: ' . $student->last_name . ', ' . $student->first_name);
 
-        if ($student->qr_code_path) {
-            activity()
-                ->causedBy(auth()->user())
-                ->performedOn($student)
-                ->log('Generated QR Code for Student: ' . $student->last_name . ', ' . $student->first_name);
-        }
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($student)
+            ->log('Student QR registered: ' . $student->qr_code_value . ' for ' . $student->last_name . ', ' . $student->first_name);
 
         $message = 'Student profile encoded successfully. ';
-        $message .= 'QR code generated, ';
+        $message .= 'Student Number (QR value): ' . $student->qr_code_value . ', ';
         $message .= $student->study_loads_count . ' study load record(s) created. ' . $student->ssg_attendance_count . ' SSG attendance record(s) prepared.';
 
         return redirect()->route('registrar.students')
@@ -397,69 +416,11 @@ class StudentController extends Controller
 
     public function replaceQR(Request $request, Student $student)
     {
-        $request->validate([
-            'qr_code_file' => 'required|file|mimes:png,jpg,jpeg,svg|max:2048',
-        ]);
-
-        $file = $request->file('qr_code_file');
-
-        // Decode the QR value from the uploaded image FIRST
-        $qrValue = $this->decodeQRCode($file);
-
-        if (! $qrValue) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to decode the QR code from the uploaded image. Please ensure the image contains a valid QR code.'
-            ], 400);
-        }
-
-        // Check if the new QR value already belongs to another student
-        $existingStudent = Student::where('student_number', $qrValue)
-            ->where('id', '!=', $student->id)
-            ->first();
-
-        if ($existingStudent) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This QR code already belongs to another student.'
-            ], 400);
-        }
-
-        // Delete old QR file if it exists
-        if ($student->qr_code_path && Storage::disk('public')->exists($student->qr_code_path)) {
-            Storage::disk('public')->delete($student->qr_code_path);
-        }
-
-        // REGENERATE QR code with high quality (same as new students)
-        // instead of just uploading the original file
-        $qrPath = 'qrcodes/' . $qrValue . '-replaced-' . Str::random(10) . '.svg';
-        $qrWritten = Storage::disk('public')->put(
-            $qrPath,
-            QrCode::format('svg')->size(300)->generate($qrValue)
-        );
-
-        if (! $qrWritten) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to generate the QR code.'
-            ], 500);
-        }
-
-        // Update student record - for old students, also update student_number to match QR
-        $student->student_number = $qrValue;
-        $student->qr_code_value = $qrValue;
-        $student->qr_code_path = $qrPath;
-        $student->save();
-
-        activity()
-            ->causedBy(auth()->user())
-            ->performedOn($student)
-            ->log('Replaced QR Code for Student: ' . $student->last_name . ', ' . $student->first_name);
-
+        // QR replacement is disabled - the school-generated student number must remain unchanged
         return response()->json([
-            'success' => true,
-            'message' => 'QR code replaced successfully.'
-        ]);
+            'success' => false,
+            'message' => 'QR code replacement is disabled. The school-generated student number cannot be changed after registration.'
+        ], 403);
     }
 
     public function decodeQR(Request $request)

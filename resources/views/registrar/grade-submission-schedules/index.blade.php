@@ -1,6 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Grade Submission Schedules')
 @section('content')
+    <x-delete-confirm-modal
+        name="delete-grade-schedule-modal"
+        title="Delete Grade Submission Schedule"
+        message="Are you sure you want to delete this grade submission schedule?"
+        recordName=""
+        recordDetails=""
+    />
 
     @session('success')
         <div class="bg-green-50 border border-green-200 text-green-800 text-xs md:text-sm rounded-lg px-3 py-2 md:px-4 md:py-3 mb-4 md:mb-6">
@@ -83,14 +90,19 @@
                             class="text-[10px] md:text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-2 py-1 md:px-3 md:py-1.5 rounded-lg transition whitespace-nowrap">
                             Edit
                         </a>
-                        <form method="POST" action="{{ route('registrar.grade-submission-schedules.destroy', $schedule) }}"
-                            onsubmit="return confirm('Delete this schedule?')">
-                            @csrf @method('DELETE')
-                            <button type="submit"
-                                class="text-[10px] md:text-xs bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 md:px-3 md:py-1.5 rounded-lg transition whitespace-nowrap">
-                                Delete
-                            </button>
-                        </form>
+                        <button
+                            type="button"
+                            x-on:click="$dispatch('open-delete-modal', {
+                                modalName: 'delete-grade-schedule-modal',
+                                id: {{ $schedule->id }},
+                                name: '{{ $schedule->school_year }} - Term {{ $schedule->grading_period }}',
+                                details: 'Start: {{ $schedule->start_at->format('M d, Y g:i A') }} | Deadline: {{ $schedule->end_at->format('M d, Y g:i A') }}',
+                                action: '/registrar/grade-submission-schedules/{{ $schedule->id }}'
+                            })"
+                            class="text-[10px] md:text-xs bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 md:px-3 md:py-1.5 rounded-lg transition whitespace-nowrap"
+                        >
+                            Delete
+                        </button>
                     </td>
                 </tr>
                 @empty

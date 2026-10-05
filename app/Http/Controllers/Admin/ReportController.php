@@ -47,6 +47,11 @@ class ReportController extends Controller
         $yearLevel = $request->filled('year_level_id') ? YearLevel::find($request->year_level_id) : null;
         $section = $request->filled('section_id') ? Section::with('yearLevel')->find($request->section_id) : null;
 
+        activity()
+            ->event('report_generated')
+            ->causedBy(auth()->user())
+            ->log('Generated student list report. ' . $students->count() . ' student(s) included.');
+
         return view('admin.reports.student-list-preview', compact('students', 'yearLevel', 'section'));
     }
 
@@ -132,6 +137,11 @@ class ReportController extends Controller
 
         $yearLevel = $request->filled('year_level_id') ? YearLevel::find($request->year_level_id) : null;
         $section = $request->filled('section_id') ? Section::with('yearLevel')->find($request->section_id) : null;
+
+        activity()
+            ->event('report_generated')
+            ->causedBy(auth()->user())
+            ->log('Generated grade summary report for ' . $subject->name . '. ' . count($studentGrades) . ' student(s) included.');
 
         return view('admin.reports.grade-summary-preview', compact('studentGrades', 'subject', 'yearLevel', 'section'));
     }

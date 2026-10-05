@@ -40,13 +40,53 @@
             </div>
         </div>
 
+        <!-- Filters -->
+        <div class="st-card p-4 md:p-6 mb-4 md:mb-6">
+            <form method="GET" action="{{ route('student.study-load.index') }}" class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">School Year</label>
+                    <select name="school_year"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        <option value="">All School Years</option>
+                        @foreach($schoolYears as $schoolYear)
+                            <option value="{{ $schoolYear }}" {{ request('school_year') == $schoolYear ? 'selected' : '' }}>
+                                {{ $schoolYear }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Term</label>
+                    <select name="term"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        <option value="">All Terms</option>
+                        @foreach($terms as $term)
+                            <option value="{{ $term }}" {{ request('term') == $term ? 'selected' : '' }}>
+                                {{ $term }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex items-end gap-2">
+                    <button type="submit"
+                        class="bg-green-800 hover:bg-green-900 text-white text-xs md:text-sm font-medium px-4 py-2 rounded-lg transition">
+                        Filter
+                    </button>
+                    <a href="{{ route('student.study-load.index') }}"
+                        class="border border-gray-300 text-gray-700 text-xs md:text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+                        Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+
         <!-- Study Load Table -->
         <div class="st-card overflow-hidden p-4 md:p-6">
             <h2 class="text-base md:text-lg font-semibold text-gray-800 mb-3 md:mb-4">Class Schedule</h2>
 
             @if($schedules->isEmpty())
                 <div class="text-center py-8 md:py-12">
-                    <p class="text-gray-500 text-xs md:text-sm">No study load has been assigned yet.</p>
+                    <p class="text-gray-500 text-xs md:text-sm">No study load records found for the selected filters.</p>
                 </div>
             @else
                 <div class="overflow-x-auto">
@@ -59,6 +99,7 @@
                                 <th class="text-left py-2 px-2 md:py-3 md:px-4 font-medium text-gray-600 text-[10px] md:text-xs">Days</th>
                                 <th class="text-left py-2 px-2 md:py-3 md:px-4 font-medium text-gray-600 text-[10px] md:text-xs">Time</th>
                                 <th class="text-left py-2 px-2 md:py-3 md:px-4 font-medium text-gray-600 text-[10px] md:text-xs">Room</th>
+                                <th class="text-left py-2 px-2 md:py-3 md:px-4 font-medium text-gray-600 text-[10px] md:text-xs">Term</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -73,6 +114,7 @@
                                         {{ \Carbon\Carbon::parse($schedule->time_end)->format('h:i A') }}
                                     </td>
                                     <td class="py-2 px-2 md:py-3 md:px-4 text-gray-700">{{ $schedule->room ?? 'N/A' }}</td>
+                                    <td class="py-2 px-2 md:py-3 md:px-4 text-gray-700">{{ $schedule->term ?? '—' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

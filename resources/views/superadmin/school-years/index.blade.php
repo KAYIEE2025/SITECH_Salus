@@ -3,6 +3,13 @@
 @section('title', 'School Year Management')
 
 @section('content')
+    <x-delete-confirm-modal
+        name="delete-school-year-modal"
+        title="Delete School Year"
+        message="Are you sure you want to delete this school year?"
+        recordName=""
+        recordDetails=""
+    />
     @session('success')
         <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
             {{ $value }}
@@ -62,15 +69,19 @@
                                         class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg transition">
                                         Edit
                                     </a>
-                                    <form method="POST" action="{{ route('superadmin.school-years.destroy', $schoolYear) }}" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            onclick="return confirm('Are you sure you want to delete this school year?')"
-                                            class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition">
-                                            Delete
-                                        </button>
-                                    </form>
+                                    <button
+                                        type="button"
+                                        x-on:click="$dispatch('open-delete-modal', {
+                                            modalName: 'delete-school-year-modal',
+                                            id: {{ $schoolYear->id }},
+                                            name: '{{ $schoolYear->name }}',
+                                            details: 'Status: {{ $schoolYear->is_active ? 'Active' : 'Inactive' }}',
+                                            action: '/superadmin/school-years/{{ $schoolYear->id }}'
+                                        })"
+                                        class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition"
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
                             </td>
                         </tr>

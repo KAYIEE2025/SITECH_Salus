@@ -3,6 +3,13 @@
 @section('title', 'SSG Events')
 
 @section('content')
+    <x-delete-confirm-modal
+        name="delete-ssg-event-modal"
+        title="Delete SSG Event"
+        message="Are you sure you want to delete this SSG event? Attendance records for this event will also be removed."
+        recordName=""
+        recordDetails=""
+    />
     @session('success')
         <div class="mb-4 md:mb-6 rounded-lg border border-green-200 bg-green-50 px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm text-green-800">
             {{ $value }}
@@ -51,15 +58,19 @@
                                         <a href="{{ route('ssg.attendance.index', $event) }}" class="attendance-btn rounded-lg bg-green-800 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-white transition hover:bg-green-900 whitespace-nowrap">Scan Attendance</a>
                                         <a href="{{ route('ssg.events.show', $event) }}" class="rounded-lg bg-gray-100 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-gray-700 transition hover:bg-gray-200 whitespace-nowrap">View</a>
                                         <a href="{{ route('ssg.events.edit', $event) }}" class="rounded-lg bg-green-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-green-700 transition hover:bg-green-100 whitespace-nowrap">Edit</a>
-                                        <form method="POST" action="{{ route('ssg.events.destroy', $event) }}">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                onclick="return confirm('Delete this event? Attendance records for this event will also be removed.')"
-                                                class="rounded-lg bg-red-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-red-600 transition hover:bg-red-100 whitespace-nowrap">
-                                                Delete
-                                            </button>
-                                        </form>
+                                        <button
+                                            type="button"
+                                            x-on:click="$dispatch('open-delete-modal', {
+                                                modalName: 'delete-ssg-event-modal',
+                                                id: {{ $event->id }},
+                                                name: '{{ $event->title }}',
+                                                details: 'Date: {{ $event->event_date->format('M d, Y') }} | Time: {{ $event->event_start_time ? \Carbon\Carbon::parse($event->event_start_time)->format('h:i A') : 'N/A' }}',
+                                                action: '/ssg/events/{{ $event->id }}'
+                                            })"
+                                            class="rounded-lg bg-red-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-red-600 transition hover:bg-red-100 whitespace-nowrap"
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                     <span class="countdown text-[10px] md:text-xs text-gray-500">--:--:--</span>
                                 </div>

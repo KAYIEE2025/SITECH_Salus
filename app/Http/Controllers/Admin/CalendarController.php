@@ -10,8 +10,8 @@ class CalendarController extends Controller
 {
     public function index()
     {
-        $events = SchoolEvent::with('creator')->latest()->get();
-        
+        $events = SchoolEvent::with('creator')->latest()->paginate(50);
+
         return view('admin.calendar.index', compact('events'));
     }
 
@@ -30,7 +30,7 @@ class CalendarController extends Controller
             'color' => 'nullable|string|max:7',
         ]);
 
-        SchoolEvent::create([
+        $event = SchoolEvent::create([
             'title' => $request->title,
             'description' => $request->description,
             'event_date' => $request->event_date,
@@ -38,6 +38,11 @@ class CalendarController extends Controller
             'color' => $request->color ?? '#3b82f6',
             'created_by' => auth()->id(),
         ]);
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($event)
+            ->log('Created school event: ' . $event->title . ' on ' . $event->event_date->format('F d, Y'));
 
         return redirect()->route('admin.calendar.index')
             ->with('success', 'School event added successfully.');
@@ -66,13 +71,26 @@ class CalendarController extends Controller
             'color' => $request->color ?? '#3b82f6',
         ]);
 
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($event)
+            ->log('Updated school event: ' . $event->title);
+
         return redirect()->route('admin.calendar.index')
             ->with('success', 'School event updated successfully.');
     }
 
     public function destroy(SchoolEvent $event)
     {
+        // Capture information before deletion for logging
+        $eventTitle = $event->title;
+        $eventDate = $event->event_date->format('F d, Y');
+
         $event->delete();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->log('Deleted school event: ' . $eventTitle . ' on ' . $eventDate);
 
         return redirect()->route('admin.calendar.index')
             ->with('success', 'School event deleted successfully.');

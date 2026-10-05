@@ -1,6 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Sections')
 @section('content')
+    <x-delete-confirm-modal
+        name="delete-section-modal"
+        title="Delete Section"
+        message="Are you sure you want to delete this section?"
+        recordName=""
+        recordDetails=""
+    />
 
     @session('success')
         <div class="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3 mb-6">
@@ -43,17 +50,25 @@
                     </label>
                     <input type="text" name="name" value="{{ old('name') }}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                        placeholder="A, B, C, Rizal, Bonifacio...">
+                        placeholder="A, B, C, Rizal, Bonifacio..."
+                        maxlength="50">
                     @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Adviser <span class="text-gray-400">(optional)</span>
+                        Adviser <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="adviser" value="{{ old('adviser') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                        placeholder="Teacher name...">
+                    <select name="adviser_id"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        <option value="">Select adviser...</option>
+                        @foreach($teachers as $teacher)
+                            <option value="{{ $teacher->id }}" {{ old('adviser_id') == $teacher->id ? 'selected' : '' }}>
+                                {{ $teacher->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('adviser_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <button type="submit"
@@ -73,6 +88,7 @@
                     <tr>
                         <th class="text-left px-6 py-3">Grade Level</th>
                         <th class="text-left px-6 py-3">Section</th>
+                        <th class="text-left px-6 py-3">Adviser</th>
                         <th class="text-left px-6 py-3">Students</th>
                         <th class="text-left px-6 py-3">Actions</th>
                     </tr>
@@ -86,19 +102,29 @@
                                 Section {{ $section->name }}
                             </span>
                         </td>
+                        <td class="px-6 py-3 text-gray-600">{{ $section->adviser?->name ?? '—' }}</td>
                         <td class="px-6 py-3 text-gray-500">
                             {{ $section->students()->count() }} student(s)
                         </td>
                         <td class="px-6 py-3">
+                            <a href="{{ route('registrar.sections.edit', $section) }}"
+                                class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg transition mr-2">
+                                Edit
+                            </a>
                             @if($section->students()->count() == 0)
-                            <form method="POST" action="{{ route('registrar.sections.destroy', $section) }}"
-                                onsubmit="return confirm('Delete this section?')">
-                                @csrf @method('DELETE')
-                                <button type="submit"
-                                    class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition">
-                                    Delete
-                                </button>
-                            </form>
+                            <button
+                                type="button"
+                                x-on:click="$dispatch('open-delete-modal', {
+                                    modalName: 'delete-section-modal',
+                                    id: {{ $section->id }},
+                                    name: 'Section {{ $section->name }}',
+                                    details: 'Grade {{ $section->yearLevel->name ?? 'Unknown' }}',
+                                    action: '/registrar/sections/{{ $section->id }}'
+                                })"
+                                class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition"
+                            >
+                                Delete
+                            </button>
                             @else
                                 <span class="text-xs text-gray-400">Has students</span>
                             @endif
@@ -106,7 +132,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-gray-400">
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-400">
                             No sections yet. Add one using the form.
                         </td>
                     </tr>

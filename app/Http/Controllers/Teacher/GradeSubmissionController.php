@@ -67,25 +67,34 @@ class GradeSubmissionController extends Controller
             return response()->json(['success' => false, 'message' => 'You cannot submit grades because the submission period has not started yet.']);
         }
 
-        // Check if all students have grades
-        $grades = FinalGrade::where('class_schedule_id', $classSchedule->id)->get();
+        // Check if all students have grades for the specific grading period
+        $grades = FinalGrade::where('class_schedule_id', $classSchedule->id)
+            ->where('grading_period', $gradingPeriod)
+            ->get();
 
         if ($grades->isEmpty()) {
-            return response()->json(['success' => false, 'message' => 'No grades to submit. Please compute grades first.']);
+            return response()->json(['success' => false, 'message' => 'No grades to submit for Term ' . $gradingPeriod . '. Please import grades first.']);
         }
 
-        // Check if any grades are null
+        // Check if any grades are null for the specific grading period
         if ($grades->where('final_grade', null)->isNotEmpty()) {
-            return response()->json(['success' => false, 'message' => 'Some students have incomplete grades. Please complete all grades before submitting.']);
+            return response()->json(['success' => false, 'message' => 'Some students have incomplete grades for Term ' . $gradingPeriod . '. Please complete all grades before submitting.']);
         }
 
-        // Update status to submitted
+        // Update status to submitted for the specific grading period
         FinalGrade::where('class_schedule_id', $classSchedule->id)
+            ->where('grading_period', $gradingPeriod)
             ->where('status', 'draft')
             ->update([
                 'status' => 'submitted',
                 'submitted_at' => now(),
             ]);
+
+        activity()
+            ->event('grade_submitted')
+            ->causedBy(auth()->user())
+            ->performedOn($classSchedule)
+            ->log('Submitted Term ' . $gradingPeriod . ' grades for ' . $classSchedule->subject->name . ' - ' . $classSchedule->section->name);
 
         return response()->json(['success' => true, 'message' => 'Grades submitted successfully. Waiting for Registrar approval.']);
     }
@@ -96,19 +105,30 @@ class GradeSubmissionController extends Controller
             abort(403);
         }
 
-        // Only allow resubmission if grades were rejected
+        // Get the current grading period from session
+        $gradingPeriod = session('import_grading_period_' . $classSchedule->id);
+        
+        if (!$gradingPeriod) {
+            return redirect()
+                ->route('teacher.classes.grades', $classSchedule)
+                ->with('error', 'No grading period selected. Please import grades first.');
+        }
+
+        // Only allow resubmission if grades were rejected for this specific grading period
         $rejectedGrades = FinalGrade::where('class_schedule_id', $classSchedule->id)
+            ->where('grading_period', $gradingPeriod)
             ->where('status', 'rejected')
             ->exists();
 
         if (!$rejectedGrades) {
             return redirect()
-                ->route('teacher.grades.index', $classSchedule)
+                ->route('teacher.classes.grades', $classSchedule)
                 ->with('error', 'Only rejected grades can be resubmitted.');
         }
 
-        // Update status back to submitted
+        // Update status back to submitted for the specific grading period
         FinalGrade::where('class_schedule_id', $classSchedule->id)
+            ->where('grading_period', $gradingPeriod)
             ->where('status', 'rejected')
             ->update([
                 'status' => 'submitted',
@@ -116,8 +136,14 @@ class GradeSubmissionController extends Controller
                 'rejection_reason' => null,
             ]);
 
+        activity()
+            ->event('grade_resubmitted')
+            ->causedBy(auth()->user())
+            ->performedOn($classSchedule)
+            ->log('Resubmitted Term ' . $gradingPeriod . ' grades for ' . $classSchedule->subject->name . ' - ' . $classSchedule->section->name);
+
         return redirect()
-            ->route('teacher.grades.index', $classSchedule)
-            ->with('success', 'Grades resubmitted successfully.');
+            ->route('teacher.classes.grades', $classSchedule)
+            ->with('success', 'Term ' . $gradingPeriod . ' grades resubmitted successfully.');
     }
 }

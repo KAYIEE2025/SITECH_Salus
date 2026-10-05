@@ -67,4 +67,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(FinalGrade::class, 'reviewed_by');
     }
+
+    public function advisorySections()
+    {
+        return $this->hasMany(Section::class, 'adviser_id');
+    }
 }

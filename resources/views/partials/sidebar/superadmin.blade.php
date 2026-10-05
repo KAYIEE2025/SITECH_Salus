@@ -10,10 +10,7 @@
     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
     <span>Student Accounts</span>
 </x-nav-link>
-<x-nav-link href="{{ route('superadmin.roles') }}" :active="request()->routeIs('superadmin.roles')">
-    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M16 3h-8"></path><path d="M12 3v4"></path></svg>
-    <span>Roles &amp; Access</span>
-</x-nav-link>
+
 <x-nav-link href="{{ route('superadmin.role-management') }}" :active="request()->routeIs('superadmin.role-management*')">
     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"></path><path d="M9 12l2 2 4-4"></path></svg>
     <span>User Role Management</span>

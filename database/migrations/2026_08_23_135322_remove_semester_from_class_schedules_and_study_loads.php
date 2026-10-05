@@ -12,12 +12,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // SAFETY CHECK: Only proceed if term columns exist and have data
-        $classSchedulesWithTerm = DB::table('class_schedules')->whereNotNull('term')->count();
-        $studyLoadsWithTerm = DB::table('study_loads')->whereNotNull('term')->count();
+        // SAFETY CHECK: Ensure no records have semester data that hasn't been migrated to term
+        // This prevents data loss in existing databases while allowing fresh installations
+        $classSchedulesWithUnmigratedSemester = DB::table('class_schedules')
+            ->whereNotNull('semester')
+            ->whereNull('term')
+            ->count();
 
-        if ($classSchedulesWithTerm === 0 && $studyLoadsWithTerm === 0) {
-            throw new \Exception('Migration safety check failed: No term data found. Cannot remove semester columns.');
+        $studyLoadsWithUnmigratedSemester = DB::table('study_loads')
+            ->whereNotNull('semester')
+            ->whereNull('term')
+            ->count();
+
+        if ($classSchedulesWithUnmigratedSemester > 0 || $studyLoadsWithUnmigratedSemester > 0) {
+            throw new \Exception('Migration safety check failed: Found records with semester data that has not been migrated to term. Run the term migration first.');
         }
 
         // Remove old semester-based index from student_enrollments if it exists

@@ -30,7 +30,6 @@
                             <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student Number</th>
                             <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Name</th>
                             <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Gender</th>
-                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -45,12 +44,6 @@
                                 </td>
                                 <td class="py-3 px-4 text-sm text-gray-800">
                                     {{ $studyLoad->student->gender }}
-                                </td>
-                                <td class="py-3 px-4 text-sm">
-                                    <a href="{{ route('teacher.grades.index', $classSchedule) }}" 
-                                       class="inline-flex items-center px-3 py-1.5 bg-green-700 text-white text-sm rounded hover:bg-green-800 transition">
-                                        Manage Grades
-                                    </a>
                                 </td>
                             </tr>
                         @endforeach

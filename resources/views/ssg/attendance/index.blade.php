@@ -16,34 +16,6 @@
     <div class="grid gap-6 lg:gap-8 grid-cols-1 lg:grid-cols-[360px_1fr] xl:grid-cols-[360px_1fr]">
         <div class="space-y-6 lg:space-y-6 w-full xl:w-auto">
             <section class="sg-card p-4 md:p-6">
-                <h2 class="mb-4 text-base font-semibold text-gray-800 md:text-lg">Event Information</h2>
-                <dl class="space-y-3 text-sm">
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Date</dt>
-                        <dd class="mt-1 text-gray-800">{{ $event->event_date->format('F d, Y') }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Time</dt>
-                        <dd class="mt-1 text-gray-800">{{ $event->event_time ? \Carbon\Carbon::parse($event->event_time)->format('h:i A') : 'N/A' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Venue</dt>
-                        <dd class="mt-1 text-gray-800">{{ $event->venue ?: 'N/A' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</dt>
-                        <dd class="mt-1">
-                            <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">{{ $event->status }}</span>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Attendance</dt>
-                        <dd class="mt-1 text-gray-800">{{ $event->present_count }} / {{ $event->attendances_count }} present</dd>
-                    </div>
-                </dl>
-            </section>
-
-            <section class="sg-card p-4 md:p-6">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-base font-semibold text-gray-800 md:text-lg">QR Scanner</h2>
                     <div id="attendance-status-badge">
@@ -84,18 +56,18 @@
 
                 @if($event->status === 'Ongoing')
                     <div id="reader" class="overflow-hidden rounded-lg border border-gray-200 bg-gray-50 w-full aspect-square md:aspect-auto"></div>
-                    <p class="mt-3 text-xs text-gray-500">Camera starts automatically. Keep the student QR code inside the scanner frame. For old QR codes, ensure good lighting and hold steady.</p>
+                        <p class="mt-3 text-xs text-gray-500">Camera starts automatically. Keep the student QR code inside the scanner frame. For old QR codes, ensure good lighting and hold steady.</p>
 
-                    <div class="mt-4 space-y-3">
-                        <p class="mb-2 text-xs font-semibold text-gray-600">Manual Entry (Last 6 Digits):</p>
-                        <div class="flex flex-col md:flex-row gap-2">
-                            <input type="text" id="manual-qr-input" placeholder="Enter last 6 digits of School ID" maxlength="6" pattern="\d{6}"
-                                class="flex-1 rounded-lg border border-gray-300 px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 min-h-[48px]">
-                            <button type="button" id="manual-scan-btn" class="rounded-lg bg-green-800 px-4 py-3 text-sm font-medium text-white transition hover:bg-green-900 min-h-[48px]">
-                                Submit
-                            </button>
+                        <div class="mt-4 space-y-3">
+                            <!-- <p class="mb-2 text-xs font-semibold text-gray-600">Manual Entry (Last 6 Digits):</p> -->
+                            <!-- <div class="flex flex-col md:flex-row gap-2">
+                                <input type="text" id="manual-qr-input" placeholder="Enter last 6 digits of School ID" maxlength="6" pattern="\d{6}"
+                                    class="flex-1 rounded-lg border border-gray-300 px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-600 min-h-[48px]">
+                                <button type="button" id="manual-scan-btn" class="rounded-lg bg-green-800 px-4 py-3 text-sm font-medium text-white transition hover:bg-green-900 min-h-[48px]">
+                                    Submit
+                                </button>
+                            </div> -->
                         </div>
-                    </div>
 
                     <div class="mt-4">
                         <button type="button" id="restart-scanner-btn" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 min-h-[48px]">
@@ -121,6 +93,36 @@
                     </div>
                 </div>
             </section>
+            
+            <section class="sg-card p-4 md:p-6">
+                <h2 class="mb-4 text-base font-semibold text-gray-800 md:text-lg">Event Information</h2>
+                <dl class="space-y-3 text-sm">
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Date</dt>
+                        <dd class="mt-1 text-gray-800">{{ $event->event_date->format('F d, Y') }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Time</dt>
+                        <dd class="mt-1 text-gray-800">{{ $event->event_time ? \Carbon\Carbon::parse($event->event_time)->format('h:i A') : 'N/A' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Venue</dt>
+                        <dd class="mt-1 text-gray-800">{{ $event->venue ?: 'N/A' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</dt>
+                        <dd class="mt-1">
+                            <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">{{ $event->status }}</span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Attendance</dt>
+                        <dd class="mt-1 text-gray-800">{{ $event->present_count }} / {{ $event->attendances_count }} present</dd>
+                    </div>
+                </dl>
+            </section>
+
+            
         </div>
 
         <section class="sg-card overflow-hidden">

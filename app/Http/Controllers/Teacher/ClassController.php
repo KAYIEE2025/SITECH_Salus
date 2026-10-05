@@ -9,6 +9,7 @@ use App\Models\GradeSubmissionSchedule;
 use App\Models\GradeSubmissionReopeningRequest;
 use App\Models\StudyLoad;
 use App\Models\Student;
+use App\Models\Section;
 use App\Models\FinalGrade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -340,21 +341,22 @@ class ClassController extends Controller
             
             // Load the spreadsheet
             $spreadsheet = $reader->load($file->getPathname());
-            
-            // Find the worksheet named exactly "SUMMARY OF GRADES"
+
+            // Always use SUMMARY OF GRADES sheet as the source of truth
             $worksheetName = 'SUMMARY OF GRADES';
             $worksheet = $spreadsheet->getSheetByName($worksheetName);
-            
+
             if ($worksheet === null) {
                 return redirect()
                     ->route('teacher.classes.grades', $classSchedule)
                     ->with('error', 'Worksheet named "SUMMARY OF GRADES" not found in the Excel file.');
             }
+            \Log::info('Using SUMMARY OF GRADES sheet for learner roster');
             
             // Get dimensions
             $highestRow = min($worksheet->getHighestDataRow(), self::IMPORT_MAX_ROWS);
             $highestColumn = $worksheet->getHighestDataColumn();
-            
+
             // Log worksheet information
             \Log::info('Excel Worksheet Selected', [
                 'worksheet_name' => $worksheetName,
@@ -362,37 +364,42 @@ class ClassController extends Controller
                 'highest_column' => $highestColumn,
                 'read_limit' => self::IMPORT_MAX_COLUMNS . ' columns x ' . self::IMPORT_MAX_ROWS . ' rows',
             ]);
-            
-            // PHASE 2: Detect header row and column mapping
-            $headerDetection = $this->detectHeaderRowAndColumns(
-                $worksheet,
-                $highestRow,
-                $highestColumn,
-                (int) $gradingPeriod
-            );
-            
-            if ($headerDetection['header_row'] === -1) {
+
+            // For SUMMARY OF GRADES, use fixed SALUS template column positions
+            // B = LEARNERS' NAMES (column 2)
+            // F = TERM 1 (column 6)
+            // J = TERM 2 (column 10)
+            // N = TERM 3 (column 14)
+            // R = FINAL GRADE (column 18)
+            $columnMapping = [
+                'learners_name' => 2,  // Column B
+                'student_number' => null,
+                'term_1' => 6,  // Column F
+                'term_2' => 10, // Column J
+                'term_3' => 14, // Column N
+                'final_grade' => 18, // Column R
+                'descriptor' => null,
+                'remarks' => null,
+            ];
+
+            // Find the header row dynamically (look for "LEARNERS' NAMES" in column B)
+            $headerRow = $this->findHeaderRowInSummarySheet($worksheet, $highestRow);
+
+            if ($headerRow === -1) {
                 return redirect()
                     ->route('teacher.classes.grades', $classSchedule)
-                    ->with('error', 'Header row not found in the worksheet.');
+                    ->with('error', 'Header row not found in the SUMMARY OF GRADES worksheet.');
             }
 
-            $selectedTermColumn = 'term_' . $gradingPeriod;
-            if ($headerDetection['column_mapping'][$selectedTermColumn] === null) {
-                return redirect()
-                    ->route('teacher.classes.grades', $classSchedule)
-                    ->with('error', "The selected Term {$gradingPeriod} column was not found in the SUMMARY OF GRADES worksheet.");
-            }
-            
             // Log header detection results
             \Log::info('Header Detection Results', [
-                'header_row' => $headerDetection['header_row'],
-                'column_mapping' => $headerDetection['column_mapping'],
+                'header_row' => $headerRow,
+                'column_mapping' => $columnMapping,
             ]);
             
             // PHASE 6A: Read all learners, match with students, and store in session for preview
-            $allLearners = $this->readAllLearners($worksheet, $headerDetection['header_row'], $headerDetection['column_mapping'], $highestRow);
-            
+            $allLearners = $this->readAllLearnersFromSummary($worksheet, $headerRow, $columnMapping, $highestRow);
+
             if (empty($allLearners)) {
                 return redirect()
                     ->route('teacher.classes.grades', $classSchedule)
@@ -454,6 +461,7 @@ class ClassController extends Controller
         $headerRowIndex = -1;
         $columnMapping = [
             'learners_name' => null,
+            'student_number' => null,
             'term_1' => null,
             'term_2' => null,
             'term_3' => null,
@@ -461,6 +469,17 @@ class ClassController extends Controller
             'descriptor' => null,
             'remarks' => null,
         ];
+        
+        $worksheetName = $worksheet->getTitle();
+        
+        // Special handling for INPUT sheet - doesn't have standard headers
+        if ($worksheetName === 'INPUT') {
+            \Log::info('INPUT sheet detected - using special header detection');
+            return [
+                'header_row' => 1, // Use row 1 as base for INPUT sheet
+                'column_mapping' => $columnMapping,
+            ];
+        }
         
         // Convert highest column to numeric index
         $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
@@ -481,6 +500,11 @@ class ClassController extends Controller
                     // Check for required columns
                     if (strpos($valueUpper, 'LEARNERS') !== false && strpos($valueUpper, 'NAME') !== false) {
                         $columnMapping['learners_name'] = $col;
+                        $foundColumns++;
+                    }
+                    
+                    if (strpos($valueUpper, 'STUDENT') !== false && strpos($valueUpper, 'NUMBER') !== false) {
+                        $columnMapping['student_number'] = $col;
                         $foundColumns++;
                     }
                     
@@ -573,11 +597,119 @@ class ClassController extends Controller
         return null;
     }
 
+    private function readAllLearnersFromSummary($worksheet, $headerRow, $columnMapping, $highestRow)
+    {
+        $allLearners = [];
+        $startRow = $headerRow + 1;
+
+        \Log::info('Reading learners from SUMMARY OF GRADES', [
+            'header_row' => $headerRow,
+            'start_row' => $startRow,
+            'highest_row' => $highestRow,
+            'column_mapping' => $columnMapping,
+        ]);
+
+        for ($row = $startRow; $row <= $highestRow; $row++) {
+            // Extract learner name from column B (column 2)
+            $learnersName = trim((string) ($this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($columnMapping['learners_name'], $row)) ?? ''));
+
+            // Skip empty rows
+            if (empty($learnersName)) {
+                continue;
+            }
+
+            // Skip non-learner rows (MALE, FEMALE, totals, etc.)
+            if (!$this->isValidLearnerRow($learnersName)) {
+                \Log::info('Skipping non-learner row', [
+                    'row' => $row,
+                    'value' => $learnersName,
+                ]);
+                continue;
+            }
+
+            // Extract term grades from fixed columns
+            $term1Value = null;
+            $term2Value = null;
+            $term3Value = null;
+            $finalGradeValue = null;
+
+            if ($columnMapping['term_1'] !== null) {
+                $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_1'], $row);
+                $term1Value = $this->readSpreadsheetCellValue($cell);
+            }
+
+            if ($columnMapping['term_2'] !== null) {
+                $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_2'], $row);
+                $term2Value = $this->readSpreadsheetCellValue($cell);
+            }
+
+            if ($columnMapping['term_3'] !== null) {
+                $cell = $worksheet->getCellByColumnAndRow($columnMapping['term_3'], $row);
+                $term3Value = $this->readSpreadsheetCellValue($cell);
+            }
+
+            if ($columnMapping['final_grade'] !== null) {
+                $cell = $worksheet->getCellByColumnAndRow($columnMapping['final_grade'], $row);
+                $finalGradeValue = $this->readSpreadsheetCellValue($cell);
+            }
+
+            $learnerData = [
+                'learners_name' => $learnersName,
+                'student_number' => '',
+                'term_1' => $term1Value,
+                'term_2' => $term2Value,
+                'term_3' => $term3Value,
+                'final_grade' => $finalGradeValue,
+                'descriptor' => '',
+                'remarks' => '',
+            ];
+
+            $allLearners[] = $learnerData;
+
+            \Log::info('Learner parsed from SUMMARY', [
+                'row' => $row,
+                'name' => $learnersName,
+                'term_1' => $term1Value,
+                'term_2' => $term2Value,
+                'term_3' => $term3Value,
+                'final_grade' => $finalGradeValue,
+            ]);
+        }
+
+        \Log::info('Total learners parsed from SUMMARY', [
+            'count' => count($allLearners),
+        ]);
+
+        return $allLearners;
+    }
+
     private function readAllLearners($worksheet, $headerRow, $columnMapping, $highestRow)
     {
         $allLearners = [];
+        $worksheetName = $worksheet->getTitle();
 
-        // Start from the row after header and read until the end
+        // Special handling for INPUT sheet which has male and female sections
+        if ($worksheetName === 'INPUT') {
+            \Log::info('Processing INPUT sheet with special structure');
+
+            // Read male learners (typically around row 12)
+            $maleLearners = $this->readLearnersFromSection($worksheet, 12, 50, $columnMapping, 'MALE');
+            $allLearners = array_merge($allLearners, $maleLearners);
+
+            // Read female learners (typically around row 63)
+            $femaleLearners = $this->readLearnersFromSection($worksheet, 63, 100, $columnMapping, 'FEMALE');
+            $allLearners = array_merge($allLearners, $femaleLearners);
+
+            \Log::info('INPUT sheet learner extraction', [
+                'male_count' => count($maleLearners),
+                'female_count' => count($femaleLearners),
+                'total_learners' => count($allLearners),
+            ]);
+
+            return $allLearners;
+        }
+
+        // Standard processing for other sheets (SUMMARY OF GRADES, TERM sheets)
         $startRow = $headerRow + 1;
 
         for ($row = $startRow; $row <= $highestRow; $row++) {
@@ -650,6 +782,9 @@ class ClassController extends Controller
             // Extract data for all required columns
             $learnerData = [
                 'learners_name' => $learnersName,
+                'student_number' => $columnMapping['student_number'] !== null
+                    ? trim((string) ($this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($columnMapping['student_number'], $row)) ?? ''))
+                    : '',
                 'term_1' => $term1Value,
                 'term_2' => $term2Value,
                 'term_3' => $term3Value,
@@ -670,6 +805,204 @@ class ClassController extends Controller
         return $allLearners;
     }
 
+    private function readLearnersFromSection($worksheet, $startRow, $endRow, $columnMapping, $sectionType)
+    {
+        $learners = [];
+        $highestColumn = $worksheet->getHighestDataColumn();
+        $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
+        
+        \Log::info('Reading learner section', [
+            'section_type' => $sectionType,
+            'start_row' => $startRow,
+            'end_row' => $endRow,
+            'highest_column' => $highestColumn,
+        ]);
+
+        for ($row = $startRow; $row <= $endRow; $row++) {
+            // Try to find learner name in various columns
+            $learnersName = '';
+            
+            // Search for learner name in the first few columns
+            for ($col = 1; $col <= min(5, $highestColumnIndex); $col++) {
+                $cellValue = $this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($col, $row));
+                if (!empty($cellValue) && is_string($cellValue)) {
+                    $cellValue = trim($cellValue);
+                    // Check if this looks like a learner name (contains comma, typical format)
+                    if (strpos($cellValue, ',') !== false && $this->isValidLearnerRow($cellValue)) {
+                        $learnersName = $cellValue;
+                        break;
+                    }
+                }
+            }
+
+            // Skip if no valid learner name found
+            if (empty($learnersName) || !$this->isValidLearnerRow($learnersName)) {
+                continue;
+            }
+
+            // Try to find student number in nearby columns
+            $studentNumber = '';
+            for ($col = 1; $col <= min(10, $highestColumnIndex); $col++) {
+                $cellValue = $this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($col, $row));
+                if (!empty($cellValue) && is_string($cellValue)) {
+                    $cellValue = trim($cellValue);
+                    // Check if this looks like a student number (contains digits, possibly year format)
+                    if (preg_match('/\d{4}-\d{4}/', $cellValue) || preg_match('/^\d+$/', $cellValue)) {
+                        $studentNumber = $cellValue;
+                        break;
+                    }
+                }
+            }
+
+            $learnerData = [
+                'learners_name' => $learnersName,
+                'student_number' => $studentNumber,
+                'term_1' => null,  // Will be filled from grade sheets later
+                'term_2' => null,
+                'term_3' => null,
+                'final_grade' => null,
+                'descriptor' => '',
+                'remarks' => '',
+            ];
+
+            $learners[] = $learnerData;
+            
+            \Log::info('Learner found in ' . $sectionType . ' section', [
+                'row' => $row,
+                'name' => $learnersName,
+                'student_number' => $studentNumber,
+            ]);
+        }
+
+        return $learners;
+    }
+
+    private function mergeGradesFromTermSheet($allLearners, $termWorksheet, $gradingPeriod)
+    {
+        $highestRow = min($termWorksheet->getHighestDataRow(), self::IMPORT_MAX_ROWS);
+        $highestColumn = $termWorksheet->getHighestDataColumn();
+        
+        \Log::info('Merging grades from TERM sheet', [
+            'grading_period' => $gradingPeriod,
+            'highest_row' => $highestRow,
+            'highest_column' => $highestColumn,
+            'learners_count' => count($allLearners),
+        ]);
+
+        // Create a map of learner names to indices for efficient lookup
+        $learnerMap = [];
+        foreach ($allLearners as $index => $learner) {
+            $normalizedName = $this->normalizeLearnerName($learner['learners_name']);
+            $learnerMap[$normalizedName] = $index;
+        }
+
+        // Try to detect header row in TERM sheet
+        $headerRow = $this->findHeaderRowInTermSheet($termWorksheet, $highestRow);
+        if ($headerRow === -1) {
+            \Log::warning('Could not find header row in TERM sheet, assuming row 1');
+            $headerRow = 1;
+        }
+
+        // Read all rows from TERM sheet and match with learners
+        $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
+        for ($row = $headerRow + 1; $row <= $highestRow; $row++) {
+            // Try to find learner name in the row
+            $learnerName = '';
+            $gradeValue = null;
+            
+            for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                $cellValue = $this->readSpreadsheetCellValue($termWorksheet->getCellByColumnAndRow($col, $row));
+                
+                if (!empty($cellValue) && is_string($cellValue)) {
+                    $cellValue = trim($cellValue);
+                    
+                    // Check if this looks like a learner name
+                    if (strpos($cellValue, ',') !== false && $this->isValidLearnerRow($cellValue)) {
+                        $learnerName = $cellValue;
+                    }
+                }
+                
+                // Check if this looks like a grade value
+                if (is_numeric($cellValue) && $cellValue >= 0 && $cellValue <= 100) {
+                    $gradeValue = $cellValue;
+                }
+            }
+
+            if (!empty($learnerName)) {
+                $normalizedName = $this->normalizeLearnerName($learnerName);
+                
+                if (isset($learnerMap[$normalizedName])) {
+                    $learnerIndex = $learnerMap[$normalizedName];
+                    $termKey = 'term_' . $gradingPeriod;
+                    $allLearners[$learnerIndex][$termKey] = $gradeValue;
+                    
+                    \Log::info('Grade merged for learner', [
+                        'learner_name' => $learnerName,
+                        'normalized_name' => $normalizedName,
+                        'grade' => $gradeValue,
+                        'term' => $termKey,
+                    ]);
+                }
+            }
+        }
+
+        return $allLearners;
+    }
+
+    private function findHeaderRowInSummarySheet($worksheet, $highestRow)
+    {
+        // Search for "LEARNERS' NAMES" in column B (column 2)
+        $learnersNameColumn = 2;
+
+        for ($row = 1; $row <= min(30, $highestRow); $row++) {
+            $cellValue = $this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($learnersNameColumn, $row));
+
+            if (is_string($cellValue)) {
+                $valueUpper = strtoupper(trim($cellValue));
+
+                // Look for LEARNERS' NAMES header
+                if (strpos($valueUpper, 'LEARNERS') !== false && strpos($valueUpper, 'NAME') !== false) {
+                    \Log::info('Found header row in SUMMARY OF GRADES', [
+                        'row' => $row,
+                        'value' => $cellValue,
+                    ]);
+                    return $row;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private function findHeaderRowInTermSheet($worksheet, $highestRow)
+    {
+        $highestColumn = $worksheet->getHighestDataColumn();
+        $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
+
+        for ($row = 1; $row <= min(30, $highestRow); $row++) {
+            for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                $cellValue = $this->readSpreadsheetCellValue($worksheet->getCellByColumnAndRow($col, $row));
+
+                if (is_string($cellValue)) {
+                    $valueUpper = strtoupper(trim($cellValue));
+
+                    // Look for LEARNERS NAME header
+                    if (strpos($valueUpper, 'LEARNERS') !== false && strpos($valueUpper, 'NAME') !== false) {
+                        return $row;
+                    }
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private function normalizeLearnerName($name)
+    {
+        // Normalize for comparison: uppercase, remove periods, collapse spaces
+        return strtoupper(preg_replace('/[.]/', '', preg_replace('/\s+/', '', trim($name))));
+    }
+
     private function matchLearnersWithStudents($allLearners, $enrolledStudents)
     {
         $matchedLearners = [];
@@ -677,6 +1010,7 @@ class ClassController extends Controller
         
         foreach ($allLearners as $learner) {
             $excelName = $learner['learners_name'];
+            $studentNumber = $learner['student_number'] ?? '';
             $parsedName = $this->parseExcelName($excelName);
             
             // Pass original Excel name for debug logging (only for first unmatched)
@@ -688,7 +1022,7 @@ class ClassController extends Controller
                     'excel_name' => $excelName,
                     'matched_student' => null,
                     'student_id' => null,
-                    'student_number' => null,
+                    'student_number' => $studentNumber,
                     'match_status' => 'ambiguous',
                     'ambiguous_matches' => $matchedStudent['matches'],
                 ];
@@ -705,7 +1039,7 @@ class ClassController extends Controller
                     'excel_name' => $excelName,
                     'matched_student' => null,
                     'student_id' => null,
-                    'student_number' => null,
+                    'student_number' => $studentNumber,
                     'match_status' => 'unmatched',
                 ];
                 $firstUnmatchedLogged = true;
@@ -727,20 +1061,81 @@ class ClassController extends Controller
             $skippedCount = 0;
             $skippedApprovedCount = 0;
             $skippedAmbiguousCount = 0;
+            $unmatchedSavedCount = 0;
             
             foreach ($matchedLearners as $index => $matched) {
-                // Skip unmatched or ambiguous learners
+                $learnerData = $allLearners[$index];
+                $gradeValue = $learnerData[$termColumn] ?? null;
+                $studentNumber = $matched['student_number'] ?? null;
+                
+                // Handle unmatched learners - save them with student_id = null
                 if ($matched['match_status'] !== 'matched') {
-                    $skippedCount++;
                     if ($matched['match_status'] === 'ambiguous') {
                         $skippedAmbiguousCount++;
+                        $skippedCount++;
+                        continue; // Skip ambiguous matches for now
                     }
+                    
+                    // For unmatched learners, save them without student_id
+                    $gradeData = [
+                        'student_id' => null,
+                        'student_name' => $learnerData['learners_name'],
+                        'student_number' => $studentNumber,
+                        'class_schedule_id' => $classSchedule->id,
+                        'grading_period' => $gradingPeriod,
+                        'computed_at' => now(),
+                        'status' => 'draft',
+                    ];
+                    
+                    // Map term to appropriate field with null conversion
+                    if ($gradingPeriod == 1) {
+                        $gradeData['term_1'] = is_numeric($gradeValue) ? $gradeValue : null;
+                    } elseif ($gradingPeriod == 2) {
+                        $gradeData['term_2'] = is_numeric($gradeValue) ? $gradeValue : null;
+                    } elseif ($gradingPeriod == 3) {
+                        $gradeData['term_3'] = is_numeric($gradeValue) ? $gradeValue : null;
+                    }
+                    
+                    // Add remarks if descriptor is available
+                    if (!empty($learnerData['remarks'])) {
+                        $gradeData['remarks'] = $learnerData['remarks'];
+                    } elseif (!empty($learnerData['descriptor'])) {
+                        $gradeData['remarks'] = $learnerData['descriptor'];
+                    }
+                    
+                    // Check if a record already exists for this student by name and grading period
+                    // Use both student_name and class_schedule_id for proper matching
+                    $existingUnmatched = FinalGrade::where('student_name', $learnerData['learners_name'])
+                        ->where('class_schedule_id', $classSchedule->id)
+                        ->where('grading_period', $gradingPeriod)
+                        ->whereNull('student_id')
+                        ->first();
+                    
+                    if ($existingUnmatched) {
+                        // Update existing unmatched record
+                        $existingUnmatched->update($gradeData);
+                        $updatedCount++;
+                        \Log::info('Updated unmatched learner record', [
+                            'student_name' => $learnerData['learners_name'],
+                            'grading_period' => $gradingPeriod,
+                        ]);
+                    } else {
+                        // Create new unmatched record
+                        $newGrade = FinalGrade::create($gradeData);
+                        $savedCount++;
+                        $unmatchedSavedCount++;
+                        \Log::info('Created new unmatched learner record', [
+                            'student_name' => $learnerData['learners_name'],
+                            'grading_period' => $gradingPeriod,
+                            'grade_id' => $newGrade->id,
+                        ]);
+                    }
+                    
                     continue;
                 }
                 
+                // Handle matched learners (with existing student accounts)
                 $studentId = $matched['student_id'];
-                $learnerData = $allLearners[$index];
-                $gradeValue = $learnerData[$termColumn] ?? null;
 
                 // Check if grade already exists for this grading period
                 $existingGrade = FinalGrade::where('student_id', $studentId)
@@ -758,6 +1153,7 @@ class ClassController extends Controller
                 // Prepare grade data based on grading period
                 $gradeData = [
                     'student_id' => $studentId,
+                    'student_number' => $studentNumber,
                     'class_schedule_id' => $classSchedule->id,
                     'student_name' => $learnerData['learners_name'],
                     'grading_period' => $gradingPeriod,
@@ -808,6 +1204,9 @@ class ClassController extends Controller
             DB::commit();
             
             $message = "Quarter {$gradingPeriod} grades saved: {$savedCount} new, {$updatedCount} updated";
+            if ($unmatchedSavedCount > 0) {
+                $message .= " ({$unmatchedSavedCount} without accounts)";
+            }
             if ($skippedCount > 0) {
                 $message .= ", {$skippedCount} skipped";
             }
@@ -825,6 +1224,7 @@ class ClassController extends Controller
                 'updated_count' => $updatedCount,
                 'skipped_count' => $skippedCount,
                 'skipped_approved_count' => $skippedApprovedCount,
+                'unmatched_saved_count' => $unmatchedSavedCount,
             ];
             
         } catch (\Exception $e) {
@@ -1262,6 +1662,7 @@ class ClassController extends Controller
     {
         $validatedRecords = [];
         $studentIds = [];
+        $studentNumbers = []; // Track student numbers for unmatched students
         $totalStudents = count($studentRecords);
         $validCount = 0;
         $invalidCount = 0;
@@ -1276,13 +1677,13 @@ class ClassController extends Controller
                 $validationMessages[] = 'Missing Student Name';
             }
 
-            // Check if student was found in database
-            if (empty($record['student_id'])) {
+            // Check if student was found in database OR has student number (for unmatched students)
+            if (empty($record['student_id']) && empty($record['student_number'])) {
                 $validationStatus = 'invalid';
-                $validationMessages[] = 'Student not found in database';
+                $validationMessages[] = 'Student not found in database and no student number provided';
             }
 
-            // Check for duplicate students
+            // Check for duplicate students (matched by student_id)
             if (!empty($record['student_id'])) {
                 if (in_array($record['student_id'], $studentIds)) {
                     $validationStatus = 'invalid';
@@ -1291,11 +1692,28 @@ class ClassController extends Controller
                 $studentIds[] = $record['student_id'];
             }
 
-            // Check for empty quarterly grade
-            if (empty($record['quarterly_grade']) && empty($record['initial_grade'])) {
-                $validationStatus = 'invalid';
-                $validationMessages[] = 'Missing Grade';
+            // Check for duplicate student numbers (for unmatched students)
+            if (empty($record['student_id']) && !empty($record['student_number'])) {
+                if (in_array($record['student_number'], $studentNumbers)) {
+                    $validationStatus = 'invalid';
+                    $validationMessages[] = 'Duplicate Student Number';
+                }
+                $studentNumbers[] = $record['student_number'];
             }
+
+            // Grade validation: only validate format if grade is present
+            // Learners without grades are still valid roster members
+            $hasAnyGrade = !empty($record['quarterly_grade']) || !empty($record['initial_grade']) || 
+                          !empty($record['term_1']) || !empty($record['term_2']) || !empty($record['term_3']);
+            
+            if ($hasAnyGrade) {
+                $gradeValue = $record['quarterly_grade'] ?? $record['initial_grade'] ?? $record['term_1'] ?? $record['term_2'] ?? $record['term_3'];
+                if (!is_numeric($gradeValue)) {
+                    $validationStatus = 'invalid';
+                    $validationMessages[] = 'Invalid grade format';
+                }
+            }
+            // Note: Learners without grades remain valid (no validation status change)
 
             // Add validation status to record
             $record['validation_status'] = $validationStatus;

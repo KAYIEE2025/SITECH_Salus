@@ -8,7 +8,7 @@ return new class extends Migration {
     {
         Schema::create('sections', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 10);             // A, B, C …
+            $table->string('name', 50);             // A, B, C, Rizal, Bonifacio, San Antonio …
             $table->foreignId('year_level_id')->constrained()->cascadeOnDelete();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

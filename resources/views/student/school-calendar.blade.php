@@ -7,13 +7,23 @@
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-gray-800">School Calendar</h2>
                 <div class="relative">
-                    <input type="text" 
-                           id="eventSearch" 
-                           placeholder="Search events..." 
-                           class="w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 text-sm focus:border-green-500 focus:ring-green-500 sm:w-64">
-                    <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
+                    <form action="{{ route('student.school-calendar.index') }}" method="GET" class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <input type="text" 
+                                   name="search"
+                                   value="{{ request('search') }}"
+                                   placeholder="Search events..." 
+                                   class="w-full rounded-lg border border-gray-300 px-4 py-2 pl-10 text-sm focus:border-green-500 focus:ring-green-500 sm:w-64">
+                            <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        @if(request('search'))
+                            <a href="{{ route('student.school-calendar.index') }}" class="text-sm text-gray-600 hover:text-gray-800">
+                                Clear
+                            </a>
+                        @endif
+                    </form>
                 </div>
             </div>
             
@@ -175,24 +185,6 @@
                 });
 
                 calendar.render();
-
-                // Search functionality
-                const searchInput = document.getElementById('eventSearch');
-                searchInput.addEventListener('input', function(e) {
-                    const searchTerm = e.target.value.toLowerCase();
-                    
-                    if (searchTerm === '') {
-                        calendar.removeAllEvents();
-                        calendar.addEventSource(allEvents);
-                    } else {
-                        const filteredEvents = allEvents.filter(event => 
-                            event.title.toLowerCase().includes(searchTerm) ||
-                            (event.extendedProps.description && event.extendedProps.description.toLowerCase().includes(searchTerm))
-                        );
-                        calendar.removeAllEvents();
-                        calendar.addEventSource(filteredEvents);
-                    }
-                });
 
                 // Event card click handlers
                 document.querySelectorAll('.event-card').forEach(card => {

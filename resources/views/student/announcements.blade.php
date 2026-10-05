@@ -40,7 +40,7 @@
                                     {{ $announcement->created_at->format('M d, Y') }}
                                 </span>
                             </div>
-                            <div class="text-sm text-gray-600 mb-4 whitespace-pre-line">{{ $announcement->body }}</div>
+                            <div class="text-sm text-gray-600 mb-4">{!! nl2br(e($announcement->body)) !!}</div>
                             <div class="flex justify-between items-center text-xs text-gray-500">
                                 <span>Posted by: {{ $announcement->poster->name ?? 'System' }}</span>
                             </div>

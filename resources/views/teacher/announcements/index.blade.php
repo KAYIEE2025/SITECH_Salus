@@ -18,8 +18,8 @@
                                 {{ $announcement->created_at->format('M d, Y') }}
                             </span>
                         </div>
-                        <div class="text-gray-600 text-sm whitespace-pre-line">
-                            {{ $announcement->body ?? 'No description available.' }}
+                        <div class="text-gray-600 text-sm">
+                            {!! nl2br(e($announcement->body ?? 'No description available.')) !!}
                         </div>
                         @if($announcement->poster)
                             <div class="mt-3 text-xs text-gray-500">

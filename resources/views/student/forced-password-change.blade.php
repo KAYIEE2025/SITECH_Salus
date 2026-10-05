@@ -51,12 +51,29 @@
                             <label for="current_password" class="block text-sm font-medium text-gray-700 mb-2">
                                 Current Password
                             </label>
-                            <input type="password" 
-                                   id="current_password"
-                                   name="current_password" 
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-red-500 focus:border-red-500"
-                                   required
-                                   autofocus>
+                            <div class="relative">
+                                <input type="password"
+                                       id="current_password"
+                                       name="current_password"
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 text-sm focus:ring-red-500 focus:border-red-500"
+                                       required
+                                       autofocus>
+                                <button type="button"
+                                        onclick="togglePassword('current_password')"
+                                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        aria-label="Show current password">
+                                    <svg id="eye-current_password" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M2.06 12.35a1 1 0 0 1 0-.7C3.64 7.68 7.51 5 12 5c4.49 0 8.36 2.68 9.94 6.65a1 1 0 0 1 0 .7C20.36 16.32 16.49 19 12 19c-4.49 0-8.36-2.68-9.94-6.65Z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg id="eye-slash-current_password" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 3l18 18"></path>
+                                        <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83"></path>
+                                        <path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c4.49 0 8.36 2.68 9.94 6.65a1 1 0 0 1 0 .7 10.97 10.97 0 0 1-4.12 5.05"></path>
+                                        <path d="M6.61 6.61A10.98 10.98 0 0 0 2.06 11.65a1 1 0 0 0 0 .7C3.64 16.32 7.51 19 12 19c1.61 0 3.13-.35 4.5-.98"></path>
+                                    </svg>
+                                </button>
+                            </div>
                             @error('current_password')
                                 <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                             @enderror
@@ -67,11 +84,28 @@
                             <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
                                 New Password
                             </label>
-                            <input type="password" 
-                                   id="password"
-                                   name="password" 
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-red-500 focus:border-red-500"
-                                   required>
+                            <div class="relative">
+                                <input type="password"
+                                       id="password"
+                                       name="password"
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 text-sm focus:ring-red-500 focus:border-red-500"
+                                       required>
+                                <button type="button"
+                                        onclick="togglePassword('password')"
+                                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        aria-label="Show new password">
+                                    <svg id="eye-password" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M2.06 12.35a1 1 0 0 1 0-.7C3.64 7.68 7.51 5 12 5c4.49 0 8.36 2.68 9.94 6.65a1 1 0 0 1 0 .7C20.36 16.32 16.49 19 12 19c-4.49 0-8.36-2.68-9.94-6.65Z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg id="eye-slash-password" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 3l18 18"></path>
+                                        <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83"></path>
+                                        <path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c4.49 0 8.36 2.68 9.94 6.65a1 1 0 0 1 0 .7 10.97 10.97 0 0 1-4.12 5.05"></path>
+                                        <path d="M6.61 6.61A10.98 10.98 0 0 0 2.06 11.65a1 1 0 0 0 0 .7C3.64 16.32 7.51 19 12 19c1.61 0 3.13-.35 4.5-.98"></path>
+                                    </svg>
+                                </button>
+                            </div>
                             <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
                             @error('password')
                                 <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
@@ -83,11 +117,28 @@
                             <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
                                 Confirm New Password
                             </label>
-                            <input type="password" 
-                                   id="password_confirmation"
-                                   name="password_confirmation" 
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-red-500 focus:border-red-500"
-                                   required>
+                            <div class="relative">
+                                <input type="password"
+                                       id="password_confirmation"
+                                       name="password_confirmation"
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 text-sm focus:ring-red-500 focus:border-red-500"
+                                       required>
+                                <button type="button"
+                                        onclick="togglePassword('password_confirmation')"
+                                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        aria-label="Show confirm password">
+                                    <svg id="eye-password_confirmation" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M2.06 12.35a1 1 0 0 1 0-.7C3.64 7.68 7.51 5 12 5c4.49 0 8.36 2.68 9.94 6.65a1 1 0 0 1 0 .7C20.36 16.32 16.49 19 12 19c-4.49 0-8.36-2.68-9.94-6.65Z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg id="eye-slash-password_confirmation" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 3l18 18"></path>
+                                        <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83"></path>
+                                        <path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c4.49 0 8.36 2.68 9.94 6.65a1 1 0 0 1 0 .7 10.97 10.97 0 0 1-4.12 5.05"></path>
+                                        <path d="M6.61 6.61A10.98 10.98 0 0 0 2.06 11.65a1 1 0 0 0 0 .7C3.64 16.32 7.51 19 12 19c1.61 0 3.13-.35 4.5-.98"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Submit Button -->
@@ -109,4 +160,22 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function togglePassword(fieldId) {
+            const input = document.getElementById(fieldId);
+            const eyeIcon = document.getElementById('eye-' + fieldId);
+            const eyeSlashIcon = document.getElementById('eye-slash-' + fieldId);
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeIcon.classList.add('hidden');
+                eyeSlashIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                eyeIcon.classList.remove('hidden');
+                eyeSlashIcon.classList.add('hidden');
+            }
+        }
+    </script>
 @endsection

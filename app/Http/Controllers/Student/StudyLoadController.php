@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class StudyLoadController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $student = Student::where('user_id', auth()->id())->first();
 
@@ -17,13 +17,31 @@ class StudyLoadController extends Controller
             return view('student.study-load', [
                 'student' => null,
                 'schedules' => collect(),
+                'schoolYears' => collect(),
+                'terms' => ['Term 1', 'Term 2', 'Term 3'],
             ]);
         }
 
+        // Get unique school years from student's study loads
+        $schoolYears = StudyLoad::where('student_id', $student->id)
+            ->select('school_year')
+            ->distinct()
+            ->orderBy('school_year', 'desc')
+            ->pluck('school_year');
+
+        $terms = ['Term 1', 'Term 2', 'Term 3'];
+
         // Get student's study loads with class schedule relationships
-        $studyLoads = StudyLoad::where('student_id', $student->id)
+        $query = StudyLoad::where('student_id', $student->id)
             ->with('classSchedule.subject', 'classSchedule.teacher')
-            ->get();
+            ->when($request->filled('school_year'), fn ($q) =>
+                $q->where('school_year', $request->school_year)
+            )
+            ->when($request->filled('term'), fn ($q) =>
+                $q->where('term', $request->term)
+            );
+
+        $studyLoads = $query->get();
 
         // Extract class schedules and sort by day and time
         $schedules = $studyLoads->pluck('classSchedule')
@@ -37,7 +55,7 @@ class StudyLoadController extends Controller
             })
             ->values();
 
-        return view('student.study-load', compact('student', 'schedules'));
+        return view('student.study-load', compact('student', 'schedules', 'schoolYears', 'terms'));
     }
 
     public function print()

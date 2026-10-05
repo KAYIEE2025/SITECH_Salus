@@ -99,46 +99,14 @@ class AttendanceController extends Controller
             }
         }
 
-        // Primary lookup: Try to find student by student_number (new QR format)
+        // QR codes contain only the student number - direct lookup
         $student = Student::where('student_number', $validated['qr_value'])->first();
 
-        \Log::info('SSG Scanner - Primary Lookup', [
+        \Log::info('SSG Scanner - Student Lookup', [
             'qr_value' => $validated['qr_value'],
-            'found_by_student_number' => $student ? true : false,
+            'found' => $student ? true : false,
             'student_id' => $student ? $student->id : null,
         ]);
-
-        // Fallback: Try to find student by qr_code_value (old QR format with SITech-STUDENT| prefix)
-        // This handles old students with QR codes that have the old format
-        if (! $student) {
-            $student = Student::where('qr_code_value', $validated['qr_value'])->first();
-
-            \Log::info('SSG Scanner - Fallback Lookup (old format)', [
-                'qr_value' => $validated['qr_value'],
-                'found_by_qr_code_value' => $student ? true : false,
-                'student_id' => $student ? $student->id : null,
-            ]);
-        }
-
-        // Additional fallback: Try to extract student number from old QR formats
-        if (! $student) {
-            $studentNumber = $this->extractStudentNumberFromQR($validated['qr_value']);
-
-            \Log::info('SSG Scanner - Fallback Extraction', [
-                'qr_value' => $validated['qr_value'],
-                'extracted_student_number' => $studentNumber,
-            ]);
-
-            if ($studentNumber) {
-                $student = Student::where('student_number', $studentNumber)->first();
-
-                \Log::info('SSG Scanner - Fallback Lookup (extracted)', [
-                    'extracted_student_number' => $studentNumber,
-                    'found_by_student_number' => $student ? true : false,
-                    'student_id' => $student ? $student->id : null,
-                ]);
-            }
-        }
 
         if (! $student) {
             \Log::info('SSG Scanner - Student Not Found', [
@@ -174,6 +142,12 @@ class AttendanceController extends Controller
             'scanned_by_user_id' => auth()->id(),
             'actual_fine' => 0,
         ]);
+
+        activity()
+            ->event('qr_attendance_scan')
+            ->causedBy(auth()->user())
+            ->performedOn($attendance)
+            ->log('QR attendance scan recorded for ' . $student->full_name . ' (' . $student->student_number . ') at event: ' . $event->title);
 
         return response()->json([
             'success' => true,
@@ -351,6 +325,12 @@ class AttendanceController extends Controller
             'actual_fine' => 0,
         ]);
 
+        activity()
+            ->event('manual_attendance_entry')
+            ->causedBy(auth()->user())
+            ->performedOn($attendance)
+            ->log('Manual attendance entry recorded for ' . $student->full_name . ' (' . $student->student_number . ') at event: ' . $event->title);
+
         return response()->json([
             'success' => true,
             'student_name' => $student->full_name,
@@ -423,36 +403,5 @@ class AttendanceController extends Controller
                 'actual_fine' => $event->fine_amount,
             ]);
         }
-    }
-
-    private function extractStudentNumberFromQR(string $qrValue): ?string
-    {
-        // Try to extract student number from various QR code formats
-        // Format 1: SITech-STUDENT|{student_number}|{uuid}
-        if (preg_match('/SITech-STUDENT\|([^|]+)/', $qrValue, $matches)) {
-            return $matches[1];
-        }
-
-        // Format 2: YYYYMMDD-{student_number} (old student QR format)
-        if (preg_match('/^\d{8}-\d+$/', $qrValue)) {
-            return $qrValue;
-        }
-
-        // Format 3: Just the student number (for old students with simple QR codes)
-        if (preg_match('/^\d+$/', $qrValue)) {
-            return $qrValue;
-        }
-
-        // Format 4: Any pipe-separated format where second part might be student number
-        if (str_contains($qrValue, '|')) {
-            $parts = explode('|', $qrValue);
-            foreach ($parts as $part) {
-                if (preg_match('/^\d+$/', trim($part))) {
-                    return trim($part);
-                }
-            }
-        }
-
-        return null;
     }
 }

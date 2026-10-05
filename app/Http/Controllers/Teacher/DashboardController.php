@@ -8,6 +8,8 @@ use App\Models\AnnouncementView;
 use App\Models\ClassSchedule;
 use App\Models\FinalGrade;
 use App\Models\StudyLoad;
+use App\Models\Section;
+use App\Models\Student;
 
 class DashboardController extends Controller
 {
@@ -18,11 +20,23 @@ class DashboardController extends Controller
         // Total assigned classes
         $totalClasses = ClassSchedule::where('teacher_id', $teacherId)->count();
 
-        // Total assigned students (unique students across all classes)
+        // Total assigned students (unique students across all classes + advisory sections)
         $classIds = ClassSchedule::where('teacher_id', $teacherId)->pluck('id');
-        $totalStudents = StudyLoad::whereIn('class_schedule_id', $classIds)
-            ->distinct('student_id')
-            ->count('student_id');
+        $assignedStudentIds = StudyLoad::whereIn('class_schedule_id', $classIds)
+            ->pluck('student_id')
+            ->unique()
+            ->toArray();
+
+        // Advisory section students
+        $advisorySectionIds = Section::where('adviser_id', $teacherId)->pluck('id');
+        $advisoryStudentIds = Student::whereIn('section_id', $advisorySectionIds)
+            ->pluck('id')
+            ->unique()
+            ->toArray();
+
+        // Combine and deduplicate
+        $allStudentIds = array_unique(array_merge($assignedStudentIds, $advisoryStudentIds));
+        $totalStudents = count($allStudentIds);
 
         // Pending grade submissions (draft status)
         $pendingSubmissions = FinalGrade::whereIn('class_schedule_id', $classIds)

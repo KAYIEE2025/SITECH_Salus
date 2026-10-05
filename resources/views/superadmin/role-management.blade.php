@@ -24,15 +24,21 @@
         <div class="border-b border-green-50 px-5 py-4 sm:px-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="relative flex-1">
-                    <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Search by name, username, email, or role..."
-                        class="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]"
-                    >
+                    <form method="GET" action="{{ route('superadmin.role-management') }}" class="flex items-center gap-2" x-data="{ loading: false }">
+                        <input
+                            type="text"
+                            name="search"
+                            value="{{ request('search') }}"
+                            placeholder="Search by name, username, email, or role..."
+                            class="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]"
+                            x-model.debounce.500ms="search"
+                            @input="$el.closest('form').submit()"
+                        >
+                        <input type="hidden" name="per_page" value="{{ request('per_page', 25) }}">
+                    </form>
                 </div>
                 <div class="flex items-center gap-2 text-sm text-gray-600">
                     <span>Show</span>
@@ -64,14 +70,9 @@
                         <th class="px-6 py-3 text-left">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100" id="usersTableBody">
+                <tbody class="divide-y divide-gray-100">
                     @forelse($users as $user)
-                        <tr class="hover:bg-gray-50 user-row"
-                            data-name="{{ $user->name }}"
-                            data-username="{{ $user->username ?? '' }}"
-                            data-email="{{ $user->email }}"
-                            data-roles="{{ $user->roles->pluck('name')->implode(', ') }}"
-                        >
+                        <tr class="hover:bg-gray-50">
                             <td class="px-6 py-3">
                                 <p class="font-medium text-gray-800">{{ $user->name }}</p>
                             </td>
@@ -175,58 +176,6 @@
     </div>
 
     <script>
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-        const usersTableBody = document.getElementById('usersTableBody');
-        const userRows = document.querySelectorAll('.user-row');
-
-        // Preserve search value from URL parameter on page load
-        const urlParams = new URLSearchParams(window.location.search);
-        const searchParam = urlParams.get('search');
-        if (searchParam) {
-            searchInput.value = searchParam;
-            // Trigger search to filter results
-            searchInput.dispatchEvent(new Event('input'));
-        }
-
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            let visibleCount = 0;
-
-            userRows.forEach(row => {
-                const name = row.dataset.name.toLowerCase();
-                const username = row.dataset.username.toLowerCase();
-                const email = row.dataset.email.toLowerCase();
-                const roles = row.dataset.roles.toLowerCase();
-
-                const matches = name.includes(searchTerm) ||
-                               username.includes(searchTerm) ||
-                               email.includes(searchTerm) ||
-                               roles.includes(searchTerm);
-
-                if (matches) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            // Show/hide "No users found" message
-            let noResultsRow = usersTableBody.querySelector('.no-results-row');
-            if (visibleCount === 0 && userRows.length > 0) {
-                if (!noResultsRow) {
-                    noResultsRow = document.createElement('tr');
-                    noResultsRow.className = 'no-results-row';
-                    noResultsRow.innerHTML = '<td colspan="4" class="px-6 py-8 text-center text-gray-400">No users found.</td>';
-                    usersTableBody.appendChild(noResultsRow);
-                }
-                noResultsRow.style.display = '';
-            } else if (noResultsRow) {
-                noResultsRow.style.display = 'none';
-            }
-        });
-
         function openRoleModal(userId, userName, isProtectedUser) {
             const modal = document.getElementById('roleModal');
             const form = document.getElementById('roleForm');

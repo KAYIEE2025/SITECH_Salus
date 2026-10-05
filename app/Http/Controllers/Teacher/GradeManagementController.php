@@ -11,6 +11,7 @@ use App\Models\GradeSubmissionSchedule;
 use App\Models\GradeSubmissionReopeningRequest;
 use App\Models\GradingComponent;
 use App\Models\ScoreItem;
+use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentScore;
 use App\Models\StudyLoad;
@@ -102,11 +103,21 @@ class GradeManagementController extends Controller
             'class_schedule_id' => 'required|exists:class_schedules,id',
         ]);
 
+        // Verify teacher has access to either the class or the advisory section
         $classSchedule = ClassSchedule::whereKey($request->class_schedule_id)
-            ->where('teacher_id', auth()->id())
             ->where('school_year', $request->school_year)
             ->where('section_id', $request->section_id)
             ->firstOrFail();
+
+        // Check if teacher teaches this class OR is the adviser of this section
+        $isTeacher = $classSchedule->teacher_id === auth()->id();
+        $isAdviser = Section::where('id', $request->section_id)
+            ->where('adviser_id', auth()->id())
+            ->exists();
+
+        if (!$isTeacher && !$isAdviser) {
+            abort(403);
+        }
 
         return redirect()->route('teacher.grades.upload', $classSchedule);
     }
@@ -117,13 +128,22 @@ class GradeManagementController extends Controller
             'school_year' => 'required|string',
         ]);
 
-        $sections = ClassSchedule::query()
-            ->with('section:id,name')
+        // Get sections from assigned classes
+        $assignedSections = ClassSchedule::query()
+            ->with('section:id,name,year_level_id')
             ->where('teacher_id', auth()->id())
             ->where('school_year', $request->school_year)
             ->whereHas('section')
             ->get()
             ->pluck('section')
+            ->unique('id');
+
+        // Get advisory sections
+        $advisorySections = Section::where('adviser_id', auth()->id())
+            ->get();
+
+        // Merge and deduplicate
+        $allSections = $assignedSections->concat($advisorySections)
             ->unique('id')
             ->sortBy('name')
             ->values()
@@ -132,7 +152,7 @@ class GradeManagementController extends Controller
                 'name' => $section->name,
             ]);
 
-        return response()->json($sections);
+        return response()->json($allSections);
     }
 
     public function subjects(Request $request): JsonResponse
@@ -142,6 +162,7 @@ class GradeManagementController extends Controller
             'section_id' => 'required|exists:sections,id',
         ]);
 
+        // Only show subjects the teacher actually teaches in the selected section
         $subjects = ClassSchedule::query()
             ->with('subject:id,code,name')
             ->where('teacher_id', auth()->id())
@@ -160,6 +181,7 @@ class GradeManagementController extends Controller
 
     public function upload(Request $request, ClassSchedule $classSchedule)
     {
+        // Verify teacher teaches this class (grade management requires teaching the subject)
         if ($classSchedule->teacher_id !== auth()->id()) {
             abort(403);
         }
@@ -397,6 +419,12 @@ class GradeManagementController extends Controller
 
             // Store in session
             session(['imported_grades_' . $classSchedule->id => $importedData]);
+
+            activity()
+                ->event('grade_import')
+                ->causedBy(auth()->user())
+                ->performedOn($classSchedule)
+                ->log('Imported grade file for ' . $classSchedule->subject->name . ' - ' . $classSchedule->section->name . '. ' . count($importedData) . ' student(s) imported.');
 
             return redirect()
                 ->route('teacher.grades.upload', $classSchedule)
@@ -693,6 +721,12 @@ class GradeManagementController extends Controller
             }
 
             DB::commit();
+
+            activity()
+                ->event('grade_import')
+                ->causedBy(auth()->user())
+                ->performedOn($classSchedule)
+                ->log('Imported grade file for ' . $classSchedule->subject->name . ' - ' . $classSchedule->section->name . '. ' . $importedCount . ' student(s) imported.');
 
             $message = "Successfully imported grades for {$importedCount} students.";
             if (!empty($missingStudents)) {
@@ -1057,6 +1091,12 @@ class GradeManagementController extends Controller
             }
 
             DB::commit();
+
+            activity()
+                ->event('grade_draft_saved')
+                ->causedBy(auth()->user())
+                ->performedOn($classSchedule)
+                ->log('Saved grade draft for ' . $classSchedule->subject->name . ' - ' . $classSchedule->section->name);
 
             return response()->json(['success' => true]);
         } catch (\Exception $e) {

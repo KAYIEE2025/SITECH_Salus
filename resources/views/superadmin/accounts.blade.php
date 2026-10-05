@@ -3,6 +3,13 @@
 @section('title', 'Manage Accounts')
 
 @section('content')
+    <x-delete-confirm-modal
+        name="delete-user-modal"
+        title="Delete Account"
+        message="Are you sure you want to delete this account?"
+        recordName=""
+        recordDetails=""
+    />
     @session('success')
         <div class="mb-4 md:mb-6 rounded-lg border border-green-200 bg-green-50 px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm text-green-800">
             {{ $value }}
@@ -187,13 +194,19 @@
                                                 class="rounded-lg bg-gray-100 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-gray-700 transition hover:bg-gray-200 whitespace-nowrap">
                                                 Edit
                                             </a>
-                                            <form method="POST" action="{{ route('superadmin.accounts.destroy', $user) }}" onsubmit="return confirm('Delete this account? This cannot be undone.')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="rounded-lg bg-red-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-red-600 transition hover:bg-red-100 whitespace-nowrap">
-                                                    Delete
-                                                </button>
-                                            </form>
+                                            <button
+                                                type="button"
+                                                x-on:click="$dispatch('open-delete-modal', {
+                                                    modalName: 'delete-user-modal',
+                                                    id: {{ $user->id }},
+                                                    name: '{{ $user->name }}',
+                                                    details: 'Role: {{ $user->getRoleNames()->first() ?? 'N/A' }}',
+                                                    action: '/superadmin/accounts/{{ $user->id }}'
+                                                })"
+                                                class="rounded-lg bg-red-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-red-600 transition hover:bg-red-100 whitespace-nowrap"
+                                            >
+                                                Delete
+                                            </button>
                                         </div>
                                     @else
                                         <span class="text-[10px] md:text-xs text-gray-400">No actions</span>

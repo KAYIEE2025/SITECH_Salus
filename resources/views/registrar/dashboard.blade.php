@@ -6,8 +6,8 @@
     <div class="mb-6 md:mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-[#14532d] via-[#1a5c1a] to-[#0f766e] p-4 md:p-6 text-white shadow-lg shadow-green-900/10 sm:p-8">
         <div class="flex flex-col justify-between gap-4 md:gap-6 sm:flex-row sm:items-end">
             <div class="min-w-0">
-                <p class="text-xs md:text-sm font-medium text-green-100">Registrar workspace</p>
-                <h2 class="mt-1 md:mt-2 text-lg md:text-2xl font-bold tracking-tight sm:text-3xl">Keep every academic record moving.</h2>
+                <!-- <p class="text-xs md:text-sm font-medium text-green-100">Registrar workspace</p> -->
+                <h2 class="mt-1 md:mt-2 text-lg md:text-2xl font-bold tracking-tight sm:text-3xl">Welcome back, {{ auth()->user()->name }}</h2>
                 <p class="mt-1 md:mt-2 max-w-lg text-xs md:text-sm leading-5 md:leading-6 text-green-100">Manage student records, class schedules, study loads, and grade approvals from one organized workspace.</p>
             </div>
             <div class="rounded-xl border border-white/20 bg-white/10 px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm backdrop-blur-sm shrink-0">

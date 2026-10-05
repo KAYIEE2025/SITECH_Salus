@@ -7,7 +7,7 @@
                 <th class="px-4 py-3 text-left md:px-6">Grade & Section</th>
                 <th class="px-4 py-3 text-left md:px-6">Attendance Status</th>
                 <th class="px-4 py-3 text-left md:px-6">Scan Time</th>
-                <th class="px-4 py-3 text-left md:px-6">Fine Status</th>
+                <!-- <th class="px-4 py-3 text-left md:px-6">Fine Status</th> -->
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -31,13 +31,13 @@
                     <td class="px-4 py-3 text-gray-600 md:px-6 md:py-4">
                         {{ $attendance->scanned_at ? $attendance->scanned_at->format('M d, Y h:i A') : 'Not scanned' }}
                     </td>
-                    <td class="px-4 py-3 md:px-6 md:py-4">
+                    <!-- <td class="px-4 py-3 md:px-6 md:py-4">
                         @if($attendance->is_present)
                             <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">Waived</span>
                         @else
                             <span class="rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700">Outstanding</span>
                         @endif
-                    </td>
+                    </td> -->
                 </tr>
             @empty
                 <tr>

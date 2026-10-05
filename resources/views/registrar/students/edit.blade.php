@@ -214,10 +214,8 @@
                                 <button type="button" onclick="printQR()" class="px-3 py-1.5 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition">
                                     Print QR
                                 </button>
-                                <button type="button" onclick="openReplaceQRUpload()" class="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition">
-                                    Replace QR
-                                </button>
                             </div>
+                            <p class="text-xs text-red-600 mt-2 font-medium">⚠ QR value cannot be changed after registration. This is the school-generated student number.</p>
                         </div>
                     </div>
                 @else
@@ -295,44 +293,6 @@
         </div>
     </div>
 
-    {{-- Replace QR Upload Modal --}}
-    <div id="replaceQRUploadModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Replace QR Code</h3>
-                <button onclick="closeReplaceQRUpload()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <p class="text-sm text-gray-600 mb-4">
-                Upload a new QR code image to replace the existing one. The old QR code will no longer work for attendance.
-            </p>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select QR Code Image</label>
-                <input type="file" id="replaceQRFile" accept="image/png,image/jpeg,image/jpg,image/svg+xml"
-                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                @error('replace_qr_file') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-            </div>
-
-            <div id="replaceQRPreview" class="hidden mb-4">
-                <p class="text-sm font-medium text-gray-700 mb-2">Preview:</p>
-                <img id="replaceQRPreviewImg" src="" alt="QR Preview" class="w-32 h-32 border border-gray-200 rounded-lg">
-            </div>
-
-            <div class="flex gap-3 justify-end">
-                <button type="button" onclick="closeReplaceQRUpload()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition">
-                    Cancel
-                </button>
-                <button type="button" onclick="submitReplaceQR()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition">
-                    Replace QR
-                </button>
-            </div>
-        </div>
-    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
@@ -435,64 +395,6 @@
             });
         }
 
-        function openReplaceQRUpload() {
-            document.getElementById('replaceQRUploadModal').classList.remove('hidden');
-            document.getElementById('replaceQRUploadModal').classList.add('flex');
-            document.getElementById('replaceQRFile').value = '';
-            document.getElementById('replaceQRPreview').classList.add('hidden');
-        }
-
-        function closeReplaceQRUpload() {
-            document.getElementById('replaceQRUploadModal').classList.add('hidden');
-            document.getElementById('replaceQRUploadModal').classList.remove('flex');
-        }
-
-        // Show preview when file is selected
-        document.getElementById('replaceQRFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('replaceQRPreviewImg').src = e.target.result;
-                    document.getElementById('replaceQRPreview').classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        function submitReplaceQR() {
-            const fileInput = document.getElementById('replaceQRFile');
-            const file = fileInput.files[0];
-
-            if (!file) {
-                alert('Please select a QR code image to upload.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('qr_code_file', file);
-            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
-
-            fetch(`/registrar/students/{{ $student->id }}/replace-qr`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    closeReplaceQRUpload();
-                    location.reload();
-                } else {
-                    alert(data.message || 'Failed to replace QR code.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while replacing the QR code.');
-            });
-        }
-
         function closeQRScannerModal() {
             document.getElementById('qrScannerModal').classList.add('hidden');
             document.getElementById('qrScannerModal').classList.remove('flex');
@@ -571,12 +473,6 @@
         document.getElementById('qrScannerModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeQRScannerModal();
-            }
-        });
-
-        document.getElementById('replaceQRUploadModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeReplaceQRUpload();
             }
         });
     </script>

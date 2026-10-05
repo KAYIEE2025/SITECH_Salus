@@ -66,8 +66,8 @@ class StudentAccountController extends Controller
 
     private function createStudentAccount(Student $student): array
     {
-        $temporaryPassword = $this->generateTemporaryPassword($student->first_name, $student->student_number);
-        $username = $this->uniqueUsername($student->student_number);
+        $username = $this->uniqueUsername($student->first_name, $student->last_name);
+        $temporaryPassword = $this->generateTemporaryPassword($student->first_name, $student->last_name);
         $email = $this->uniqueEmailFor($student);
 
         $user = User::create([
@@ -102,15 +102,15 @@ class StudentAccountController extends Controller
         ];
     }
 
-    private function uniqueUsername(string $studentNumber): string
+    private function uniqueUsername(string $firstName, string $lastName): string
     {
-        // Extract the last 6 digits of the student number
-        $base = substr($studentNumber, -6);
+        // Generate username as "First Name Last Name"
+        $base = trim($firstName . ' ' . $lastName);
         $username = $base;
         $counter = 1;
 
         while (User::where('username', $username)->exists()) {
-            $username = $base . '-' . $counter;
+            $username = $base . ' ' . $counter;
             $counter++;
         }
 
@@ -137,21 +137,11 @@ class StudentAccountController extends Controller
         return $email;
     }
 
-    private function generateTemporaryPassword(string $firstName, string $studentNumber): string
+    private function generateTemporaryPassword(string $firstName, string $lastName): string
     {
-        // Get the first name only (in case it contains spaces)
-        $firstName = trim(explode(' ', $firstName)[0]);
-        
-        // Take the first three letters (or entire name if fewer than 3 letters)
-        $firstThreeLetters = mb_substr($firstName, 0, 3);
-        
-        // Convert to uppercase
-        $firstThreeLetters = strtoupper($firstThreeLetters);
-        
-        // Extract the last 6 digits of the student number
-        $lastSixDigits = substr($studentNumber, -6);
-        
-        // Combine with underscore and last 6 digits of student number
-        return $firstThreeLetters . '_' . $lastSixDigits;
+        // Combine first name and last name, remove all spaces, convert to uppercase
+        $password = strtoupper(preg_replace('/\s+/', '', $firstName . $lastName));
+
+        return $password;
     }
 }

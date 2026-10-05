@@ -47,7 +47,7 @@
             <div class="info-col">
                 <div class="info-row">
                     <div class="info-label">Adviser:</div>
-                    <div class="info-value">{{ $student->section->adviser }}</div>
+                    <div class="info-value">{{ $student->section->adviser->name }}</div>
                 </div>
             </div>
         </div>

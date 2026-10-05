@@ -28,3 +28,4 @@ Thumbs.db
 # Private legacy student master data - DO NOT COMMIT
 SALUS STUDENTS.xlsx
 SALUS STUDENTS(2).xlsx
+storage/app/private/*.xlsx

@@ -2,6 +2,14 @@
 @section('title', 'Study Load Management')
 @section('content')
 
+@include('components.delete-confirm-modal', [
+    'name' => 'delete-study-load-modal',
+    'title' => 'Remove Subject from Study Load',
+    'message' => 'Are you sure you want to remove this subject from the study load?',
+    'recordName' => '',
+    'recordDetails' => ''
+])
+
     @session('success')
         <div class="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3 mb-6">
             {{ $value }}
@@ -62,34 +70,24 @@
         {{-- Student Study Load Tab --}}
         <div id="student-study-load-tab" class="hidden">
             <h2 class="text-base font-semibold text-gray-800 mb-4">View Student Study Load</h2>
-            <p class="text-sm text-gray-500 mb-4">View the class schedule of students assigned to a section. Students automatically inherit their section's schedule.</p>
-            
-            <form method="GET" action="{{ route('registrar.study-load') }}" class="flex gap-3 flex-wrap">
-                <select name="section_id"
-                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
-                <option value="">Select a section...</option>
-                @foreach($sections as $section)
-                    <option value="{{ $section->id }}"
-                        {{ optional($selected)->id == $section->id ? 'selected' : '' }}>
-                        {{ $section->yearLevel->name ?? '' }} — Section {{ $section->name }}
-                    </option>
-                @endforeach
-            </select>
-                @if($activeSchoolYear)
-                    <input type="text" name="school_year" value="{{ old('school_year', $activeSchoolYear) }}"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                        placeholder="School Year">
-                @else
-                    <input type="text" name="school_year" value="{{ old('school_year') }}"
-                        class="border border-red-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
-                        placeholder="School Year">
-                    <p class="text-red-500 text-xs mt-1">No active school year set. Please contact Super Admin to set an active school year.</p>
-                @endif
+            <p class="text-sm text-gray-500 mb-4">View the class schedule of all students. Students automatically inherit their section's schedule.</p>
+
+            <form method="GET" action="{{ route('registrar.study-load') }}" class="flex gap-3 flex-wrap" x-data="{ loading: false }">
+                <input type="text" name="student_search" value="{{ request('student_search') }}" placeholder="Search student name..."
+                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                    x-model.debounce.500ms="search"
+                    @input="$el.closest('form').submit()">
                 <input type="hidden" name="view" value="students">
                 <button type="submit"
                     class="bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-5 py-2 rounded-lg transition">
-                    View Students
+                    Search
                 </button>
+                @if(request('student_search'))
+                    <a href="{{ route('registrar.study-load', ['view' => 'students']) }}"
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-5 py-2 rounded-lg transition">
+                        Clear
+                    </a>
+                @endif
             </form>
         </div>
     </div>
@@ -263,14 +261,25 @@
                         </td>
                         <td class="px-6 py-3 text-gray-600">{{ $schedule->room }}</td>
                         <td class="px-6 py-3">
-                            <form method="POST" action="{{ route('registrar.study-load.destroy', $schedule) }}"
-                                onsubmit="return confirm('Remove this subject from study load?')">
-                                @csrf @method('DELETE')
-                                <button type="submit"
-                                    class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition">
-                                    Remove
-                                </button>
-                            </form>
+                            <button
+                                type="button"
+                                x-on:click="$dispatch('open-delete-modal', {
+                                    modalName: 'delete-study-load-modal',
+                                    id: {{ $schedule->id }},
+                                    name: @js(($schedule->subject->code ?? 'N/A') . ' - ' . ($schedule->subject->name ?? 'N/A')),
+                                    details: @js(
+                                        'Teacher: ' . ($schedule->teacher->name ?? 'N/A') .
+                                        ' | Section: ' .
+                                        ($selected->yearLevel->name ?? '') .
+                                        ' - Sec ' .
+                                        ($selected->name ?? '')
+                                    ),
+                                    action: @js(route('registrar.study-load.destroy', $schedule->id))
+                                })"
+                                class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition"
+                            >
+                                Remove
+                            </button>
                         </td>
                     </tr>
                     @empty
@@ -288,22 +297,17 @@
     @endif
 
     {{-- Student Study Load View --}}
-    @if($selected && request('view') == 'students')
+    @if(request('view') == 'students')
         <div class="ra-card overflow-hidden">
             <div class="ra-card-header">
             <h2 class="text-base font-semibold text-gray-800">
-                Students in {{ $selected->yearLevel->name ?? '' }} Section {{ $selected->name }}
+                All Students
             </h2>
-            <p class="text-xs text-gray-500 mt-0.5">{{ request('school_year', $activeSchoolYear ?? '2026-2027') }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Showing all students with their class schedules</p>
         </div>
 
-        @php
-            $students = \App\Models\Student::where('section_id', $selected->id)
-                ->where('school_year', request('school_year', $activeSchoolYear ?? '2026-2027'))
-                ->get();
-        @endphp
-
-        @forelse($students as $student)
+        @if(isset($students) && $students->isNotEmpty())
+            @forelse($students as $student)
             <div class="border-b border-green-50 px-5 py-4 sm:px-6">
                 <div class="flex items-center justify-between mb-3">
                     <div>
@@ -311,7 +315,7 @@
                             {{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}
                         </p>
                         <p class="text-xs text-gray-500">
-                            Student Number: {{ $student->student_number }}
+                            Student Number: {{ $student->student_number }} · {{ $student->yearLevel->name ?? 'N/A' }} — Sec {{ $student->section->name ?? 'N/A' }}
                         </p>
                     </div>
                     <div class="flex gap-2">
@@ -321,7 +325,7 @@
                         </button>
                         <button onclick="openPrintPreview({{ $student->id }})"
                             class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg transition">
-                            🖨️ Print Schedule
+                            Print Schedule
                         </button>
                     </div>
                 </div>
@@ -330,8 +334,8 @@
                 <div id="student-schedule-{{ $student->id }}" class="hidden">
                     @php
                         $studentSchedules = \App\Models\ClassSchedule::with(['subject', 'teacher'])
-                            ->where('section_id', $selected->id)
-                            ->where('school_year', request('school_year', $activeSchoolYear ?? '2026-2027'))
+                            ->where('section_id', $student->section_id)
+                            ->where('school_year', $student->school_year)
                             ->orderBy('time_start')
                             ->get();
                     @endphp
@@ -374,9 +378,15 @@
             </div>
         @empty
             <div class="px-6 py-8 text-center text-gray-400">
-                No students enrolled in this section for the selected school year.
+                No students found.
             </div>
         @endforelse
+
+        @if($students->hasPages())
+        <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+            {{ $students->links() }}
+        </div>
+        @endif
     </div>
     @endif
 

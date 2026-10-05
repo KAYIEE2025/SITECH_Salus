@@ -13,21 +13,21 @@ class LegacyStudentSeeder extends Seeder
     /**
      * Run the database seeds.
      * 
-     * This seeder reads the private Excel file "SALUS STUDENTS.xlsx" from the project root
+     * This seeder reads the private Excel file "SALUS STUDENTS(2)(1).xlsx" from storage/app/private/
      * and populates the legacy_students table with master identity data for old students.
      * 
-     * The Excel file is NOT committed to Git and must be provided separately.
+     * The Excel file is NOT committed to Git and must be provided separately in storage/app/private/.
      */
     public function run(): void
     {
         $this->command->info('LegacyStudentSeeder - Starting...');
         
-        $excelFile = base_path('SALUS STUDENTS.xlsx');
+        $excelFile = storage_path('app/private/SALUS STUDENTS(2)(1).xlsx');
         
         // Check if Excel file exists
         if (!file_exists($excelFile)) {
             $this->command->error("Excel file not found: {$excelFile}");
-            $this->command->error('Please place "SALUS STUDENTS.xlsx" in the project root directory.');
+            $this->command->error('Please place "SALUS STUDENTS(2)(1).xlsx" in storage/app/private/ directory.');
             return;
         }
 
@@ -81,10 +81,10 @@ class LegacyStudentSeeder extends Seeder
                     continue;
                 }
 
-                // Validate student number format
-                if (!preg_match('/^\d{8}-\d{6}$/', $studentNumber)) {
+                // Validate student number is not empty (format validation removed for flexibility)
+                if (empty($studentNumber)) {
                     $errorCount++;
-                    $errors[] = "Row {$rowNumber}: Invalid student number format: {$studentNumber}";
+                    $errors[] = "Row {$rowNumber}: Missing student number";
                     continue;
                 }
 

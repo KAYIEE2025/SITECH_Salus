@@ -41,26 +41,6 @@
                     @error('contact_number') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
-                @if($user->hasRole('Super Admin'))
-                    <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
-                        This protected Super Admin account cannot have its role changed here.
-                    </div>
-                @else
-                    <div>
-                        <label for="role" class="mb-1 block text-sm font-medium text-gray-700">Role</label>
-                        <select id="role" name="role" required
-                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
-                            @foreach($roles as $role)
-                                <option value="{{ $role->name }}" @selected(old('role', $user->getRoleNames()->first()) === $role->name)>
-                                    {{ $role->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('role') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
-                        <p class="mt-1 text-xs text-gray-500">Use <a href="{{ route('superadmin.role-management') }}" class="text-[#1a5c1a] hover:underline">Role Management</a> when a user needs multiple roles.</p>
-                    </div>
-                @endif
-
                 <div>
                     <label for="password" class="mb-1 block text-sm font-medium text-gray-700">New Password</label>
                     <input id="password" type="password" name="password" autocomplete="new-password"

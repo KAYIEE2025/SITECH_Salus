@@ -1,19 +1,19 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use App\Models\Course;
 use App\Models\YearLevel;
 use Spatie\Permission\Models\Role;
+use Database\Seeders\LegacyStudentSeeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // ── 1. Create roles (Spatie) ───────────────────────────────
-        // 6 roles only — no Registrar Staff
+        // 1. Create system roles
         $roles = [
             'Super Admin',
             'Admin',
@@ -24,21 +24,34 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($roles as $roleName) {
-            Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+            Role::firstOrCreate([
+                'name' => $roleName,
+                'guard_name' => 'web',
+            ]);
         }
 
-        // ── 2. Create Super Admin account ─────────────────────────
+        // 2. Create Super Admin from .env
+        $superAdminEmail = env('SUPERADMIN_EMAIL');
+        $superAdminPassword = env('SUPERADMIN_PASSWORD');
+
+        if (!$superAdminEmail || !$superAdminPassword) {
+            throw new \RuntimeException(
+                'SUPERADMIN_EMAIL and SUPERADMIN_PASSWORD must be set in the .env file.'
+            );
+        }
+
         $superAdmin = User::firstOrCreate(
-            ['email' => 'superadmin@salus.edu'],
+            ['email' => $superAdminEmail],
             [
-                'name'      => 'Super Admin',
-                'password'  => Hash::make('SIT@superadmin2025'),
+                'name' => 'Super Admin',
+                'password' => Hash::make($superAdminPassword),
                 'is_active' => true,
             ]
         );
+
         $superAdmin->assignRole('Super Admin');
 
-        // ── Seed grade levels ──────────────────────────────────────
+        // 3. Seed year levels
         $levels = [
             ['level' => 7,  'name' => 'Grade 7'],
             ['level' => 8,  'name' => 'Grade 8'],
@@ -48,10 +61,20 @@ class DatabaseSeeder extends Seeder
             ['level' => 12, 'name' => 'Grade 12'],
         ];
 
-        foreach ($levels as $yr) {
-            \App\Models\YearLevel::firstOrCreate(['level' => $yr['level']], $yr);
+        foreach ($levels as $yearLevel) {
+            YearLevel::firstOrCreate(
+                ['level' => $yearLevel['level']],
+                $yearLevel
+            );
         }
 
-        $this->command->info('Done! Super Admin: superadmin@salus.edu / SIT@superadmin2025');
+        // 4. Seed legacy students from private Excel file
+        $this->call([
+            LegacyStudentSeeder::class,
+        ]);
+
+        $this->command->info(
+            "Database seeding completed. Super Admin: {$superAdminEmail}"
+        );
     }
 }

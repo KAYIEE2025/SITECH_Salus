@@ -12,7 +12,7 @@ class FinalGrade extends Model
         'component_scores', 'computed_at', 'status', 'submitted_at', 'reviewed_by',
         'reviewed_at', 'rejection_reason',
         'written_works', 'performance_tasks', 'quarterly_assessment',
-        'student_name', 'imported_data',
+        'student_name', 'student_number', 'imported_data',
         'term_1', 'term_2', 'term_3', 'final_rating',
         'grading_period',
     ];

@@ -69,9 +69,16 @@
                         <th class="px-4 py-3 text-left">Match Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody id="learnerTableBody" class="divide-y divide-gray-100">
                     @foreach($displayData as $row)
-                        <tr class="{{ $row['match_status'] === 'unmatched' ? 'bg-red-50' : ($row['match_status'] === 'ambiguous' ? 'bg-yellow-50' : 'hover:bg-gray-50') }}">
+                        <tr class="learner-row {{ $row['match_status'] === 'unmatched' ? 'bg-red-50' : ($row['match_status'] === 'ambiguous' ? 'bg-yellow-50' : 'hover:bg-gray-50') }}"
+                            data-student-name="{{ $row['student_name'] }}"
+                            data-matched-student="{{ $row['matched_student'] ?? 'Not matched' }}"
+                            data-student-number="{{ $row['student_number'] ?? 'N/A' }}"
+                            data-quarter-grade="{{ $row['quarter_grade'] ?? 'N/A' }}"
+                            data-remarks="{{ $row['remarks'] ?? 'N/A' }}"
+                            data-match-status="{{ $row['match_status'] }}"
+                            data-ambiguous-matches="{{ json_encode($row['ambiguous_matches'] ?? []) }}">
                             <td class="px-4 py-3 font-medium text-gray-800">
                                 {{ $row['student_name'] }}
                             </td>
@@ -117,6 +124,24 @@
             </table>
         </div>
 
+        <!-- Pagination Controls -->
+        <div class="mt-4 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Showing <span id="showingStart">1</span> to <span id="showingEnd">10</span> of <span id="totalLearners">{{ $totalParsed }}</span> learners
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="prevBtn" onclick="changePage(-1)" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Previous
+                </button>
+                <div id="pageNumbers" class="flex items-center gap-1">
+                    <!-- Page numbers will be rendered here -->
+                </div>
+                <button id="nextBtn" onclick="changePage(1)" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next
+                </button>
+            </div>
+        </div>
+
         <!-- Action Buttons -->
         <div class="mt-6 flex justify-end gap-3">
             <form action="{{ route('teacher.classes.cancel-import-summary', $classSchedule) }}" method="POST">
@@ -133,4 +158,71 @@
             </form>
         </div>
     </div>
+
+    <script>
+        // Pagination configuration
+        const ITEMS_PER_PAGE = 10;
+        let currentPage = 1;
+
+        // Get all learner rows
+        const learnerRows = document.querySelectorAll('.learner-row');
+        const totalLearners = learnerRows.length;
+        const totalPages = Math.ceil(totalLearners / ITEMS_PER_PAGE);
+
+        // Pagination functions
+        function renderPage(page) {
+            const start = (page - 1) * ITEMS_PER_PAGE;
+            const end = Math.min(start + ITEMS_PER_PAGE, totalLearners);
+
+            // Hide all rows
+            learnerRows.forEach((row, index) => {
+                row.style.display = index >= start && index < end ? '' : 'none';
+            });
+
+            // Update showing info
+            document.getElementById('showingStart').textContent = start + 1;
+            document.getElementById('showingEnd').textContent = end;
+            document.getElementById('totalLearners').textContent = totalLearners;
+
+            // Update button states
+            document.getElementById('prevBtn').disabled = page === 1;
+            document.getElementById('nextBtn').disabled = page === totalPages;
+
+            // Render page numbers
+            renderPageNumbers();
+        }
+
+        function renderPageNumbers() {
+            const pageNumbersContainer = document.getElementById('pageNumbers');
+            pageNumbersContainer.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = i === currentPage
+                    ? 'px-3 py-1.5 text-sm font-medium text-white bg-green-700 rounded-lg'
+                    : 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition';
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    renderPage(currentPage);
+                };
+                pageNumbersContainer.appendChild(pageBtn);
+            }
+        }
+
+        function changePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderPage(currentPage);
+            }
+        }
+
+        // Initialize pagination
+        document.addEventListener('DOMContentLoaded', function() {
+            if (totalLearners > 0) {
+                renderPage(currentPage);
+            }
+        });
+    </script>
 @endsection

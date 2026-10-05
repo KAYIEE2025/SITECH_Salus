@@ -84,25 +84,14 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $isProtectedUser = $user->id === 1;
-        $roles = $isProtectedUser
-            ? Role::whereNotIn('name', ['Super Admin', 'SSG', 'Student'])->orderBy('name')->get()
-            : Role::whereNotIn('name', ['Student'])->orderBy('name')->get();
-        return view('superadmin.accounts-edit', compact('user', 'roles'));
+        return view('superadmin.accounts-edit', compact('user'));
     }
 
     public function update(Request $request, User $user)
     {
-        $isProtectedUser = $user->id === 1;
-
         $request->validate([
             'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'role'  => [
-                $isProtectedUser ? 'nullable' : 'required',
-                'exists:roles,name',
-                'not_in:Student',
-            ],
             'contact_number' => 'nullable|string|max:20',
         ]);
 
@@ -117,9 +106,8 @@ class UserController extends Controller
             $user->update(['password' => Hash::make($request->password)]);
         }
 
-        if (! $isProtectedUser) {
-            $user->syncRoles($request->role);
-        }
+        // Note: Role changes are handled exclusively through User Role Management
+        // The edit form does not include role selection, and role is not updated here
 
         activity()
             ->event('updated')

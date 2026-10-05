@@ -10,12 +10,30 @@
 
     <div class="ra-card overflow-hidden">
         <div class="ra-card-header flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-            <h2 class="text-base font-semibold text-gray-800">All Students</h2>
+            <div>
+                <h2 class="text-base font-semibold text-gray-800">All Students</h2>
+                <p class="mt-1 text-xs text-gray-500">Search by student number or name.</p>
+            </div>
             <a href="{{ route('registrar.students.create') }}"
                 class="bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
                 + Encode Student
             </a>
         </div>
+
+        <form method="GET" action="{{ route('registrar.students') }}" class="px-6 py-4 border-b border-gray-100">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="search" name="search" value="{{ request('search') }}" placeholder="Search students..."
+                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-800">
+                <button type="submit" class="rounded-lg bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-4 py-2 transition">
+                    Search
+                </button>
+                @if(request('search'))
+                    <a href="{{ route('registrar.students') }}" class="rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 transition text-center">
+                        Clear
+                    </a>
+                @endif
+            </div>
+        </form>
 
         <div class="overflow-x-auto">
             <table class="w-full min-w-max text-xs md:text-sm">

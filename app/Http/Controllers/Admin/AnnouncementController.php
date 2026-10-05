@@ -12,10 +12,10 @@ class AnnouncementController extends Controller
 {
     public function index()
     {
-        $announcements = Announcement::with('poster')->latest()->get();
+        $announcements = Announcement::with('poster')->latest()->paginate(50);
         $yearLevels = YearLevel::all();
         $sections = Section::with('yearLevel')->get();
-        
+
         return view('admin.announcements.index', compact('announcements', 'yearLevels', 'sections'));
     }
 
@@ -37,7 +37,7 @@ class AnnouncementController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        Announcement::create([
+        $announcement = Announcement::create([
             'title' => $request->title,
             'body' => $request->body,
             'target_type' => $request->target_type,
@@ -45,6 +45,11 @@ class AnnouncementController extends Controller
             'posted_by' => auth()->id(),
             'is_active' => $request->is_active ?? true,
         ]);
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($announcement)
+            ->log('Created announcement: ' . $announcement->title);
 
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Announcement created successfully.');
@@ -76,13 +81,25 @@ class AnnouncementController extends Controller
             'is_active' => $request->is_active ?? true,
         ]);
 
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($announcement)
+            ->log('Updated announcement: ' . $announcement->title);
+
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Announcement updated successfully.');
     }
 
     public function destroy(Announcement $announcement)
     {
+        // Capture information before deletion for logging
+        $announcementTitle = $announcement->title;
+
         $announcement->delete();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->log('Deleted announcement: ' . $announcementTitle);
 
         return redirect()->route('admin.announcements.index')
             ->with('success', 'Announcement deleted successfully.');

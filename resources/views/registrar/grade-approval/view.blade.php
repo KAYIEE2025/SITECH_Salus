@@ -37,7 +37,7 @@
                 <p class="mt-1 text-sm font-medium text-gray-800">{{ $classSchedule->teacher->name ?? 'N/A' }}</p>
             </div>
             <div>
-                <p class="text-xs text-gray-500 uppercase tracking-wide">Total Students</p>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">Total Learners</p>
                 <p class="mt-1 text-sm font-medium text-gray-800">{{ $grades->count() }}</p>
             </div>
         </div>
@@ -55,6 +55,8 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="text-left py-3 px-4 font-medium text-gray-600">Student Name</th>
+                        <th class="text-left py-3 px-4 font-medium text-gray-600">Student Number</th>
+                        <th class="text-center py-3 px-4 font-medium text-gray-600">Account</th>
                         <th class="text-center py-3 px-4 font-medium text-gray-600">Term 1</th>
                         <th class="text-center py-3 px-4 font-medium text-gray-600">Term 2</th>
                         <th class="text-center py-3 px-4 font-medium text-gray-600">Term 3</th>
@@ -79,7 +81,27 @@
                             }
                         @endphp
                         <tr class="border-b border-gray-100 hover:bg-gray-50">
-                            <td class="py-3 px-4 font-medium text-gray-800">{{ $grade->student->last_name }}, {{ $grade->student->first_name }}</td>
+                            <td class="py-3 px-4 font-medium text-gray-800">
+                                @if($grade->student)
+                                    {{ $grade->student->last_name }}, {{ $grade->student->first_name }}
+                                @else
+                                    {{ $grade->student_name ?? 'Unknown' }}
+                                @endif
+                            </td>
+                            <td class="py-3 px-4 text-gray-600">
+                                @if($grade->student)
+                                    {{ $grade->student->student_number }}
+                                @else
+                                    {{ $grade->student_number ?? '-' }}
+                                @endif
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                @if($grade->student)
+                                    <span class="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700">Has Account</span>
+                                @else
+                                    <span class="text-xs px-2 py-1 rounded-full bg-gray-50 text-gray-600">No Account</span>
+                                @endif
+                            </td>
                             <td class="py-3 px-4 text-center text-gray-700">{{ $grade->term_1 ?? '-' }}</td>
                             <td class="py-3 px-4 text-center text-gray-700">{{ $grade->term_2 ?? '-' }}</td>
                             <td class="py-3 px-4 text-center text-gray-700">{{ $grade->term_3 ?? '-' }}</td>

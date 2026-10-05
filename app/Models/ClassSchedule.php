@@ -9,7 +9,7 @@ class ClassSchedule extends Model
     protected $fillable = [
         'subject_id', 'teacher_id', 'section_id', 'room',
         'days', 'time_start', 'time_end', 'school_year', 'is_active',
-        'date_start', 'date_end',
+        'date_start', 'date_end', 'term',
     ];
 
     protected $casts = [

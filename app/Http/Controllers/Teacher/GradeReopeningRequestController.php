@@ -46,6 +46,11 @@ class GradeReopeningRequestController extends Controller
                 'requested_at' => now(),
             ]);
 
+            activity()
+                ->event('grade_reopening_request_created')
+                ->causedBy(auth()->user())
+                ->log('Created grade reopening request for Term ' . $request->grading_period . ' (' . $classSchedule->school_year . '). Reason: ' . $request->reason);
+
             DB::commit();
 
             return response()->json([

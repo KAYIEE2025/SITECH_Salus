@@ -11,16 +11,18 @@ use App\Models\Subject;
 use App\Models\User;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class StudyLoadController extends Controller
 {
-    public function index()
+    public function index(Request $request)
 {
     $sections   = Section::with('yearLevel')->get();
     $teachers   = User::role('Teacher')->get();
     $selected   = null;
     $schedules  = collect();
     $activeSchoolYear = SchoolYearHelper::getActive();
+    $students   = collect();
 
     if (request('section_id')) {
         $selected  = Section::with('yearLevel')->find(request('section_id'));
@@ -31,8 +33,24 @@ class StudyLoadController extends Controller
             ->get();
     }
 
+    // Handle student search in Student Study Load tab
+    if (request('view') === 'students') {
+        $studentQuery = Student::with(['yearLevel', 'section']);
+
+        if ($request->filled('student_search')) {
+            $search = $request->student_search;
+            $studentQuery->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('middle_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+
+        $students = $studentQuery->orderBy('last_name')->orderBy('first_name')->paginate(15)->withQueryString();
+    }
+
     return view('registrar.study-load.index', compact(
-        'sections', 'teachers', 'selected', 'schedules', 'activeSchoolYear'
+        'sections', 'teachers', 'selected', 'schedules', 'activeSchoolYear', 'students'
     ));
 }
 
@@ -46,7 +64,7 @@ public function store(Request $request)
         'room'         => 'required|string|max:50',
         'days'         => 'required|array|min:1',
         'time_start'   => 'required',
-        'time_end'     => 'required',
+        'time_end'     => 'required|after:time_start',
         'date_start'   => 'nullable|date',
         'date_end'     => 'nullable|date|after_or_equal:date_start',
         'school_year'  => 'required|string',
@@ -57,6 +75,14 @@ public function store(Request $request)
         ['code' => strtoupper(trim($request->subject_code))],
         ['name' => $request->subject_name, 'units' => 3]
     );
+
+    // Log if subject was newly created
+    if ($subject->wasRecentlyCreated) {
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($subject)
+            ->log('Created subject: ' . $subject->code . ' - ' . $subject->name);
+    }
 
     // ── Conflict: Teacher already has a class at this time/day ──
     $teacherConflict = ClassSchedule::where('teacher_id', $request->teacher_id)
@@ -71,8 +97,13 @@ public function store(Request $request)
         });
 
     if ($teacherConflict->isNotEmpty()) {
+        $conflict = $teacherConflict->first();
+        $conflictDays = implode(', ', $conflict->days ?? []);
+        $conflictTime = Carbon::parse($conflict->time_start)->format('g:i A') . ' - ' . Carbon::parse($conflict->time_end)->format('g:i A');
+        $conflictDetails = $conflict->subject->name ?? 'Unknown subject';
+        
         return back()->withInput()
-            ->with('error', 'Teacher conflict: This teacher already has a class at this day and time.');
+            ->with('error', "Teacher conflict: The selected teacher already has a schedule for {$conflictDetails} on {$conflictDays} from {$conflictTime} in the same school year.");
     }
 
     // ── Conflict: Room already taken ──
@@ -88,8 +119,13 @@ public function store(Request $request)
         });
 
     if ($roomConflict->isNotEmpty()) {
+        $conflict = $roomConflict->first();
+        $conflictDays = implode(', ', $conflict->days ?? []);
+        $conflictTime = Carbon::parse($conflict->time_start)->format('g:i A') . ' - ' . Carbon::parse($conflict->time_end)->format('g:i A');
+        $conflictDetails = $conflict->subject->name ?? 'Unknown subject';
+        
         return back()->withInput()
-            ->with('error', 'Room conflict: This room is already occupied at this day and time.');
+            ->with('error', "Room conflict: Room {$request->room} is already assigned to {$conflictDetails} on {$conflictDays} from {$conflictTime} in the same school year.");
     }
 
     // ── Create schedule ──
@@ -108,17 +144,21 @@ public function store(Request $request)
 
     // ── Auto-assign to existing students in this section ──
     $students = Student::where('section_id', $request->section_id)->get();
+    $assignedCount = 0;
     foreach ($students as $student) {
-        StudyLoad::firstOrCreate([
+        $studyLoad = StudyLoad::firstOrCreate([
             'student_id'        => $student->id,
             'class_schedule_id' => $schedule->id,
             'school_year'       => $request->school_year,
         ]);
+        if ($studyLoad->wasRecentlyCreated) {
+            $assignedCount++;
+        }
     }
 
     activity()
         ->causedBy(auth()->user())
-        ->log('Added ' . $subject->code . ' to study load of section.');
+        ->log('Added ' . $subject->code . ' (' . $subject->name . ') to study load of section. ' . $assignedCount . ' student(s) assigned.');
 
     return redirect()->route('registrar.study-load', [
         'section_id'  => $request->section_id,
@@ -130,10 +170,20 @@ public function store(Request $request)
     {
         $sectionId  = $schedule->section_id;
         $schoolYear = $schedule->school_year;
+        
+        // Capture information before deletion for logging
+        $subjectCode = $schedule->subject->code ?? 'Unknown';
+        $subjectName = $schedule->subject->name ?? 'Unknown';
+        $sectionName = $schedule->section->name ?? 'Unknown';
+        $studyLoadCount = StudyLoad::where('class_schedule_id', $schedule->id)->count();
 
         // Remove study loads for this schedule
         StudyLoad::where('class_schedule_id', $schedule->id)->delete();
         $schedule->delete();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->log('Removed ' . $subjectCode . ' (' . $subjectName . ') from study load of ' . $sectionName . ' section. ' . $studyLoadCount . ' student(s) affected.');
 
         return redirect()->route('registrar.study-load', [
             'section_id'  => $sectionId,

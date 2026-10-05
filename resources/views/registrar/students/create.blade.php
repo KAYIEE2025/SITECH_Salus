@@ -18,7 +18,7 @@
                     <option value="old" {{ old('student_type') == 'old' ? 'selected' : '' }}>Old Student</option>
                 </select>
                 @error('student_type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                <p class="text-xs text-gray-500 mt-1">New students will have a QR code automatically generated. Old students will be identified via QR scan for re-enrollment or legacy record import.</p>
+                <p class="text-xs text-gray-500 mt-1">New students: Scan the school-generated QR to auto-fill the Student Number. Old students: Scan existing QR or enter student number for re-enrollment.</p>
             </div>
 
             {{-- Existing Student Notice --}}
@@ -35,21 +35,26 @@
                 {{-- Student Number --}}
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Student Number <span class="text-red-500">*</span></label>
-                    <input type="text" name="student_number" id="student_number" value="{{ old('student_number') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                        placeholder="2024-0001" required>
+                    <div class="flex gap-2">
+                        <input type="text" name="student_number" id="student_number" value="{{ old('student_number') }}"
+                            class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                            placeholder="2024-0001" required>
+                        <button type="button" id="lookup-student-btn" class="hidden bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+                            Lookup
+                        </button>
+                    </div>
                     @error('student_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     <p class="text-xs text-gray-500 mt-1" id="student-number-hint">Enter the student's School ID (Student Number).</p>
                 </div>
 
                 <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
                     <p class="text-sm font-medium text-green-800">QR Code</p>
-                    <p class="mt-1 text-xs text-green-700" id="qr-code-hint">A unique QR code will be generated automatically after saving.</p>
+                    <p class="mt-1 text-xs text-green-700" id="qr-code-hint">Scan the school-generated QR to auto-fill the Student Number.</p>
                 </div>
 
-                {{-- QR Code Scanner for Old Students --}}
+                {{-- QR Code Scanner for New and Old Students --}}
                 <div class="mb-4 hidden" id="qr-code-scanner-container">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Scan Existing Student QR <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Scan School QR Code <span class="text-red-500">*</span></label>
                     <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
                         <div id="qr-reader" class="w-full"></div>
                         <div id="qr-scan-result" class="mt-3 hidden">
@@ -71,7 +76,7 @@
                             Stop Scanner
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Scan the student's existing QR code to auto-fill their information.</p>
+                    <p class="text-xs text-gray-500 mt-1" id="qr-scan-instruction">Scan the school-generated QR code below to auto-fill the Student Number.</p>
                 </div>
 
                 {{-- Gender --}}
@@ -269,6 +274,7 @@
                 const foundStudentNumber = document.getElementById('found-student-number');
                 const foundStudentName = document.getElementById('found-student-name');
                 const scanErrorMessage = document.getElementById('scan-error-message');
+                const lookupStudentBtn = document.getElementById('lookup-student-btn');
                 
                 let html5QrCode = null;
                 let isScanning = false;
@@ -277,13 +283,24 @@
                 function toggleQRCodeScanner() {
                     if (studentTypeSelect.value === 'old') {
                         qrCodeScannerContainer.classList.remove('hidden');
-                        qrCodeHint.textContent = 'Scan the student\'s existing QR code to auto-fill their information.';
-                        studentNumberInput.removeAttribute('required');
-                        studentNumberInput.setAttribute('readonly', 'readonly');
-                        studentNumberHint.textContent = 'School ID will be auto-filled from QR scan.';
+                        qrCodeHint.textContent = 'Scan the student\'s existing QR code or enter student number manually above.';
+                        document.getElementById('qr-scan-instruction').textContent = 'Scan the student\'s existing QR code below or enter the student number manually above and click Lookup to auto-fill their information.';
+                        lookupStudentBtn.classList.remove('hidden');
+                        studentNumberInput.removeAttribute('readonly');
+                        studentNumberInput.setAttribute('required', 'required');
+                        studentNumberHint.textContent = 'Enter student number and click Lookup, or scan QR code below.';
+                    } else if (studentTypeSelect.value === 'new') {
+                        qrCodeScannerContainer.classList.remove('hidden');
+                        qrCodeHint.textContent = 'Scan the school-generated QR to auto-fill the Student Number.';
+                        document.getElementById('qr-scan-instruction').textContent = 'Scan the school-generated QR code below to auto-fill the Student Number.';
+                        lookupStudentBtn.classList.add('hidden');
+                        studentNumberInput.removeAttribute('readonly');
+                        studentNumberInput.setAttribute('required', 'required');
+                        studentNumberHint.textContent = 'Scan QR code to auto-fill, or enter Student Number manually.';
                     } else {
                         qrCodeScannerContainer.classList.add('hidden');
-                        qrCodeHint.textContent = 'A unique QR code will be generated automatically after saving.';
+                        qrCodeHint.textContent = 'Select student type to begin.';
+                        lookupStudentBtn.classList.add('hidden');
                         stopScanner();
                         qrScanResult.classList.add('hidden');
                         qrScanError.classList.add('hidden');
@@ -305,7 +322,7 @@
                         }
                         firstNameInput.removeAttribute('readonly');
                         lastNameInput.removeAttribute('readonly');
-                        studentNumberHint.textContent = 'Enter the student\'s School ID (Student Number).';
+                        studentNumberHint.textContent = 'Select student type first.';
                     }
                 }
 
@@ -374,86 +391,105 @@
                 function onScanSuccess(decodedText, decodedResult) {
                     if (scanInProgress) return;
                     scanInProgress = true;
-                    
+
                     // Stop scanner immediately after successful scan
                     stopScanner();
-                    
+
                     // Normalize QR value (remove any extra whitespace)
                     const studentNumber = decodedText.trim();
-                    
-                    // Show loading state
-                    scanErrorMessage.textContent = 'Looking up student...';
-                    qrScanError.classList.remove('hidden');
-                    
-                    // Call unified student lookup endpoint
-                    fetch('{{ route('registrar.students.lookup-student-qr') }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ student_number: studentNumber })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        qrScanError.classList.add('hidden');
-                        
-                        if (data.success) {
-                            if (data.student_type === 'existing') {
-                                // Handle existing student re-enrollment
-                                studentNumberInput.value = data.student.student_number;
-                                firstNameInput.value = data.student.first_name || '';
-                                middleNameInput.value = data.student.middle_name || '';
-                                lastNameInput.value = data.student.last_name || '';
-                                
-                                // Show existing student notice
-                                existingStudentName.textContent = data.student.full_name;
-                                existingStudentNumber.textContent = data.student.student_number;
-                                existingStudentAccount.textContent = data.student.has_account ? 'Yes' : 'No';
-                                existingStudentNotice.classList.remove('hidden');
-                                
-                                // Make identity fields readonly
-                                studentNumberInput.readOnly = true;
-                                firstNameInput.readOnly = true;
-                                lastNameInput.readOnly = true;
-                                
-                                // Keep student type as 'old' for unified workflow
-                                studentTypeSelect.value = 'old';
-                            } else if (data.student_type === 'legacy') {
-                                // Handle legacy student
-                                studentNumberInput.value = data.student.student_number;
-                                firstNameInput.value = data.student.first_name || '';
-                                middleNameInput.value = data.student.middle_name || '';
-                                lastNameInput.value = data.student.last_name || '';
-                                
-                                // Show success message
-                                foundStudentNumber.textContent = data.student.student_number;
-                                foundStudentName.textContent = data.student.full_name;
-                                qrScanResult.classList.remove('hidden');
-                                
-                                // Make identity fields readonly
-                                studentNumberInput.readOnly = true;
-                                firstNameInput.readOnly = true;
-                                lastNameInput.readOnly = true;
-                                
-                                // Keep student type as 'old' for unified workflow
-                                studentTypeSelect.value = 'old';
-                            }
-                        } else {
-                            // Show error message
-                            scanErrorMessage.textContent = data.message || 'Student not found.';
-                            qrScanError.classList.remove('hidden');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error looking up student:', error);
-                        scanErrorMessage.textContent = 'Error connecting to server. Please try again.';
-                        qrScanError.classList.remove('hidden');
-                    })
-                    .finally(() => {
+
+                    // Check student type to determine workflow
+                    if (studentTypeSelect.value === 'new') {
+                        // New Student: Just populate student number, no lookup
+                        studentNumberInput.value = studentNumber;
+                        studentNumberInput.readOnly = true;
+
+                        // Show success message
+                        foundStudentNumber.textContent = studentNumber;
+                        foundStudentName.textContent = 'Ready for manual entry';
+                        qrScanResult.classList.remove('hidden');
+
                         scanInProgress = false;
-                    });
+                    } else if (studentTypeSelect.value === 'old') {
+                        // Old Student: Lookup student in system
+                        scanErrorMessage.textContent = 'Looking up student...';
+                        qrScanError.classList.remove('hidden');
+
+                        // Call unified student lookup endpoint
+                        fetch('{{ route('registrar.students.lookup-student-qr') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ student_number: studentNumber })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            qrScanError.classList.add('hidden');
+
+                            if (data.success) {
+                                if (data.student_type === 'existing') {
+                                    // Handle existing student re-enrollment
+                                    studentNumberInput.value = data.student.student_number;
+                                    firstNameInput.value = data.student.first_name || '';
+                                    middleNameInput.value = data.student.middle_name || '';
+                                    lastNameInput.value = data.student.last_name || '';
+
+                                    // Show existing student notice
+                                    existingStudentName.textContent = data.student.full_name;
+                                    existingStudentNumber.textContent = data.student.student_number;
+                                    existingStudentAccount.textContent = data.student.has_account ? 'Yes' : 'No';
+                                    existingStudentNotice.classList.remove('hidden');
+
+                                    // Make identity fields readonly
+                                    studentNumberInput.readOnly = true;
+                                    firstNameInput.readOnly = true;
+                                    lastNameInput.readOnly = true;
+
+                                    // Keep student type as 'old' for unified workflow
+                                    studentTypeSelect.value = 'old';
+                                } else if (data.student_type === 'legacy') {
+                                    // Handle legacy student
+                                    studentNumberInput.value = data.student.student_number;
+                                    firstNameInput.value = data.student.first_name || '';
+                                    middleNameInput.value = data.student.middle_name || '';
+                                    lastNameInput.value = data.student.last_name || '';
+
+                                    // Show success message
+                                    foundStudentNumber.textContent = data.student.student_number;
+                                    foundStudentName.textContent = data.student.full_name;
+                                    qrScanResult.classList.remove('hidden');
+
+                                    // Make identity fields readonly
+                                    studentNumberInput.readOnly = true;
+                                    firstNameInput.readOnly = true;
+                                    lastNameInput.readOnly = true;
+
+                                    // Keep student type as 'old' for unified workflow
+                                    studentTypeSelect.value = 'old';
+                                }
+                            } else {
+                                // Show error message
+                                scanErrorMessage.textContent = data.message || 'Student not found.';
+                                qrScanError.classList.remove('hidden');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error looking up student:', error);
+                            scanErrorMessage.textContent = 'Error connecting to server. Please try again.';
+                            qrScanError.classList.remove('hidden');
+                        })
+                        .finally(() => {
+                            scanInProgress = false;
+                        });
+                    } else {
+                        // No student type selected
+                        scanErrorMessage.textContent = 'Please select Student Type first.';
+                        qrScanError.classList.remove('hidden');
+                        scanInProgress = false;
+                    }
                 }
 
                 function onScanFailure(error) {
@@ -469,6 +505,108 @@
                 // QR Scanner button handlers
                 startScanBtn.addEventListener('click', startScanner);
                 stopScanBtn.addEventListener('click', stopScanner);
+                
+                // Manual lookup button handler
+                lookupStudentBtn.addEventListener('click', function() {
+                    const studentNumber = studentNumberInput.value.trim();
+
+                    if (!studentNumber) {
+                        alert('Please enter a student number first.');
+                        return;
+                    }
+
+                    // Check student type to determine workflow
+                    if (studentTypeSelect.value === 'new') {
+                        // New Student: Just confirm the student number is set
+                        studentNumberInput.readOnly = true;
+
+                        // Show success message
+                        foundStudentNumber.textContent = studentNumber;
+                        foundStudentName.textContent = 'Ready for manual entry';
+                        qrScanResult.classList.remove('hidden');
+                    } else if (studentTypeSelect.value === 'old') {
+                        // Old Student: Lookup student in system
+                        // Show loading state
+                        scanErrorMessage.textContent = 'Looking up student...';
+                        qrScanError.classList.remove('hidden');
+                        lookupStudentBtn.disabled = true;
+                        lookupStudentBtn.textContent = 'Looking up...';
+
+                        // Call unified student lookup endpoint
+                        fetch('{{ route('registrar.students.lookup-student-qr') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ student_number: studentNumber })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            qrScanError.classList.add('hidden');
+
+                            if (data.success) {
+                                if (data.student_type === 'existing') {
+                                    // Handle existing student re-enrollment
+                                    studentNumberInput.value = data.student.student_number;
+                                    firstNameInput.value = data.student.first_name || '';
+                                    middleNameInput.value = data.student.middle_name || '';
+                                    lastNameInput.value = data.student.last_name || '';
+
+                                    // Show existing student notice
+                                    existingStudentName.textContent = data.student.full_name;
+                                    existingStudentNumber.textContent = data.student.student_number;
+                                    existingStudentAccount.textContent = data.student.has_account ? 'Yes' : 'No';
+                                    existingStudentNotice.classList.remove('hidden');
+
+                                    // Make identity fields readonly
+                                    studentNumberInput.readOnly = true;
+                                    firstNameInput.readOnly = true;
+                                    lastNameInput.readOnly = true;
+
+                                    // Keep student type as 'old' for unified workflow
+                                    studentTypeSelect.value = 'old';
+                                } else if (data.student_type === 'legacy') {
+                                    // Handle legacy student
+                                    studentNumberInput.value = data.student.student_number;
+                                    firstNameInput.value = data.student.first_name || '';
+                                    middleNameInput.value = data.student.middle_name || '';
+                                    lastNameInput.value = data.student.last_name || '';
+
+                                    // Show success message
+                                    foundStudentNumber.textContent = data.student.student_number;
+                                    foundStudentName.textContent = data.student.full_name;
+                                    qrScanResult.classList.remove('hidden');
+
+                                    // Make identity fields readonly
+                                    studentNumberInput.readOnly = true;
+                                    firstNameInput.readOnly = true;
+                                    lastNameInput.readOnly = true;
+
+                                    // Keep student type as 'old' for unified workflow
+                                    studentTypeSelect.value = 'old';
+                                }
+                            } else {
+                                // Show error message
+                                scanErrorMessage.textContent = data.message || 'Student not found.';
+                                qrScanError.classList.remove('hidden');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error looking up student:', error);
+                            scanErrorMessage.textContent = 'Error connecting to server. Please try again.';
+                            qrScanError.classList.remove('hidden');
+                        })
+                        .finally(() => {
+                            lookupStudentBtn.disabled = false;
+                            lookupStudentBtn.textContent = 'Lookup';
+                        });
+                    } else {
+                        // No student type selected
+                        alert('Please select Student Type first.');
+                    }
+                });
             });
         </script>
     </div>

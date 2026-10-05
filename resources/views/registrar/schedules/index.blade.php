@@ -1,12 +1,24 @@
 @extends('layouts.app')
 @section('title', 'Class Schedules')
 @section('content')
+    <x-delete-confirm-modal
+        name="delete-schedule-modal"
+        title="Delete Class Schedule"
+        message="Are you sure you want to delete this class schedule?"
+        recordName=""
+        recordDetails=""
+    />
 
     @session('success')
         <div class="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3 mb-6">
             {{ $value }}
         </div>
     @endsession
+    @if(session('error'))
+        <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-6">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
@@ -133,14 +145,19 @@
                         </td>
                         <td class="px-6 py-3 text-gray-600">{{ $schedule->room }}</td>
                         <td class="px-6 py-3">
-                            <form method="POST" action="{{ route('registrar.schedules.destroy', $schedule) }}"
-                                onsubmit="return confirm('Delete this schedule?')">
-                                @csrf @method('DELETE')
-                                <button type="submit"
-                                    class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition">
-                                    Delete
-                                </button>
-                            </form>
+                            <button
+                                type="button"
+                                x-on:click="$dispatch('open-delete-modal', {
+                                    modalName: 'delete-schedule-modal',
+                                    id: {{ $schedule->id }},
+                                    name: '{{ $schedule->subject->code ?? 'N/A' }} - {{ $schedule->subject->name ?? 'N/A' }}',
+                                    details: 'Teacher: {{ $schedule->teacher->name ?? 'N/A' }} | Section: {{ $schedule->section->yearLevel->name ?? '' }} - Sec {{ $schedule->section->name ?? '' }}',
+                                    action: '/registrar/schedules/{{ $schedule->id }}'
+                                })"
+                                class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition"
+                            >
+                                Delete
+                            </button>
                         </td>
                     </tr>
                     @empty

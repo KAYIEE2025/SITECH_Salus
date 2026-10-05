@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Section extends Model
 {
-    protected $fillable = ['name', 'year_level_id', 'is_active', 'adviser'];
+    protected $fillable = ['name', 'year_level_id', 'is_active', 'adviser_id'];
 
     public function yearLevel()
     {
@@ -21,5 +21,10 @@ class Section extends Model
     public function classSchedules()
     {
         return $this->hasMany(ClassSchedule::class);
+    }
+
+    public function adviser()
+    {
+        return $this->belongsTo(User::class, 'adviser_id');
     }
 }

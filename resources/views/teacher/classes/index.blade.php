@@ -7,7 +7,7 @@
             <p class="mt-1 text-sm text-gray-500">Sections are grouped below. Open a section to manage grades by subject.</p>
         </div>
         <div class="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600">
-            {{ $sectionGroups->sum(fn ($group) => $group['classes']->count()) }} assigned subject(s)
+            {{ $sectionGroups->sum(fn ($group) => $group['classes']->pluck('subject_id')->unique()->count()) }} assigned subject(s)
         </div>
     </div>
 
@@ -31,7 +31,7 @@
                                     {{ optional($section?->yearLevel)->name ?? 'No grade level' }} - {{ $section->name ?? 'Unassigned Section' }}
                                 </h3>
                                 <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-                                    {{ $classes->count() }} subject(s)
+                                    {{ $classes->pluck('subject_id')->unique()->count() }} subject(s)
                                 </span>
                             </div>
                             <p class="mt-1 text-sm text-gray-500">
@@ -49,7 +49,7 @@
                         <div class="hidden grid-cols-12 gap-4 bg-gray-50 px-5 py-3 text-xs font-medium uppercase text-gray-500 md:grid">
                             <div class="col-span-4">Subject</div>
                             <div class="col-span-2">Schedule</div>
-                            <div class="col-span-2">Term</div>
+                            <div class="col-span-2">School Year</div>
                             <div class="col-span-2">Room</div>
                             <div class="col-span-2 text-right">Action</div>
                         </div>
@@ -75,7 +75,7 @@
                                     </div>
 
                                     <div class="text-sm text-gray-600 md:col-span-2">
-                                        <span class="font-medium text-gray-500 md:hidden">Term: </span>
+                                        <span class="font-medium text-gray-500 md:hidden">School Year: </span>
                                         {{ $class->school_year }}
                                     </div>
 
@@ -85,10 +85,22 @@
                                     </div>
 
                                     <div class="md:col-span-2 md:text-right">
-                                        <a href="{{ route('teacher.classes.grades', $class) }}"
-                                           class="inline-flex w-full items-center justify-center rounded-lg bg-[#1a5c1a] px-3 py-2 text-sm font-semibold text-white transition hover:bg-green-900 sm:w-auto">
-                                            Manage Grades
-                                        </a>
+                                        <div class="flex flex-col gap-2 lg:flex-row lg:justify-end">
+                                            <a href="{{ route('teacher.classes.students', $class) }}"
+                                               class="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[#1a5c1a] bg-white px-4 py-2.5 text-sm font-medium text-[#1a5c1a] shadow-sm transition hover:bg-green-50 hover:shadow lg:w-auto">
+                                                <svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                                </svg>
+                                                View Students
+                                            </a>
+                                            <a href="{{ route('teacher.classes.grades', $class) }}"
+                                               class="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#1a5c1a] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-900 hover:shadow lg:w-auto">
+                                                <svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                Manage Grades
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach

@@ -5,11 +5,13 @@ use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
+use App\Http\Controllers\Admin\TeacherStudyLoadController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Registrar\DashboardController as RegistrarDashboardController;
 use App\Http\Controllers\Registrar\GradeApprovalController;
 use App\Http\Controllers\Registrar\GradeReopeningRequestController as RegistrarGradeReopeningRequestController;
 use App\Http\Controllers\Registrar\GradeSubmissionScheduleController;
+use App\Http\Controllers\Registrar\ClassScheduleController;
 use App\Http\Controllers\Registrar\SectionController;
 use App\Http\Controllers\Registrar\StudentController;
 use App\Http\Controllers\Registrar\StudyLoadController;
@@ -30,10 +32,10 @@ use App\Http\Controllers\SuperAdmin\ActivityLogController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\FineRecordsController;
 use App\Http\Controllers\SuperAdmin\RoleManagementController;
-use App\Http\Controllers\SuperAdmin\RolesController;
 use App\Http\Controllers\SuperAdmin\SchoolYearController;
 use App\Http\Controllers\SuperAdmin\StudentAccountController;
 use App\Http\Controllers\SuperAdmin\UserController;
+use App\Http\Controllers\Teacher\AdvisoryStudentController;
 use App\Http\Controllers\Teacher\AnnouncementController as TeacherAnnouncementController;
 use App\Http\Controllers\Teacher\ClassController as TeacherClassController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
@@ -90,7 +92,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/{schoolYear}/set-active', [SchoolYearController::class, 'setActive'])->name('set-active');
             Route::delete('/{schoolYear}', [SchoolYearController::class, 'destroy'])->name('destroy');
         });
-        Route::get('/roles', [RolesController::class, 'index'])->name('roles');
         Route::get('/role-management', [RoleManagementController::class, 'index'])->name('role-management');
         Route::get('/api/user-roles/{user}', [RoleManagementController::class, 'getUserRoles'])->name('api.user-roles');
         Route::put('/role-management/{user}', [RoleManagementController::class, 'update'])->name('role-management.update');
@@ -127,6 +128,7 @@ Route::middleware('auth')->group(function () {
         Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
             Route::get('/', [AdminActivityLogController::class, 'index'])->name('index');
         });
+        Route::get('/teacher-study-load', [TeacherStudyLoadController::class, 'index'])->name('teacher-study-load');
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/', [ProfileController::class, 'index'])->name('index');
             Route::put('/', [ProfileController::class, 'update'])->name('update');
@@ -151,8 +153,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/study-load', [StudyLoadController::class, 'index'])->name('study-load');
         Route::post('/study-load', [StudyLoadController::class, 'store'])->name('study-load.store');
         Route::delete('/study-load/{schedule}', [StudyLoadController::class, 'destroy'])->name('study-load.destroy');
+        Route::get('/schedules', [ClassScheduleController::class, 'index'])->name('schedules');
+        Route::post('/schedules', [ClassScheduleController::class, 'store'])->name('schedules.store');
+        Route::delete('/schedules/{schedule}', [ClassScheduleController::class, 'destroy'])->name('schedules.destroy');
         Route::get('/sections', [SectionController::class, 'index'])->name('sections');
         Route::post('/sections', [SectionController::class, 'store'])->name('sections.store');
+        Route::get('/sections/{section}/edit', [SectionController::class, 'edit'])->name('sections.edit');
+        Route::put('/sections/{section}', [SectionController::class, 'update'])->name('sections.update');
         Route::delete('/sections/{section}', [SectionController::class, 'destroy'])->name('sections.destroy');
         Route::get('/grade-approval', [GradeApprovalController::class, 'index'])->name('grade-approval');
         Route::get('/grade-approval/{classSchedule}/view', [GradeApprovalController::class, 'view'])->name('grade-approval.view');
@@ -220,6 +227,9 @@ Route::middleware('auth')->group(function () {
         Route::prefix('announcements')->name('announcements.')->group(function () {
             Route::get('/', [TeacherAnnouncementController::class, 'index'])->name('index');
             Route::post('/{announcement}/mark-seen', [TeacherAnnouncementController::class, 'markSeen'])->name('mark-seen');
+        });
+        Route::prefix('advisory-students')->name('advisory-students.')->group(function () {
+            Route::get('/', [AdvisoryStudentController::class, 'index'])->name('index');
         });
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/', [TeacherProfileController::class, 'index'])->name('index');

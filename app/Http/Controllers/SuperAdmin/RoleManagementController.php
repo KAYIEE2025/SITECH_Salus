@@ -15,8 +15,20 @@ class RoleManagementController extends Controller
         $validPerPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 25;
 
         $users = User::with('roles')
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->string('search')->toString();
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhereHas('roles', function ($roleQuery) use ($search) {
+                          $roleQuery->where('name', 'like', "%{$search}%");
+                      });
+                });
+            })
             ->orderBy('name')
-            ->paginate($validPerPage);
+            ->paginate($validPerPage)
+            ->withQueryString();
 
         $roles = Role::orderBy('name')->get();
 

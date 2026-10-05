@@ -62,6 +62,10 @@ class EventController extends Controller
                 });
         });
 
+        activity()
+            ->causedBy(auth()->user())
+            ->log('Created SSG event: ' . $validated['title'] . ' on ' . $validated['event_date'] . '. ' . $attendanceCount . ' attendance record(s) prepared.');
+
         return redirect()
             ->route('ssg.events.index')
             ->with('success', 'Event created successfully. ' . $attendanceCount . ' attendance record(s) prepared.');
@@ -83,6 +87,11 @@ class EventController extends Controller
     {
         $event->update($this->validateEvent($request));
 
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($event)
+            ->log('Updated SSG event: ' . $event->title);
+
         return redirect()
             ->route('ssg.events.index')
             ->with('success', 'Event updated successfully.');
@@ -90,7 +99,15 @@ class EventController extends Controller
 
     public function destroy(SsgEvent $event)
     {
+        // Capture information before deletion for logging
+        $eventTitle = $event->title;
+        $eventDate = $event->event_date->format('F d, Y');
+
         $event->delete();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->log('Deleted SSG event: ' . $eventTitle . ' on ' . $eventDate);
 
         return redirect()
             ->route('ssg.events.index')

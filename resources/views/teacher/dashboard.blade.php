@@ -10,7 +10,6 @@
                     <div class="flex items-start justify-between mb-4">
                         <div>
                             <h3 class="text-xl font-bold text-gray-900">{{ $latestAnnouncement->title }}</h3>
-                            <p class="text-sm text-gray-500 mt-1">{{ $latestAnnouncement->created_at->format('M d, Y - g:i A') }}</p>
                         </div>
                         <button onclick="closeAnnouncementModal()" class="text-gray-400 hover:text-gray-600 transition">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -19,7 +18,7 @@
                         </button>
                     </div>
                     <div class="prose prose-sm max-w-none text-gray-700">
-                        <p>{{ nl2br(e($latestAnnouncement->body)) }}</p>
+                        <p>{!! nl2br(e($latestAnnouncement->body)) !!}</p>
                     </div>
                     <div class="mt-6 flex justify-end">
                         <button onclick="markAnnouncementAsSeen({{ $latestAnnouncement->id }})" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium">

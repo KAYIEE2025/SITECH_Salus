@@ -5,10 +5,18 @@
     <x-nav-link href="{{ route('admin.announcements.index') }}" :active="false">Announcements</x-nav-link>
     <x-nav-link href="{{ route('admin.calendar.index') }}" :active="true">School Calendar</x-nav-link>
     <x-nav-link href="{{ route('admin.reports.index') }}" :active="false">Reports</x-nav-link>
+    <x-nav-link href="{{ route('admin.teacher-study-load') }}" :active="false">Teacher Study Load</x-nav-link>
     <x-nav-link href="{{ route('admin.activity-logs.index') }}" :active="false">Activity Logs</x-nav-link>
     <x-nav-link href="{{ route('admin.profile.index') }}" :active="false">My Profile</x-nav-link>
 @endsection
 @section('content')
+    <x-delete-confirm-modal
+        name="delete-calendar-modal"
+        title="Delete School Event"
+        message="Are you sure you want to delete this school event?"
+        recordName=""
+        recordDetails=""
+    />
     @session('success')
         <div class="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3 mb-6">
             {{ $value }}
@@ -60,15 +68,19 @@
                                     class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg transition">
                                     Edit
                                 </a>
-                                <form method="POST" action="{{ route('admin.calendar.destroy', $event) }}" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                        onclick="return confirm('Are you sure you want to delete this event?')"
-                                        class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition">
-                                        Delete
-                                    </button>
-                                </form>
+                                <button
+                                    type="button"
+                                    x-on:click="$dispatch('open-delete-modal', {
+                                        modalName: 'delete-calendar-modal',
+                                        id: {{ $event->id }},
+                                        name: '{{ $event->title }}',
+                                        details: 'Date: {{ $event->event_date ? $event->event_date->format('M d, Y') : 'N/A' }}',
+                                        action: '/admin/calendar/{{ $event->id }}'
+                                    })"
+                                    class="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg transition"
+                                >
+                                    Delete
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -82,5 +94,14 @@
                 </tbody>
             </table>
         </div>
+
+        @if($events->hasPages())
+        <div class="px-4 py-3 md:px-6 md:py-4 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-2 md:gap-0">
+            <p class="text-xs md:text-sm text-gray-600">
+                Showing {{ $events->firstItem() }} to {{ $events->lastItem() }} of {{ $events->total() }} entries
+            </p>
+            {{ $events->links() }}
+        </div>
+        @endif
     </div>
 @endsection

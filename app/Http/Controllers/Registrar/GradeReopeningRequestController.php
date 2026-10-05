@@ -66,6 +66,12 @@ class GradeReopeningRequestController extends Controller
             // Update the reopening request with approval details
             $reopeningRequest->approve(auth()->id(), $newDeadline, $httpRequest->remarks);
 
+            activity()
+                ->event('grade_reopening_request_approved')
+                ->causedBy(auth()->user())
+                ->performedOn($reopeningRequest)
+                ->log('Approved grade reopening request for Term ' . $reopeningRequest->grading_period . ' (' . $reopeningRequest->school_year . '). New deadline: ' . $newDeadline->format('F d, Y g:i A'));
+
             Log::info('AFTER APPROVING REOPENING REQUEST', [
                 'request_id' => $reopeningRequest->id,
                 'new_status' => $reopeningRequest->fresh()->status,
@@ -142,6 +148,12 @@ class GradeReopeningRequestController extends Controller
             DB::beginTransaction();
 
             $reopeningRequest->reject(auth()->id());
+
+            activity()
+                ->event('grade_reopening_request_rejected')
+                ->causedBy(auth()->user())
+                ->performedOn($reopeningRequest)
+                ->log('Rejected grade reopening request for Term ' . $reopeningRequest->grading_period . ' (' . $reopeningRequest->school_year . ')');
 
             Log::info('REJECT METHOD COMPLETED', [
                 'request_id' => $reopeningRequest->id,
