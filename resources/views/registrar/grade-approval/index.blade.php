@@ -8,6 +8,105 @@
         </div>
     @endsession
 
+    {{-- Filters --}}
+    <div class="ra-card mb-6 p-4 md:p-6">
+        <form method="GET" action="{{ route('registrar.grade-approval') }}" class="grid gap-3 md:gap-4 grid-cols-1 lg:grid-cols-3 lg:items-end" x-data="{ loading: false }">
+            <div class="lg:col-span-3">
+                <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Search Student / Student Number</label>
+                <input type="text" name="search" value="{{ request('search') }}"
+                    placeholder="Search by student name or number..."
+                    class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                    x-model.debounce.500ms="search"
+                    @input="$el.closest('form').submit()">
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">School Year</label>
+                <select name="school_year"
+                    class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="">All School Years</option>
+                    @foreach($schoolYears as $schoolYear)
+                        <option value="{{ $schoolYear }}" {{ request('school_year') == $schoolYear ? 'selected' : '' }}>
+                            {{ $schoolYear }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Term</label>
+                <select name="term"
+                    class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="">All Terms</option>
+                    <option value="Term 1" {{ request('term') == 'Term 1' ? 'selected' : '' }}>Term 1</option>
+                    <option value="Term 2" {{ request('term') == 'Term 2' ? 'selected' : '' }}>Term 2</option>
+                    <option value="Term 3" {{ request('term') == 'Term 3' ? 'selected' : '' }}>Term 3</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Grade Level</label>
+                <select name="grade_level_id"
+                    class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="">All Grade Levels</option>
+                    @foreach($yearLevels as $yearLevel)
+                        <option value="{{ $yearLevel->id }}" {{ request('grade_level_id') == $yearLevel->id ? 'selected' : '' }}>
+                            {{ $yearLevel->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Section</label>
+                <select name="section_id"
+                    class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="">All Sections</option>
+                    @foreach($sections as $section)
+                        <option value="{{ $section->id }}" {{ request('section_id') == $section->id ? 'selected' : '' }}>
+                            {{ $section->yearLevel->name ?? '' }} - Section {{ $section->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Subject</label>
+                <select name="subject_id"
+                    class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="">All Subjects</option>
+                    @foreach($subjects as $subject)
+                        <option value="{{ $subject->id }}" {{ request('subject_id') == $subject->id ? 'selected' : '' }}>
+                            {{ $subject->code }} - {{ $subject->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Teacher</label>
+                <select name="teacher_id"
+                    class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                    <option value="">All Teachers</option>
+                    @foreach($teachers as $teacher)
+                        <option value="{{ $teacher->id }}" {{ request('teacher_id') == $teacher->id ? 'selected' : '' }}>
+                            {{ $teacher->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 rounded-lg bg-green-800 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-semibold text-white transition hover:bg-green-900 whitespace-nowrap">
+                    Apply Filters
+                </button>
+                <a href="{{ route('registrar.grade-approval') }}" class="rounded-lg bg-gray-100 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-medium text-gray-700 transition hover:bg-gray-200 whitespace-nowrap">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
     {{-- Pending Approvals --}}
     <div class="ra-card mb-6 overflow-hidden">
         <div class="ra-card-header flex flex-col items-start justify-between gap-3 sm:gap-4 sm:flex-row sm:items-center">
@@ -28,7 +127,7 @@
             </div>
         </div>
 
-        @forelse($pendingGrades as $classScheduleId => $grades)
+        @forelse($groupedPendingGrades as $classScheduleId => $grades)
             @php $first = $grades->first(); @endphp
             <div class="px-4 py-3 md:px-6 md:py-4 border-b border-gray-100">
                 <div class="flex items-center justify-between mb-2 md:mb-3">
@@ -167,6 +266,12 @@
                 No grade submissions pending approval.
             </div>
         @endforelse
+
+        @if($pendingGrades->hasPages())
+            <div class="px-4 py-3 md:px-6 md:py-4 border-t border-gray-100">
+                {{ $pendingGrades->appends(request()->query())->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- Review History --}}
@@ -216,6 +321,12 @@
                 @endforelse
             </tbody>
         </table></div>
+
+        @if($history->hasPages())
+            <div class="px-4 py-3 md:px-6 md:py-4 border-t border-gray-100">
+                {{ $history->appends(request()->query())->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- Reject Selected Modal --}}
@@ -305,7 +416,8 @@
                 console.log('APPROVE SELECTED - Response received:', data);
                 if (data.success) {
                     console.log('APPROVE SELECTED - Success, reloading page');
-                    window.location.href = '{{ route('registrar.grade-approval') }}';
+                    const currentParams = new URLSearchParams(window.location.search);
+                    window.location.href = '{{ route('registrar.grade-approval') }}' + (currentParams.toString() ? '?' + currentParams.toString() : '');
                 } else {
                     console.error('APPROVE SELECTED - Server error:', data.message);
                     alert(data.message || 'Error approving selected classes.');
@@ -362,7 +474,8 @@
                 console.log('REJECT SELECTED - Response received:', data);
                 if (data.success) {
                     console.log('REJECT SELECTED - Success, reloading page');
-                    window.location.href = '{{ route('registrar.grade-approval') }}';
+                    const currentParams = new URLSearchParams(window.location.search);
+                    window.location.href = '{{ route('registrar.grade-approval') }}' + (currentParams.toString() ? '?' + currentParams.toString() : '');
                 } else {
                     console.error('REJECT SELECTED - Server error:', data.message);
                     alert(data.message || 'Error rejecting selected classes.');

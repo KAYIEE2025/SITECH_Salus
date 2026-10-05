@@ -20,10 +20,12 @@
             </a>
         </div>
 
-        <form method="GET" action="{{ route('registrar.students') }}" class="px-6 py-4 border-b border-gray-100">
+        <form method="GET" action="{{ route('registrar.students') }}" class="px-6 py-4 border-b border-gray-100" x-data="{ loading: false }">
             <div class="flex flex-col sm:flex-row gap-3">
                 <input type="search" name="search" value="{{ request('search') }}" placeholder="Search students..."
-                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-800">
+                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-800"
+                    x-model.debounce.500ms="search"
+                    @input="$el.closest('form').submit()">
                 <button type="submit" class="rounded-lg bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-4 py-2 transition">
                     Search
                 </button>

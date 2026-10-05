@@ -51,7 +51,7 @@ class AnnouncementController extends Controller
         }
 
         // Get announcements sorted by newest first
-        $announcements = $query->orderByDesc('created_at')->get();
+        $announcements = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
 
         return view('student.announcements', compact(
             'student',

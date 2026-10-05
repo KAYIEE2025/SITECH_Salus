@@ -17,13 +17,15 @@
 
     {{-- Filters --}}
     <div class="bg-white rounded-xl border border-gray-200 p-4 md:p-6 mb-6">
-        <form method="GET" action="{{ route('admin.teacher-study-load') }}" class="flex flex-col gap-4">
+        <form method="GET" action="{{ route('admin.teacher-study-load') }}" class="flex flex-col gap-4" x-data="{ loading: false }">
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
                     <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">Search Teacher Name</label>
                     <input type="text" name="search" value="{{ request('search') }}"
                         placeholder="Search by teacher name..."
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
+                        x-model.debounce.500ms="search"
+                        @input="$el.closest('form').submit()">
                 </div>
                 <div class="flex-1">
                     <label class="block text-xs md:text-sm font-medium text-gray-700 mb-1">School Year</label>

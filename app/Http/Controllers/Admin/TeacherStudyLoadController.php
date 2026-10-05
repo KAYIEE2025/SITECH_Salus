@@ -34,7 +34,7 @@ class TeacherStudyLoadController extends Controller
             ->orderBy('school_year', 'desc')
             ->orderBy('time_start');
 
-        $schedules = $query->paginate(50);
+        $schedules = $query->paginate(50)->withQueryString();
         
         return view('admin.teacher-study-load.index', compact(
             'teachers',

@@ -14,7 +14,7 @@
     </div>
 
     <div class="sa-card mb-4 md:mb-6 p-4 md:p-5 sm:p-6">
-        <form method="GET" action="{{ route('superadmin.fine-records.index') }}" class="grid gap-3 md:gap-4 grid-cols-1 lg:grid-cols-5 lg:items-end">
+        <form method="GET" action="{{ route('superadmin.fine-records.index') }}" class="grid gap-3 md:gap-4 grid-cols-1 lg:grid-cols-5 lg:items-end" x-data="{ loading: false }">
             <div>
                 <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">School Year</label>
                 <select name="school_year" class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600">
@@ -51,7 +51,9 @@
                 <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Search Student</label>
                 <input type="text" name="search" value="{{ $filters['search'] ?? '' }}"
                     class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                    placeholder="Name or student number">
+                    placeholder="Name or student number"
+                    x-model.debounce.500ms="search"
+                    @input="$el.closest('form').submit()">
             </div>
 
             <div class="flex gap-2">

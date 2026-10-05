@@ -20,9 +20,11 @@
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('superadmin.activity-logs') }}" class="mt-3 md:mt-4 grid grid-cols-1 gap-2 md:gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <form method="GET" action="{{ route('superadmin.activity-logs') }}" class="mt-3 md:mt-4 grid grid-cols-1 gap-2 md:gap-3 sm:grid-cols-2 xl:grid-cols-3" x-data="{ loading: false }">
                 <input type="search" name="search" value="{{ request('search') }}" placeholder="Search description"
-                    class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                    class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]"
+                    x-model.debounce.500ms="search"
+                    @input="$el.closest('form').submit()">
 
                 <select name="causer_id" class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                     <option value="">All users</option>

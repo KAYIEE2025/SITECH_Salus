@@ -9,7 +9,7 @@
     </div>
 
     <div class="sg-card mb-6 p-6">
-        <form method="GET" action="{{ route('ssg.fines.index') }}" class="grid gap-4 lg:grid-cols-5 lg:items-end">
+        <form method="GET" action="{{ route('ssg.fines.index') }}" class="grid gap-4 lg:grid-cols-5 lg:items-end" x-data="{ loading: false }">
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700">School Year</label>
                 @if($activeSchoolYear)
@@ -56,7 +56,9 @@
                 <label class="mb-1 block text-sm font-medium text-gray-700">Search Student</label>
                 <input type="text" name="search" value="{{ $filters['search'] ?? '' }}"
                     class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                    placeholder="Name or student number">
+                    placeholder="Name or student number"
+                    x-model.debounce.500ms="search"
+                    @input="$el.closest('form').submit()">
             </div>
 
             <div class="flex gap-2">

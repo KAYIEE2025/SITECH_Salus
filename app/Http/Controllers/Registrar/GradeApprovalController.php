@@ -11,43 +11,153 @@ use Illuminate\Support\Facades\DB;
 
 class GradeApprovalController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Get submitted grades grouped by class schedule (exclude old records without grading_period)
-        $pendingGrades = FinalGrade::where('status', 'submitted')
+        // Get filter options
+        $schoolYears = ClassSchedule::select('school_year')
+            ->whereNotNull('school_year')
+            ->distinct()
+            ->orderBy('school_year', 'desc')
+            ->pluck('school_year');
+
+        $yearLevels = \App\Models\YearLevel::orderBy('level')->get();
+        $sections = \App\Models\Section::with('yearLevel')->orderBy('name')->get();
+        $subjects = \App\Models\Subject::where('is_active', true)->orderBy('code')->get();
+        $teachers = \App\Models\User::role('Teacher')->orderBy('name')->get();
+
+        // Build pending grades query with filters
+        $pendingQuery = FinalGrade::where('status', 'submitted')
             ->whereNotNull('grading_period')
-            ->with(['student', 'classSchedule.subject', 'classSchedule.section.yearLevel', 'classSchedule.teacher'])
-            ->get()
-            ->groupBy('class_schedule_id');
+            ->with(['student', 'classSchedule.subject', 'classSchedule.section.yearLevel', 'classSchedule.teacher']);
+
+        // Apply filters
+        $pendingQuery->when($request->filled('search'), function ($query) use ($request) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('student', function ($studentQuery) use ($search) {
+                    $studentQuery->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('student_number', 'like', "%{$search}%");
+                })
+                ->orWhere('student_name', 'like', "%{$search}%")
+                ->orWhere('student_number', 'like', "%{$search}%");
+            });
+        })
+        ->when($request->filled('school_year'), function ($query) use ($request) {
+            $query->whereHas('classSchedule', function ($q) use ($request) {
+                $q->where('school_year', $request->school_year);
+            });
+        })
+        ->when($request->filled('term'), function ($query) use ($request) {
+            $termMap = ['Term 1' => 1, 'Term 2' => 2, 'Term 3' => 3];
+            $gradingPeriod = $termMap[$request->term] ?? null;
+            if ($gradingPeriod) {
+                $query->where('grading_period', $gradingPeriod);
+            }
+        })
+        ->when($request->filled('grade_level_id'), function ($query) use ($request) {
+            $query->whereHas('classSchedule.section.yearLevel', function ($q) use ($request) {
+                $q->where('id', $request->grade_level_id);
+            });
+        })
+        ->when($request->filled('section_id'), function ($query) use ($request) {
+            $query->whereHas('classSchedule', function ($q) use ($request) {
+                $q->where('section_id', $request->section_id);
+            });
+        })
+        ->when($request->filled('subject_id'), function ($query) use ($request) {
+            $query->whereHas('classSchedule', function ($q) use ($request) {
+                $q->where('subject_id', $request->subject_id);
+            });
+        })
+        ->when($request->filled('teacher_id'), function ($query) use ($request) {
+            $query->whereHas('classSchedule', function ($q) use ($request) {
+                $q->where('teacher_id', $request->teacher_id);
+            });
+        });
+
+        // Get paginated pending grades
+        $pendingGrades = $pendingQuery->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        // Group by class schedule for display
+        $groupedPendingGrades = $pendingGrades->getCollection()->groupBy('class_schedule_id');
 
         \Log::info('REGISTRAR INDEX - Pending grades query', [
-            'total_pending_count' => $pendingGrades->count(),
-            'grouped_by_class' => $pendingGrades->keys()->toArray(),
+            'total_pending_count' => $groupedPendingGrades->count(),
+            'grouped_by_class' => $groupedPendingGrades->keys()->toArray(),
         ]);
 
-        foreach ($pendingGrades as $classScheduleId => $grades) {
-            \Log::info('REGISTRAR INDEX - Class grades', [
-                'class_schedule_id' => $classScheduleId,
-                'grade_count' => $grades->count(),
-                'grading_periods' => $grades->pluck('grading_period')->unique()->toArray(),
-                'statuses' => $grades->pluck('status')->unique()->toArray(),
-                'student_ids' => $grades->pluck('student_id')->toArray(),
-                'student_names' => $grades->map(function($grade) {
-                    return $grade->student ? $grade->student->last_name . ', ' . $grade->student->first_name : $grade->student_name;
-                })->toArray(),
-            ]);
-        }
+        // Get history (approved/rejected) with filters
+        $historyQuery = FinalGrade::whereIn('status', ['approved', 'rejected'])
+            ->with(['student', 'classSchedule.subject']);
 
-        // Get history (approved/rejected)
-        $history = FinalGrade::whereIn('status', ['approved', 'rejected'])
-            ->with(['student', 'classSchedule.subject'])
-            ->orderBy('reviewed_at', 'desc')
-            ->take(50)
-            ->get();
+        // Apply same filters to history
+        $historyQuery->when($request->filled('search'), function ($query) use ($request) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('student', function ($studentQuery) use ($search) {
+                    $studentQuery->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('student_number', 'like', "%{$search}%");
+                })
+                ->orWhere('student_name', 'like', "%{$search}%")
+                ->orWhere('student_number', 'like', "%{$search}%");
+            });
+        })
+        ->when($request->filled('school_year'), function ($query) use ($request) {
+            $query->whereHas('classSchedule', function ($q) use ($request) {
+                $q->where('school_year', $request->school_year);
+            });
+        })
+        ->when($request->filled('term'), function ($query) use ($request) {
+            $termMap = ['Term 1' => 1, 'Term 2' => 2, 'Term 3' => 3];
+            $gradingPeriod = $termMap[$request->term] ?? null;
+            if ($gradingPeriod) {
+                $query->where('grading_period', $gradingPeriod);
+            }
+        })
+        ->when($request->filled('grade_level_id'), function ($query) use ($request) {
+            $query->whereHas('classSchedule.section.yearLevel', function ($q) use ($request) {
+                $q->where('id', $request->grade_level_id);
+            });
+        })
+        ->when($request->filled('section_id'), function ($query) use ($request) {
+            $query->whereHas('classSchedule', function ($q) use ($request) {
+                $q->where('section_id', $request->section_id);
+            });
+        })
+        ->when($request->filled('subject_id'), function ($query) use ($request) {
+            $query->whereHas('classSchedule', function ($q) use ($request) {
+                $q->where('subject_id', $request->subject_id);
+            });
+        })
+        ->when($request->filled('teacher_id'), function ($query) use ($request) {
+            $query->whereHas('classSchedule', function ($q) use ($request) {
+                $q->where('teacher_id', $request->teacher_id);
+            });
+        });
+
+        $history = $historyQuery->orderBy('reviewed_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
 
         $activeSchoolYear = SchoolYearHelper::getActive();
 
-        return view('registrar.grade-approval.index', compact('pendingGrades', 'history', 'activeSchoolYear'));
+        return view('registrar.grade-approval.index', compact(
+            'pendingGrades',
+            'groupedPendingGrades',
+            'history',
+            'activeSchoolYear',
+            'schoolYears',
+            'yearLevels',
+            'sections',
+            'subjects',
+            'teachers'
+        ));
     }
 
     public function view(ClassSchedule $classSchedule)
@@ -156,7 +266,7 @@ class GradeApprovalController extends Controller
 
             DB::commit();
 
-            return back()->with('success', "Term {$gradingPeriod} grades approved successfully. {$approvedCount} student grades are now official.");
+            return redirect()->route('registrar.grade-approval')->with('success', "Term {$gradingPeriod} grades approved successfully. {$approvedCount} student grades are now official.");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -330,7 +440,7 @@ class GradeApprovalController extends Controller
 
             \Log::info('REJECT AFTER COMMIT');
 
-            return back()->with('success', "Term {$gradingPeriod} grades rejected and returned to teacher for revision. {$rejectedCount} student grades affected.");
+            return redirect()->route('registrar.grade-approval')->with('success', "Term {$gradingPeriod} grades rejected and returned to teacher for revision. {$rejectedCount} student grades affected.");
 
         } catch (\Exception $e) {
             DB::rollBack();

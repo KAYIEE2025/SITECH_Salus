@@ -115,9 +115,11 @@
                     </a>
                 </div>
 
-                <form method="GET" action="{{ route('superadmin.accounts') }}" class="mt-3 md:mt-4 grid grid-cols-1 gap-2 md:gap-3 sm:grid-cols-2">
+                <form method="GET" action="{{ route('superadmin.accounts') }}" class="mt-3 md:mt-4 grid grid-cols-1 gap-2 md:gap-3 sm:grid-cols-2" x-data="{ loading: false }">
                     <input type="search" name="search" value="{{ request('search') }}" placeholder="Search accounts"
-                        class="sm:col-span-2 rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
+                        class="sm:col-span-2 rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]"
+                        x-model.debounce.500ms="search"
+                        @input="$el.closest('form').submit()">
                     <select name="role" class="rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5c1a]">
                         <option value="">All roles</option>
                         @foreach($roles as $role)
