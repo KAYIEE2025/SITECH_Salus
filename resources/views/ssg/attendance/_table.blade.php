@@ -2,7 +2,7 @@
     <table class="w-full text-sm">
         <thead class="bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
-                <th class="px-4 py-3 text-left md:px-6">Student Number</th>
+                <!-- <th class="px-4 py-3 text-left md:px-6">Student Number</th> -->
                 <th class="px-4 py-3 text-left md:px-6">Student Name</th>
                 <th class="px-4 py-3 text-left md:px-6">Grade & Section</th>
                 <th class="px-4 py-3 text-left md:px-6">Attendance Status</th>
@@ -13,7 +13,7 @@
         <tbody class="divide-y divide-gray-100">
             @forelse($attendances as $attendance)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3 font-medium text-gray-800 md:px-6 md:py-4">{{ $attendance->student->student_number ?? 'N/A' }}</td>
+                    <!-- <td class="px-4 py-3 font-medium text-gray-800 md:px-6 md:py-4">{{ $attendance->student->student_number ?? 'N/A' }}</td> -->
                     <td class="px-4 py-3 text-gray-700 md:px-6 md:py-4">{{ $attendance->student->full_name ?? 'N/A' }}</td>
                     <td class="px-4 py-3 text-gray-600 md:px-6 md:py-4">
                         {{ $attendance->student?->yearLevel?->name ?? 'N/A' }}

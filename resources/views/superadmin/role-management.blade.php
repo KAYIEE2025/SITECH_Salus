@@ -77,7 +77,11 @@
                                 <p class="font-medium text-gray-800">{{ $user->name }}</p>
                             </td>
                             <td class="px-6 py-3 text-gray-500">
-                                {{ $user->email }}
+                                @if($user->hasRole('Student') && (!$user->email || str_contains($user->email, '@students.local')))
+                                    Not provided
+                                @else
+                                    {{ $user->email }}
+                                @endif
                             </td>
                             <td class="px-6 py-3">
                                 @if($user->roles->isNotEmpty())

@@ -51,7 +51,7 @@
                 <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Search Student</label>
                 <input type="text" name="search" value="{{ $filters['search'] ?? '' }}"
                     class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
-                    placeholder="Name or student number"
+                    placeholder="Student Name"
                     x-model.debounce.500ms="search"
                     @input="$el.closest('form').submit()">
             </div>
@@ -72,7 +72,7 @@
             <table class="w-full min-w-max text-xs md:text-sm">
                 <thead class="bg-gray-50 text-[10px] md:text-xs uppercase text-gray-500">
                     <tr>
-                        <th class="px-2 py-2 md:px-6 md:py-3 text-left">Student Number</th>
+                        <!-- <th class="px-2 py-2 md:px-6 md:py-3 text-left">QR Value</th> -->
                         <th class="px-2 py-2 md:px-6 md:py-3 text-left">Student Name</th>
                         <th class="px-2 py-2 md:px-6 md:py-3 text-left">Grade Level</th>
                         <th class="px-2 py-2 md:px-6 md:py-3 text-left">Section</th>
@@ -84,7 +84,7 @@
                 <tbody class="divide-y divide-gray-100">
                     @forelse($students as $student)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-medium text-gray-800">{{ $student->student_number }}</td>
+                            <!-- <td class="px-2 py-2 md:px-6 md:py-4 font-medium text-gray-800">{{ $student->student_number }}</td> -->
                             <td class="px-2 py-2 md:px-6 md:py-4 text-gray-700">{{ $student->full_name }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-gray-600">{{ $student->yearLevel->name ?? 'N/A' }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-gray-600">{{ $student->section ? 'Section ' . $student->section->name : 'N/A' }}</td>
@@ -166,7 +166,7 @@
                     </div>
                     <div>
                         <label class="mb-1 block text-xs md:text-sm font-medium text-gray-700">Search Student</label>
-                        <input type="text" name="search" class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600" placeholder="Name or student number">
+                        <input type="text" name="search" class="w-full rounded-lg border border-gray-300 px-2 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-green-600" placeholder="Student Name">
                     </div>
                 </div>
                 </div>

@@ -253,10 +253,10 @@
         <div class="info-box">
             <div class="info-row">
                 <div class="info-col">
-                    <div class="info-row">
+                    <!-- <div class="info-row">
                         <div class="info-label">Student No.:</div>
                         <div class="info-value">{{ $student->student_number }}</div>
-                    </div>
+                    </div> -->
                     <div class="info-row">
                         <div class="info-label">Name:</div>
                         <div class="info-value">{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }} {{ $student->suffix }}</div>

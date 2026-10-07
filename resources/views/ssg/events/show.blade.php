@@ -6,10 +6,16 @@
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-2xl font-bold text-gray-800">{{ $event->title }}</h1>
         <div class="flex gap-2">
-            @if($event->status === 'Ongoing' && $event->scan_end_time)
-                <button type="button" id="extend-time-btn" class="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900">Extend Time</button>
-            @endif
-            <a href="{{ route('ssg.events.edit', $event) }}" class="rounded-lg bg-green-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-900">Edit</a>
+            @auth
+                @if(auth()->user()->hasRole('SSG') && auth()->user()->hasRole('Teacher') && $event->status === 'Ongoing' && $event->scan_end_time)
+                    <button type="button" id="extend-time-btn" class="rounded-lg bg-blue-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-900">Extend Time</button>
+                @endif
+            @endauth
+            @auth
+                @if(auth()->user()->hasRole('SSG') && auth()->user()->hasRole('Teacher'))
+                    <a href="{{ route('ssg.events.edit', $event) }}" class="rounded-lg bg-green-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-900">Edit</a>
+                @endif
+            @endauth
             <a href="{{ route('ssg.events.index') }}" class="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200">Back</a>
         </div>
     </div>

@@ -10,7 +10,11 @@
                 <h2 class="mt-1 md:mt-2 text-lg md:text-2xl font-bold tracking-tight sm:text-3xl">Make every campus activity count.</h2>
                 <p class="mt-1 md:mt-2 max-w-lg text-xs md:text-sm leading-5 md:leading-6 text-green-100">Coordinate events, monitor attendance, and keep fine records organized for the student community.</p>
             </div>
-            <a href="{{ route('ssg.events.create') }}" class="rounded-xl bg-gradient-to-r from-[#f4d35e] to-[#d6ad22] px-4 py-3 text-xs md:text-sm font-semibold text-green-950 shadow-md transition hover:shadow-lg min-h-[48px] flex items-center justify-center shrink-0">+ Create Event</a>
+            @auth
+                @if(auth()->user()->hasRole('SSG') && auth()->user()->hasRole('Teacher'))
+                    <a href="{{ route('ssg.events.create') }}" class="rounded-xl bg-gradient-to-r from-[#f4d35e] to-[#d6ad22] px-4 py-3 text-xs md:text-sm font-semibold text-green-950 shadow-md transition hover:shadow-lg min-h-[48px] flex items-center justify-center shrink-0">+ Create Event</a>
+                @endif
+            @endauth
         </div>
     </div>
 

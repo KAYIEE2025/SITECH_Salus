@@ -21,10 +21,14 @@
             <h1 class="text-xl md:text-2xl font-bold text-gray-800">Events</h1>
             <p class="mt-1 text-xs md:text-sm text-gray-500">Create and manage SSG events.</p>
         </div>
-        <a href="{{ route('ssg.events.create') }}"
-            class="rounded-lg bg-green-800 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-medium text-white transition hover:bg-green-900 whitespace-nowrap">
-            + Create Event
-        </a>
+        @auth
+            @if(auth()->user()->hasRole('SSG') && auth()->user()->hasRole('Teacher'))
+                <a href="{{ route('ssg.events.create') }}"
+                    class="rounded-lg bg-green-800 px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-medium text-white transition hover:bg-green-900 whitespace-nowrap">
+                    + Create Event
+                </a>
+            @endif
+        @endauth
     </div>
 
     <div class="sg-card overflow-hidden">
@@ -57,20 +61,24 @@
                                     <div class="flex gap-1.5 md:gap-2 flex-wrap">
                                         <a href="{{ route('ssg.attendance.index', $event) }}" class="attendance-btn rounded-lg bg-green-800 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-white transition hover:bg-green-900 whitespace-nowrap">Scan Attendance</a>
                                         <a href="{{ route('ssg.events.show', $event) }}" class="rounded-lg bg-gray-100 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-gray-700 transition hover:bg-gray-200 whitespace-nowrap">View</a>
-                                        <a href="{{ route('ssg.events.edit', $event) }}" class="rounded-lg bg-green-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-green-700 transition hover:bg-green-100 whitespace-nowrap">Edit</a>
-                                        <button
-                                            type="button"
-                                            x-on:click="$dispatch('open-delete-modal', {
-                                                modalName: 'delete-ssg-event-modal',
-                                                id: {{ $event->id }},
-                                                name: '{{ $event->title }}',
-                                                details: 'Date: {{ $event->event_date->format('M d, Y') }} | Time: {{ $event->event_start_time ? \Carbon\Carbon::parse($event->event_start_time)->format('h:i A') : 'N/A' }}',
-                                                action: '/ssg/events/{{ $event->id }}'
-                                            })"
-                                            class="rounded-lg bg-red-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-red-600 transition hover:bg-red-100 whitespace-nowrap"
-                                        >
-                                            Delete
-                                        </button>
+                                        @auth
+                                            @if(auth()->user()->hasRole('SSG') && auth()->user()->hasRole('Teacher'))
+                                                <a href="{{ route('ssg.events.edit', $event) }}" class="rounded-lg bg-green-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-green-700 transition hover:bg-green-100 whitespace-nowrap">Edit</a>
+                                                <button
+                                                    type="button"
+                                                    x-on:click="$dispatch('open-delete-modal', {
+                                                        modalName: 'delete-ssg-event-modal',
+                                                        id: {{ $event->id }},
+                                                        name: '{{ $event->title }}',
+                                                        details: 'Date: {{ $event->event_date->format('M d, Y') }} | Time: {{ $event->event_start_time ? \Carbon\Carbon::parse($event->event_start_time)->format('h:i A') : 'N/A' }}',
+                                                        action: '/ssg/events/{{ $event->id }}'
+                                                    })"
+                                                    class="rounded-lg bg-red-50 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs text-red-600 transition hover:bg-red-100 whitespace-nowrap"
+                                                >
+                                                    Delete
+                                                </button>
+                                            @endif
+                                        @endauth
                                     </div>
                                     <span class="countdown text-[10px] md:text-xs text-gray-500">--:--:--</span>
                                 </div>

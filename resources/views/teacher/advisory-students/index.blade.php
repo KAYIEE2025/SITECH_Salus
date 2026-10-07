@@ -52,7 +52,7 @@
                             <table class="w-full text-sm">
                                 <thead class="bg-gray-50 text-gray-500 text-xs">
                                     <tr>
-                                        <th class="px-6 py-3 text-left">Student Number</th>
+                                        <!-- <th class="px-6 py-3 text-left">Student Number</th> -->
                                         <th class="px-6 py-3 text-left">Student Name</th>
                                         <th class="px-6 py-3 text-left">Grade Level</th>
                                         <th class="px-6 py-3 text-left">Section</th>
@@ -61,7 +61,7 @@
                                 <tbody class="divide-y divide-gray-100">
                                     @foreach($section->students->sortBy('last_name') as $student)
                                         <tr class="hover:bg-gray-50">
-                                            <td class="px-6 py-3 text-gray-600">{{ $student->student_number ?? '—' }}</td>
+                                            <!-- <td class="px-6 py-3 text-gray-600">{{ $student->student_number ?? '—' }}</td> -->
                                             <td class="px-6 py-3 font-medium text-gray-800">
                                                 {{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}
                                             </td>

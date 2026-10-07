@@ -82,7 +82,7 @@
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="text-left py-3 px-4 font-medium text-gray-600">Student Number</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-600">Qr Value</th>
                                 <th class="text-left py-3 px-4 font-medium text-gray-600">Student Name (Excel)</th>
                                 <th class="text-left py-3 px-4 font-medium text-gray-600">Matched Name (DB)</th>
                                 <th class="text-center py-3 px-4 font-medium text-gray-600">Initial Grade</th>

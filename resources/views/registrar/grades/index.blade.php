@@ -1,0 +1,79 @@
+@extends('layouts.app')
+@section('title', 'Student Grades')
+@section('content')
+
+    @session('success')
+        <div class="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3 mb-6">
+            {{ $value }}
+        </div>
+    @endsession
+
+    <div class="ra-card overflow-hidden">
+        <div class="ra-card-header flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+                <h2 class="text-base font-semibold text-gray-800">Student Grades</h2>
+                <p class="mt-1 text-xs text-gray-500">Search for a student to view their grades.</p>
+            </div>
+        </div>
+
+        <form method="GET" action="{{ route('registrar.grades.index') }}" class="px-6 py-4 border-b border-gray-100" x-data="{ loading: false }">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="search" name="search" value="{{ request('search') }}" placeholder="Search by name, student number, or QR value..."
+                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-800"
+                    x-model.debounce.500ms="search"
+                    @input="$el.closest('form').submit()">
+                <button type="submit" class="rounded-lg bg-green-800 hover:bg-green-900 text-white text-sm font-medium px-4 py-2 transition">
+                    Search
+                </button>
+                @if(request('search'))
+                    <a href="{{ route('registrar.grades.index') }}" class="rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 transition text-center">
+                        Clear
+                    </a>
+                @endif
+            </div>
+        </form>
+
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-max text-xs md:text-sm">
+                <thead class="bg-gray-50 text-gray-500 text-[10px] md:text-xs">
+                    <tr>
+                        <th class="text-left px-2 py-2 md:px-6 md:py-3">Student Name</th>
+                        <!-- <th class="text-left px-2 py-2 md:px-6 md:py-3">Student Number</th> -->
+                        <!-- <th class="text-left px-2 py-2 md:px-6 md:py-3">QR Value</th> -->
+                        <th class="text-left px-2 py-2 md:px-6 md:py-3">Grade Level</th>
+                        <th class="text-left px-2 py-2 md:px-6 md:py-3">Section</th>
+                        <th class="text-left px-2 py-2 md:px-6 md:py-3">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($students as $student)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-2 py-2 md:px-6 md:py-3 text-gray-800">{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</td>
+                        <!-- <td class="px-2 py-2 md:px-6 md:py-3 text-gray-600">{{ $student->student_number ?? '—' }}</td> -->
+                        <!-- <td class="px-2 py-2 md:px-6 md:py-3 text-gray-600">{{ $student->qr_code_value ?? '—' }}</td> -->
+                        <td class="px-2 py-2 md:px-6 md:py-3 text-gray-500">{{ $student->yearLevel->name ?? '—' }}</td>
+                        <td class="px-2 py-2 md:px-6 md:py-3 text-gray-500">{{ $student->section->name ?? '—' }}</td>
+                        <td class="px-2 py-2 md:px-6 md:py-3">
+                            <a href="{{ route('registrar.grades.show', $student) }}"
+                                class="text-[10px] md:text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 md:px-3 md:py-1.5 rounded-lg transition whitespace-nowrap">
+                                View Grades
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-2 py-4 md:px-6 md:py-8 text-center text-gray-400">No students found.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($students->hasPages())
+            <div class="px-6 py-4 border-t border-gray-100">
+                {{ $students->links() }}
+            </div>
+        @endif
+    </div>
+
+@endsection

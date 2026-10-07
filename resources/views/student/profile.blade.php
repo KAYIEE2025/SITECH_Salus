@@ -69,10 +69,10 @@
                 <div class="st-card p-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-6">Profile Information</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
+                        <!-- <div>
                             <label class="block text-sm font-medium text-gray-500 mb-1">Student Number</label>
                             <p class="text-base text-gray-800">{{ $student->student_number }}</p>
-                        </div>
+                        </div> -->
                         <div>
                             <label class="block text-sm font-medium text-gray-500 mb-1">Full Name</label>
                             <p class="text-base text-gray-800">{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }} {{ $student->suffix }}</p>

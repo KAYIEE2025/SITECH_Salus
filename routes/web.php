@@ -11,6 +11,7 @@ use App\Http\Controllers\Registrar\DashboardController as RegistrarDashboardCont
 use App\Http\Controllers\Registrar\GradeApprovalController;
 use App\Http\Controllers\Registrar\GradeReopeningRequestController as RegistrarGradeReopeningRequestController;
 use App\Http\Controllers\Registrar\GradeSubmissionScheduleController;
+use App\Http\Controllers\Registrar\GradeViewController as RegistrarGradeViewController;
 use App\Http\Controllers\Registrar\ClassScheduleController;
 use App\Http\Controllers\Registrar\SectionController;
 use App\Http\Controllers\Registrar\StudentController;
@@ -153,6 +154,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/study-load', [StudyLoadController::class, 'index'])->name('study-load');
         Route::post('/study-load', [StudyLoadController::class, 'store'])->name('study-load.store');
         Route::delete('/study-load/{schedule}', [StudyLoadController::class, 'destroy'])->name('study-load.destroy');
+        Route::prefix('grades')->name('grades.')->group(function () {
+            Route::get('/', [RegistrarGradeViewController::class, 'index'])->name('index');
+            Route::get('/{student}', [RegistrarGradeViewController::class, 'show'])->name('show');
+        });
         Route::get('/schedules', [ClassScheduleController::class, 'index'])->name('schedules');
         Route::post('/schedules', [ClassScheduleController::class, 'store'])->name('schedules.store');
         Route::delete('/schedules/{schedule}', [ClassScheduleController::class, 'destroy'])->name('schedules.destroy');
@@ -245,11 +250,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/attendance/manual-entry', [SsgAttendanceController::class, 'manualEntry'])->name('attendance.manual-entry');
         Route::post('/attendance/manual-entry-full', [SsgAttendanceController::class, 'manualEntryWithFullId'])->name('attendance.manual-entry-full');
         Route::get('/attendance/{event}/list', [SsgAttendanceController::class, 'list'])->name('attendance.list');
-        Route::post('/attendance/{event}/extend-time', [SsgAttendanceController::class, 'extendTime'])->name('attendance.extend-time');
+        Route::post('/attendance/{event}/extend-time', [SsgAttendanceController::class, 'extendTime'])->name('attendance.extend-time')->middleware('is_ssg_teacher');
         Route::get('/fines', [SsgFineController::class, 'index'])->name('fines.index');
         Route::get('/fines/{student}', [SsgFineController::class, 'show'])->name('fines.show');
-        Route::resource('events', SsgEventController::class);
+
+        // Event routes - management requires SSG + Teacher roles
+        Route::get('/events', [SsgEventController::class, 'index'])->name('events.index');
+        Route::get('/events/create', [SsgEventController::class, 'create'])->name('events.create')->middleware('is_ssg_teacher');
+        Route::post('/events', [SsgEventController::class, 'store'])->name('events.store')->middleware('is_ssg_teacher');
+        Route::get('/events/{event}', [SsgEventController::class, 'show'])->name('events.show');
+        Route::get('/events/{event}/edit', [SsgEventController::class, 'edit'])->name('events.edit')->middleware('is_ssg_teacher');
+        Route::put('/events/{event}', [SsgEventController::class, 'update'])->name('events.update')->middleware('is_ssg_teacher');
+        Route::delete('/events/{event}', [SsgEventController::class, 'destroy'])->name('events.destroy')->middleware('is_ssg_teacher');
         Route::get('/events/{event}/status', [SsgEventController::class, 'getStatus'])->name('events.status');
+
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/', [SsgProfileController::class, 'index'])->name('index');
             Route::put('/', [SsgProfileController::class, 'update'])->name('update');

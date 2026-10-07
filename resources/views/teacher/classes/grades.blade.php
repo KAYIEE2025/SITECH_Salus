@@ -500,7 +500,7 @@
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 text-xs uppercase text-gray-500">
                         <tr>
-                            <th class="px-6 py-3 text-left">Student Number</th>
+                            <!-- <th class="px-6 py-3 text-left">Student Number</th> -->
                             <th class="px-6 py-3 text-left">Name</th>
                             <th class="px-6 py-3 text-left">Gender</th>
                             <th class="px-6 py-3 text-left">Status</th>
@@ -509,8 +509,8 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach($students as $studyLoad)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-3 font-mono text-gray-700">
-                                    {{ $studyLoad->student->student_number }}
+                                <!-- <td class="px-6 py-3 font-mono text-gray-700">
+                                    {{ $studyLoad->student->student_number }} -->
                                 </td>
                                 <td class="px-6 py-3 font-medium text-gray-800">
                                     {{ $studyLoad->student->last_name }}, {{ $studyLoad->student->first_name }}

@@ -18,14 +18,14 @@
                     <option value="old" {{ old('student_type') == 'old' ? 'selected' : '' }}>Old Student</option>
                 </select>
                 @error('student_type') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                <p class="text-xs text-gray-500 mt-1">New students: Scan the school-generated QR to auto-fill the Student Number. Old students: Scan existing QR or enter student number for re-enrollment.</p>
+                <!-- <p class="text-xs text-gray-500 mt-1">New students: Scan the school-generated QR to auto-fill the Student Number. Old students: Scan existing QR or enter student number for re-enrollment.</p> -->
             </div>
 
             {{-- Existing Student Notice --}}
             <div id="existing-student-notice" class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200 hidden">
                 <p class="text-sm font-semibold text-green-800">✓ Existing Student Found</p>
                 <p class="text-xs text-gray-700 mt-1">Name: <span id="existing-student-name" class="font-semibold"></span></p>
-                <p class="text-xs text-gray-700 mt-1">Student Number: <span id="existing-student-number" class="font-mono font-semibold"></span></p>
+                <p class="text-xs text-gray-700 mt-1">QR Value: <span id="existing-student-number" class="font-mono font-semibold"></span></p>
                 <p class="text-xs text-gray-700 mt-1">Existing Account: <span id="existing-student-account" class="font-semibold"></span></p>
                 <p class="text-xs text-gray-600 mt-2">This is a re-enrollment. The student's identity and account will be preserved.</p>
             </div>
@@ -34,7 +34,7 @@
 
                 {{-- Student Number --}}
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Student Number <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">QR Value <span class="text-red-500">*</span></label>
                     <div class="flex gap-2">
                         <input type="text" name="student_number" id="student_number" value="{{ old('student_number') }}"
                             class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-600"
@@ -44,12 +44,12 @@
                         </button>
                     </div>
                     @error('student_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                    <p class="text-xs text-gray-500 mt-1" id="student-number-hint">Enter the student's School ID (Student Number).</p>
+                    <!-- <p class="text-xs text-gray-500 mt-1" id="student-number-hint">Enter the student's School ID (Student Number).</p> -->
                 </div>
 
                 <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
                     <p class="text-sm font-medium text-green-800">QR Code</p>
-                    <p class="mt-1 text-xs text-green-700" id="qr-code-hint">Scan the school-generated QR to auto-fill the Student Number.</p>
+                    <p class="mt-1 text-xs text-green-700" id="qr-code-hint">Scan the school-generated QR to auto-fill the QR Value.</p>
                 </div>
 
                 {{-- QR Code Scanner for New and Old Students --}}
@@ -76,7 +76,7 @@
                             Stop Scanner
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1" id="qr-scan-instruction">Scan the school-generated QR code below to auto-fill the Student Number.</p>
+                    <!-- <p class="text-xs text-gray-500 mt-1" id="qr-scan-instruction">Scan the school-generated QR code below to auto-fill the Student Number.</p> -->
                 </div>
 
                 {{-- Gender --}}
@@ -291,12 +291,12 @@
                         studentNumberHint.textContent = 'Enter student number and click Lookup, or scan QR code below.';
                     } else if (studentTypeSelect.value === 'new') {
                         qrCodeScannerContainer.classList.remove('hidden');
-                        qrCodeHint.textContent = 'Scan the school-generated QR to auto-fill the Student Number.';
-                        document.getElementById('qr-scan-instruction').textContent = 'Scan the school-generated QR code below to auto-fill the Student Number.';
+                        qrCodeHint.textContent = 'Scan the school-generated QR to auto-fill the QR Value.';
+                        document.getElementById('qr-scan-instruction').textContent = 'Scan the school-generated QR code.';
                         lookupStudentBtn.classList.add('hidden');
                         studentNumberInput.removeAttribute('readonly');
                         studentNumberInput.setAttribute('required', 'required');
-                        studentNumberHint.textContent = 'Scan QR code to auto-fill, or enter Student Number manually.';
+                        studentNumberHint.textContent = 'Scan QR code to auto-fill, or enter QR Value manually.';
                     } else {
                         qrCodeScannerContainer.classList.add('hidden');
                         qrCodeHint.textContent = 'Select student type to begin.';

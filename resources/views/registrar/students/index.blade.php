@@ -41,7 +41,7 @@
             <table class="w-full min-w-max text-xs md:text-sm">
                 <thead class="bg-gray-50 text-gray-500 text-[10px] md:text-xs">
                     <tr>
-                        <th class="text-left px-2 py-2 md:px-6 md:py-3">Student Number</th>
+                        <!-- <th class="text-left px-2 py-2 md:px-6 md:py-3">Student Number</th> -->
                         <th class="text-left px-2 py-2 md:px-6 md:py-3">Full Name</th>
                         <th class="text-left px-2 py-2 md:px-6 md:py-3">Grade Level & Section</th>
                         <th class="text-left px-2 py-2 md:px-6 md:py-3">Status</th>
@@ -51,7 +51,7 @@
                 <tbody class="divide-y divide-gray-100">
                     @forelse($students as $student)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-2 py-2 md:px-6 md:py-3 font-medium text-green-800">{{ $student->student_number }}</td>
+                        <!-- <td class="px-2 py-2 md:px-6 md:py-3 font-medium text-green-800">{{ $student->student_number }}</td> -->
                         <td class="px-2 py-2 md:px-6 md:py-3 text-gray-800">{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</td>
                         <td class="px-2 py-2 md:px-6 md:py-3 text-gray-500">{{ $student->yearLevel->name ?? '—' }} — Sec {{ $student->section->name ?? '—' }}</td>
                         <td class="px-2 py-2 md:px-6 md:py-3">

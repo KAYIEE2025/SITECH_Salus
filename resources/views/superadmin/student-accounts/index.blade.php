@@ -32,7 +32,7 @@
                     <thead class="bg-yellow-100/60 text-xs text-yellow-800">
                         <tr>
                             <th class="px-6 py-3 text-left">Student</th>
-                            <th class="px-6 py-3 text-left">Student No.</th>
+                            <th class="px-6 py-3 text-left">QR Value</th>
                             <th class="px-6 py-3 text-left">Username</th>
                             <th class="px-6 py-3 text-left">Email</th>
                             <th class="px-6 py-3 text-left">Temporary Password</th>
@@ -58,7 +58,7 @@
         <div class="flex flex-col items-start justify-between gap-4 border-b border-green-50 px-5 py-4 sm:flex-row sm:items-center sm:px-6">
             <div>
                 <h2 class="text-base font-semibold text-gray-800">Students Awaiting Account Creation</h2>
-                <p class="mt-1 text-xs text-gray-500">Accounts use the student number as the default username.</p>
+                <!-- <p class="mt-1 text-xs text-gray-500">Accounts use the student number as the default username.</p> -->
             </div>
             <form id="bulk-student-account-form" method="POST" action="{{ route('superadmin.student-accounts.bulk-store') }}">
                 @csrf
@@ -76,7 +76,7 @@
                             <input type="checkbox" class="rounded border-gray-300 text-[#1a5c1a] focus:ring-[#1a5c1a]" onclick="document.querySelectorAll('[data-student-account-checkbox]').forEach((checkbox) => checkbox.checked = this.checked)">
                         </th>
                         <th class="px-6 py-3 text-left">Student</th>
-                        <th class="px-6 py-3 text-left">Student No.</th>
+                        <th class="px-6 py-3 text-left">QR Value</th>
                         <th class="px-6 py-3 text-left">Section</th>
                         <th class="px-6 py-3 text-left">Contact</th>
                         <th class="px-6 py-3 text-left">Status</th>

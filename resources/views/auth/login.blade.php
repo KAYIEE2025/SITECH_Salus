@@ -46,14 +46,14 @@
                     @csrf
 
                     <div>
-                        <label for="email" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-green-900/70">SCHOOL ID</label>
+                        <label for="email" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-green-900/70">USER NAME</label>
                         <div class="relative">
                             <span class="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-green-700">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                             </span>
                             <input id="email" type="text" name="email" value="{{ old('email') }}" required autofocus autocomplete="username"
                                 class="w-full rounded-xl border-green-100 py-3 pl-11 pr-4 text-sm shadow-sm transition focus:border-green-600 focus:ring-2 focus:ring-green-500/20"
-                                placeholder="you@salus.edu or student number">
+                                placeholder="Full Name">
                         </div>
                     </div>
 

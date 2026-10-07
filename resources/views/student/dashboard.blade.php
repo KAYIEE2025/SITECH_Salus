@@ -88,7 +88,7 @@
             <div class="st-card p-3 md:p-4 sm:p-6 lg:col-span-2">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><h2 class="text-sm md:text-lg font-semibold text-gray-800">Student Information</h2><a href="{{ route('student.profile.index') }}" class="text-xs md:text-xs font-semibold text-green-700 hover:text-green-900">View profile</a></div>
                 <div class="mt-4 md:mt-6 grid grid-cols-1 gap-4 md:gap-5 sm:grid-cols-2">
-                    <div><p class="text-[10px] md:text-xs font-semibold uppercase tracking-wide text-green-800/70">Student number</p><p class="mt-1 break-all text-sm md:text-base font-medium text-gray-800">{{ $student->student_number }}</p></div>
+                    <!-- <div><p class="text-[10px] md:text-xs font-semibold uppercase tracking-wide text-green-800/70">Student number</p><p class="mt-1 break-all text-sm md:text-base font-medium text-gray-800">{{ $student->student_number }}</p></div> -->
                     <div><p class="text-[10px] md:text-xs font-semibold uppercase tracking-wide text-green-800/70">Student name</p><p class="mt-1 break-words text-sm md:text-base font-medium text-gray-800">{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</p></div>
                     <div><p class="text-[10px] md:text-xs font-semibold uppercase tracking-wide text-green-800/70">Grade level</p><p class="mt-1 text-sm md:text-base font-medium text-gray-800">{{ $student->yearLevel->name ?? 'N/A' }}</p></div>
                     <div><p class="text-[10px] md:text-xs font-semibold uppercase tracking-wide text-green-800/70">Section</p><p class="mt-1 text-sm md:text-base font-medium text-gray-800">{{ $student->section->name ?? 'N/A' }}</p></div>

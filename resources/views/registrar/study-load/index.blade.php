@@ -315,7 +315,7 @@
                             {{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}
                         </p>
                         <p class="text-xs text-gray-500">
-                            Student Number: {{ $student->student_number }} · {{ $student->yearLevel->name ?? 'N/A' }} — Sec {{ $student->section->name ?? 'N/A' }}
+                                        {{ $student->yearLevel->name ?? 'N/A' }} — Sec {{ $student->section->name ?? 'N/A' }}
                         </p>
                     </div>
                     <div class="flex gap-2">
@@ -387,8 +387,9 @@
             {{ $students->links() }}
         </div>
         @endif
-    </div>
+        @endif
     @endif
+    </div>
 
     {{-- Print Preview Modal --}}
     <div id="print-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">

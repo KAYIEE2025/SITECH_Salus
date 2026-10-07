@@ -155,7 +155,9 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-2 py-2 md:px-6 md:py-3">
                                     <p class="font-medium text-gray-800">{{ $user->name }}</p>
-                                    <p class="text-[10px] md:text-xs text-gray-500">{{ $user->email }}</p>
+                                    @if(!$user->hasRole('Student'))
+                                        <p class="text-[10px] md:text-xs text-gray-500">{{ $user->email }}</p>
+                                    @endif
                                 </td>
                                 <td class="px-2 py-2 md:px-6 md:py-3 text-gray-500">
                                     {{ $user->contact_number ?? 'Not provided' }}

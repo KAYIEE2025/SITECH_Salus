@@ -25,8 +25,8 @@
                         <p class="font-medium text-gray-800 text-sm md:text-base">{{ $student->last_name }}, {{ $student->first_name }} {{ $student->middle_name }}</p>
                     </div>
                     <div>
-                        <p class="text-xs md:text-sm text-gray-500">Student Number</p>
-                        <p class="font-medium text-gray-800 text-sm md:text-base">{{ $student->student_number }}</p>
+                        <!-- <p class="text-xs md:text-sm text-gray-500">Student Number</p> -->
+                        <!-- <p class="font-medium text-gray-800 text-sm md:text-base">{{ $student->student_number }}</p> -->
                     </div>
                     <div>
                         <p class="text-xs md:text-sm text-gray-500">Grade Level & Section</p>

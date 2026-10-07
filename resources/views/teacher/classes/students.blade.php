@@ -27,7 +27,7 @@
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-gray-200">
-                            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student Number</th>
+                            <!-- <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Student Number</th> -->
                             <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Name</th>
                             <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Gender</th>
                         </tr>
@@ -35,8 +35,8 @@
                     <tbody>
                         @foreach($students as $studyLoad)
                             <tr class="border-b border-gray-100 hover:bg-gray-50">
-                                <td class="py-3 px-4 text-sm text-gray-800">
-                                    {{ $studyLoad->student->student_number }}
+                                <!-- <td class="py-3 px-4 text-sm text-gray-800">
+                                    {{ $studyLoad->student->student_number }} -->
                                 </td>
                                 <td class="py-3 px-4 text-sm text-gray-800">
                                     {{ $studyLoad->student->last_name }}, {{ $studyLoad->student->first_name }}

@@ -284,7 +284,7 @@
                 <tr>
                     <th class="text-left px-2 py-2 md:px-6 md:py-3">Student</th>
                     <th class="text-left px-2 py-2 md:px-6 md:py-3">Subject</th>
-                    <th class="text-left px-2 py-2 md:px-6 md:py-3">Grade</th>
+                    <!-- <th class="text-left px-2 py-2 md:px-6 md:py-3">Grade</th> -->
                     <th class="text-left px-2 py-2 md:px-6 md:py-3">Status</th>
                     <th class="text-left px-2 py-2 md:px-6 md:py-3">Reviewed</th>
                 </tr>
@@ -300,7 +300,7 @@
                         @endif
                     </td>
                     <td class="px-2 py-2 md:px-6 md:py-3 text-gray-600">{{ $grade->classSchedule->subject->code ?? '—' }}</td>
-                    <td class="px-2 py-2 md:px-6 md:py-3 font-semibold text-green-800">{{ $grade->final_grade }}</td>
+                    <!-- <td class="px-2 py-2 md:px-6 md:py-3 font-semibold text-green-800">{{ $grade->final_grade }}</td> -->
                     <td class="px-2 py-2 md:px-6 md:py-3">
                         <span class="text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded-full
                             {{ $grade->status == 'approved' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600' }}">

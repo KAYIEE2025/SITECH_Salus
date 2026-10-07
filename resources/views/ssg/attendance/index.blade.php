@@ -46,11 +46,15 @@
                         </div>
                     @endif
                     @if($event->scan_end_time)
-                        <div class="mt-3">
-                            <button type="button" id="extend-time-btn" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 min-h-[48px]">
-                                Extend Attendance Time
-                            </button>
-                        </div>
+                        @auth
+                            @if(auth()->user()->hasRole('SSG') && auth()->user()->hasRole('Teacher'))
+                                <div class="mt-3">
+                                    <button type="button" id="extend-time-btn" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 min-h-[48px]">
+                                        Extend Attendance Time
+                                    </button>
+                                </div>
+                            @endif
+                        @endauth
                     @endif
                 </div>
 
